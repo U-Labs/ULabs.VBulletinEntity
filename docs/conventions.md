@@ -46,7 +46,6 @@ Example:
 
 ```cs
 public class VBThread {
-    x
     [Column("lastpost")]
     public int LastPostTimeRaw { get; set; }
 
