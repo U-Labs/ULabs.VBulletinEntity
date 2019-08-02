@@ -1,0 +1,37 @@
+﻿@model NewestContentModel
+
+<h1>Newest Threads</h1>
+<table class="table">
+    <tr>
+        <th>Title</th>
+        <th>Created at</th>
+        <th>Author</th>
+        <th>Forum name</th>
+        <th>Replys</th>
+    </tr>
+
+    @foreach (var thread in Model.Threads) {
+        <tr>
+            <td>@thread.Title</td>
+            <td>@thread.CreatedTime.ToString()</td>
+            <td>@thread.AuthorName</td>
+            <td>@thread.Forum.Title</td>
+            <td>@thread.ReplyPostsCount</td>
+        </tr>
+    }
+</table>
+
+<h1>Newest Posts</h1>
+<table class="table">
+    <tr>
+        <th>Title</th>
+        <th>Created at</th>
+    </tr>
+
+    @foreach (var post in Model.Posts) {
+        <tr>
+            <td>@post.Title</td>
+            <td>@post.CreatedTime.ToString()</td>
+        </tr>
+    }
+</table>
