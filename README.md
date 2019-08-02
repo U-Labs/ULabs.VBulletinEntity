@@ -40,3 +40,33 @@ Tipp for local developing: Use `appsettings.Development.json` to override the Co
 to your `.gitignore`, no credentials can be checked in by accident. This approach is used in our example project.  
 ASP.NET Core automatically adds files following the pattern `appsettings.{Environment}.json` when existing. 
 So keep in mind, that this only works while `ASPNETCORE_ENVIRONMENT` is set to `Development`. 
+
+## Motivation
+This project is part of my approach to develop on a modern .NET Core application stack for vBulletin. I did some POCs, also on the database.
+But now it's time to create a better structure. Since I believe in open source and also use a lot of OSS, I'd also like to share my work to
+give something back for the community.
+
+## Contributions/Coding Conventions
+
+Every help on this library is welcome! The code in this repository should fit to 
+[the official C# Coding Conventions](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions). 
+My only intentionally deviation from this were the curly brackets, which are not placed in an extra line. So code should looke like 
+
+```cs
+if(true) {
+	myClass.DoAction();
+}
+```
+
+instead of 
+
+```cs
+if(true) 
+{
+	myClass.DoAction();
+}
+```
+
+## Credits
+This project itself uses the following external open source libraries to which I would like to express my gratitude:
+* [Pomelo.EntityFrameworkCore.MySql](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql)
