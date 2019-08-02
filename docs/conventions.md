@@ -60,6 +60,15 @@ public class VBThread {
 We also sometimes changed the namings a bit to make it more clear. The column `lastpost` for example could be interpreted as id of the last post 
 or for the timestamp. Since vBulletin itself added some suffixes (e.g. lastpost**id**), I made this more consistent. 
 
+### `[Column("xyz")]` annotations
+Our `VBDbContext` automatically converts propertys to lowercase. So we don't need a column annotation if our property and the database column have
+the same name and were only different by upper/lower case writing. Example: We have a database field called `avatarmaxsize`. Our model rewrite 
+it to `AvatarMaxSize`. No annotation is required. 
+
+We only need them, when renaming a property is required to fit our needs or simply make it more readable. For example, this is the case on all unix timestamp
+columns. Using this conventions, no annotations were required in most attributes. They should only be used when required so they don't 
+inflate the models unnecessarily.
+
 ### Naming of _VBulletin_
 We generally write VBulletin with capital V and also capital B, since it's a proper name of the brand product. While `Db` is just an abbreviation
 for `Database`, it's written in lowercase, as recommended for C#. 
