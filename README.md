@@ -1,8 +1,16 @@
 ﻿# U-Labs VBulletin Entity
-A vBulletin 4 database abstraction layer for Entity Framework Core - OSS under [GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/)
+A vBulletin 4 database abstraction layer for Entity Framework Core - OSS under [GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/). 
+It is based on the current V2.1 LTS release of Entity Framework Core.
 
-## Requirements
-This project is based on Entity Framework Core 2.1. As the current LTS release, it should be suiteable for many users. 
+# Feature state
+
+| Entity  | State | Comment |
+| ------------- | ------------- |
+| VBUserGroup  | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Forum & Admin permissions implemented, rest missing
+
+![Complete](https://u-img.net/img/8798Dw.png) Full completed 
+![Partly implemented](https://u-img.net/img/5113Ab.png) Partly implemented
+![Not implemented yet](https://u-img.net/img/2301Ja.png) Not implemented (yet)
 
 # Usage
 ToDo: NuGet Package
@@ -56,6 +64,9 @@ Please see our [dedicated conventions documentation](./docs/conventions.md) rela
 ## Credits
 This project itself uses the following external open source libraries to which I would like to express my gratitude:
 * [Pomelo.EntityFrameworkCore.MySql](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql)
+* Icons from made by [Flaticons](https://www.flaticon.com/) by [Freepik](https://www.flaticon.com/authors/freepik),
+[Maxim Basinski](https://www.flaticon.com/authors/maxim-basinski) 
+licensed with [CCC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
 
 ## Disclaimer
 I'm not associated with _MH Sub I, LLC dba vBulletin_, the company behind vBulletin community software. As a customer of vBulletin, 

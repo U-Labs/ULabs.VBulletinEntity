@@ -54,5 +54,20 @@ namespace ULabs.VBulletinEntity.Models.User {
         public int AvatarMaxHeight { get; set; }
         public int AvatarMaxSize { get; set; }
         public int ProfilePicMaxWidth { get; set; }
+        public int ProfilePicMaxHeight { get; set; }
+        public int SigPicMaxHeight { get; set; }
+        public int SigPicMaxSize { get; set; }
+        public int SigPicMaxImages { get; set; }
+        public int SigPicMaxSizeBBCode { get; set; }
+        public int SigMaxChars { get; set; }
+        public int SigMaxLines { get; set; }
+        // ToDo: Missing usercsspermissions, albumpermissions, socialgrouppermission, vbblog_* permissions
+        public int AlbumPicMaxWidth { get; set; }
+        public int AlbumPicMaxHeight { get; set; }
+        public int AlbumMaxPics { get; set; }
+        public int AlbumMaxSize { get; set; }
+        public int PmThrottleQuantity { get; set; }
+        public int GroupIconMaxSize { get; set; }
+        public int MaximumSocialGroups { get; set; }
     }
 }
