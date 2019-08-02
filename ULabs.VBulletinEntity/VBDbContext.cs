@@ -1,15 +1,34 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using ULabs.VBulletinEntity.Models.AddOns;
+using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Models.Forum;
+using ULabs.VBulletinEntity.Models.Message;
 using ULabs.VBulletinEntity.Models.User;
 
 namespace ULabs.VBulletinEntity {
     public class VBDbContext : DbContext {
         public VBDbContext(DbContextOptions options) : base(options) { }
-        #region Forum
-        public DbSet<VBThread> Threads { get; set; }
+
+        public DbSet<VBUser> Users { get; set; }
+        public DbSet<VBUserGroup> UserGroups { get; set; }
+        public DbSet<VBSession> Sessions { get; set; }
+        public DbSet<VBCustomAvatar> CustomAvatars { get; set; }
+
         public DbSet<VBPost> Posts { get; set; }
-        #endregion
+        public DbSet<VBThread> Threads { get; set; }
+        public DbSet<VBForum> Forums { get; set; }
+        public DbSet<VBForumPermission> ForumPermissions { get; set; }
+
+        public DbSet<VBPoll> Polls { get; set; }
+        public DbSet<VBMessage> Messages { get; set; }
+        public DbSet<VBMessageText> MessagesText { get; set; }
+        public DbSet<VBAttachment> Attachments { get; set; }
+        public DbSet<VBThreadRead> ThreadReads { get; set; }
+
+        public DbSet<VBSettings> Settings { get; set; }
+
+        public DbSet<PostThanks> PostThanks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder) {
             // Since vB has multiple FKs to VBPost (e.g. first/last post) we need to tell EF which of them is used for our 1:n mapping (thread/replys)
