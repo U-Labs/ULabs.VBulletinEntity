@@ -1,0 +1,15 @@
+﻿@model List<VBThread>
+
+<h1>Newest Threads</h1>
+
+<table>
+    <tr>
+        <th>Title</th>
+    </tr>
+
+    @foreach(var thread in Model) {
+        <tr>
+            <td>@thread.Title</td>
+        </tr>
+    }
+</table>
