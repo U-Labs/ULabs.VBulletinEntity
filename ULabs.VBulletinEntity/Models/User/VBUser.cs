@@ -109,6 +109,58 @@ namespace ULabs.VBulletinEntity.Models.User {
 
         [Column("emailstamp")]
         public int EmailStampRaw { get; set; }
+        // ToDo: Check what this is used for, seems a boolean calue
+        public int ThreadedMode { get; set; }
+        // ToDo: Check - Seems also some kind of boolean but with -1 values
+        public int AutoSubscribe { get; set; }
+
+        [Column("pmtotal")]
+        public int PmTotalCount { get; set; }
+
+        [Column("pmunread")]
+        public int PmUnreadCount { get; set; }
+
+        [Column("salt"), MaxLength(50)]
+        public string PasswordSalt { get; set; }
+
+        [Column("ipoints")]
+        public int InfractionPoints { get; set; }
+
+        [Column("infractions")]
+        public int InfractionsCount { get; set; }
+
+        [Column("warnings")]
+        public int WarningsCount { get; set; }
+
+        // ToDo: Check - were both empty for all U-Labs users
+        [MaxLength(255)]
+        public string InfractionGroupIds { get; set; }
+        public int InfractionGroupId { get; set; }
+
+        // ToDo: Create enum
+        public int AdminOptions { get; set; }
+
+        [Column("profilevisits")]
+        public int ProfileVisitsCount { get; set; }
+        public int FriendCount { get; set; }
+
+        [Column("friendreqcount")]
+        public int FriendRequestsCount { get; set; }
+
+        // ToDo: Check what VM is
+        public int VmUnreadCount { get; set; }
+        public int VmModeratedCount { get; set; }
+
+        [Column("socgroupinvitecount")]
+        public int SocialGroupInviteCount { get; set; }
+        [Column("socgroupreqcount")]
+        public int SocialGroupRequestsCount { get; set; }
+
+        // ToDo: Check what PC/GM is
+        public int PcUnreadCount { get; set; }
+        public int PcModeratedCount { get; set; }
+        public int GmModeratedCount { get; set; }
+
         // ToDo: Handle self referencing loops doesn't full work yet. On the session we get: 
         // JsonSerializationException: Self referencing loop detected with type 'ULabs.VBulletinEntity.Models.Forum.VBPost'. Path 'User.LastPost.Thread.Replys'.
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
