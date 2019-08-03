@@ -2,7 +2,7 @@
 A vBulletin 4 database abstraction layer for Entity Framework Core - OSS under [GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/). 
 It is based on the current V2.1 LTS release of Entity Framework Core.
 
-# Feature state
+## Feature state
 
 | Entity  | State | Comment |
 | ------------- | ------------- |
@@ -15,10 +15,10 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 ![Partly implemented](https://u-img.net/img/5113Ab.png) Partly implemented
 ![Not implemented yet](https://u-img.net/img/2301Ja.png) Not implemented (yet)
 
-# Usage
+## Get started
 ToDo: NuGet Package
 
-## Configure Connection Strings
+### Configure Connection Strings
 In your `appsettings.json` insert a [Connection String](https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-strings) for the
 vBulletin MySQL database in the corresponding section like this:
 
@@ -44,6 +44,8 @@ namespace ULabs.VBulletinEntityDemo {
 
         public void ConfigureServices(IServiceCollection services) {
             services.AddVBDbContext(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+            // For using Managers, see above
+            services.AddVBManagers();
             // ...
         }
     }
@@ -54,6 +56,46 @@ Tipp for local developing: Use `appsettings.Development.json` to override the Co
 to your `.gitignore`, no credentials can be checked in by accident. This approach is used in our example project.  
 ASP.NET Core automatically adds files following the pattern `appsettings.{Environment}.json` when existing. 
 So keep in mind, that this only works while `ASPNETCORE_ENVIRONMENT` is set to `Development`. 
+
+## Usage
+You can choose between two ways of accessing VB data: 
+
+### [Low level DbContext](./ULabs.VBulletinEntity/VBDbContext.cs)
+
+Working with a familar DbContext instance give maximum flexibility: Every query that EF can technically do is possible. But you have to care about 
+lazy loading propertys by yourself. Same way for required fields (e.g. creation timestamps) on writing queries. Recommended for advanced users which 
+a deeper knowledge in vBulletins database, if the managers reach their limit for the use-case. 
+
+If you registered the service by calling `services.AddVBDbContext()` as described in the getting started guide, you're already done. 
+Simply let .NET Core's DI inject the context to your controller like this:
+
+```cs
+namespace ULabs.VBulletinEntityDemo.Controllers {
+    public class DbContextController : Controller {
+        readonly VBDbContext db;
+
+        public DbContextController(VBDbContext db) {
+            this.db = db;
+        }
+    }
+}
+```
+
+Now use the instance to write your LINQ queries. See the [NewestContentModel.cs](./ULabs.VBulletinEntityDemo/Models/NewestContentModel.cs) model
+in our example project. It shows how to fetch the newest users, threads, posts and active sessions. Also relations are included, for example
+the forum of a thread. 
+
+### [High level Managers](./ULabs.VBulletinEntity/Managers)
+
+Our managers try to cover common use-cases for developing a .NET based board. This helps keeping VB and database related logic outside of your application
+project. While the managers will extended if needed, they doesn't aim to cover every special use-case. 
+
+Managers are registered by adding `services.AddVBManagers()` to our `Startup.ConfigureServices()` method. 
+Currently this public repo contains the following managers:
+
+* [`VBUserManager`](./ULabs.VBulletinEntity/Manager/VBUserManager.cs)
+
+Simply register the required service in e.g. a controller constructor. 
 
 ## Motivation
 This project is part of my approach to develop on a modern .NET Core application stack for vBulletin. I did some POCs, also on the database.
