@@ -4,6 +4,7 @@ using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ULabs.VBulletinEntity.Manager;
 
 namespace ULabs.VBulletinEntity {
     public static class VBServiceHelper {
@@ -15,6 +16,10 @@ namespace ULabs.VBulletinEntity {
                     options.EnableSensitiveDataLogging();
                 }
             }, ServiceLifetime.Scoped);
+        }
+
+        public static void AddVBManagers(this IServiceCollection services) {
+            services.AddScoped<VBUserManager>();
         }
     }
 }
