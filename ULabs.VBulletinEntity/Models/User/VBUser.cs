@@ -173,7 +173,7 @@ namespace ULabs.VBulletinEntity.Models.User {
         [Column("fbaccesstoken"), MaxLength(255)]
         public string FacebookAccessToken { get; set; }
 
-        [Column("newreplcount")]
+        [Column("newrepcount")]
         public int NewReplysCount { get; set; }
 
         [Column("bloggroupreqcount")]
