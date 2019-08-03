@@ -22,7 +22,6 @@ namespace ULabs.VBulletinEntity.Models.User {
 
         [Column("passwordexpires")]
         public int PasswordExpiresDays { get; set; }
-
         public int PasswordHistory { get; set; }
         public int PmQuota { get; set; }
 
@@ -57,8 +56,8 @@ namespace ULabs.VBulletinEntity.Models.User {
         public int ProfilePicMaxHeight { get; set; }
         public int SigPicMaxHeight { get; set; }
         public int SigPicMaxSize { get; set; }
-        public int SigPicMaxImages { get; set; }
-        public int SigPicMaxSizeBBCode { get; set; }
+        public int SigMaxImages { get; set; }
+        public int SigMaxSizeBBCode { get; set; }
         public int SigMaxChars { get; set; }
         public int SigMaxLines { get; set; }
         // ToDo: Missing usercsspermissions, albumpermissions, socialgrouppermission, vbblog_* permissions
