@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using ULabs.VBulletinEntity.Models.Forum;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.Models.User {
@@ -14,6 +15,7 @@ namespace ULabs.VBulletinEntity.Models.User {
         public string SessionHash { get; set; }
 
         public int? UserId { get; set; }
+
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
         public VBUser User { get; set; }
 
@@ -38,7 +40,6 @@ namespace ULabs.VBulletinEntity.Models.User {
         public string UserAgent { get; set; }
 
         public int StyleId { get; set; }
-
         public int LanguageId { get; set; }
 
         /// <summary>
@@ -54,10 +55,11 @@ namespace ULabs.VBulletinEntity.Models.User {
 
         [Column("inforum")]
         public int InForumId { get; set; }
-        // ToDo: FK Forum
+        public VBForum InForum{ get; set; }
 
         [Column("inthread")]
         public int InThreadId { get; set; }
+        public VBThread InThread { get; set; }
         // ToDo: FK Thread
 
         // ToDo: incalendar, badlocation, bypass, profileupdate, apiclientid, apiaccesstoken
