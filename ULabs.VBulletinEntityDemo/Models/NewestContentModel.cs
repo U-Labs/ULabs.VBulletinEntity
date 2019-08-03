@@ -24,7 +24,8 @@ namespace ULabs.VBulletinEntityDemo.Models {
                 .Take(limit)
                 .ToList();
             var groups = db.UserGroups.ToList();
-            var testUser = db.Users.FirstOrDefault(u => u.UserName == "DMW007");
+            var testUser = db.Users.FirstOrDefault(u => u.Id == 7);
+            bool has = testUser.Birthday.HasValue;
             var someUsers = db.Users.Take(30).ToList();
         }
     }

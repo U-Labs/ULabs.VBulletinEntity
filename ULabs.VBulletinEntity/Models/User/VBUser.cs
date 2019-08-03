@@ -224,9 +224,13 @@ namespace ULabs.VBulletinEntity.Models.User {
         }
 
         [NotMapped]
-        public DateTime Birthday {
-            get => DateTime.Parse(BirthdayRaw);
-            set => BirthdayRaw = value.ToString("MM-dd-yy");
+        public DateTime? Birthday {
+            get => string.IsNullOrEmpty(BirthdayRaw) ? null : (DateTime?)DateTime.Parse(BirthdayRaw);
+            set {
+                if(value.HasValue) {
+                    BirthdayRaw = value.Value.ToString("MM-dd-yy");
+                }
+            }
         }
 
         [NotMapped]
