@@ -48,11 +48,6 @@ namespace ULabs.VBulletinEntity.Models.User {
         [Column("loggedin")]
         public int LoggedInRaw { get; set; }
 
-        [NotMapped]
-        public bool LoggedIn {
-            get { return LoggedInRaw == 2 || LoggedInRaw == 1; }
-        }
-
         [Column("inforum")]
         public int InForumId { get; set; }
         public VBForum InForum{ get; set; }
@@ -60,13 +55,28 @@ namespace ULabs.VBulletinEntity.Models.User {
         [Column("inthread")]
         public int InThreadId { get; set; }
         public VBThread InThread { get; set; }
-        // ToDo: FK Thread
 
-        // ToDo: incalendar, badlocation, bypass, profileupdate, apiclientid, apiaccesstoken
-        // badlocation = 3 when viewing non existing thread/post
+        [Column("incalendar")]
+        public int InCalendarId { get; set; }
+
+        /// <summary>
+        /// BadLocation = 3 when viewing non existing thread/post
+        /// </summary>
+        public int BadLocation { get; set; }
+        public int Bypass { get; set; }
+        public int ProfileUpdate { get; set; }
+        public int ApiClientId { get; set; }
+
+        [MaxLength(32)]
+        public string ApiAccessToken { get; set; }
 
         // vB uses TINYINT but since only boolean values are expected, we can set the SQL type to bit 
         [Column(TypeName = "bit")]
         public bool IsBot { get; set; }
+
+        [NotMapped]
+        public bool LoggedIn {
+            get { return LoggedInRaw == 2 || LoggedInRaw == 1; }
+        }
     }
 }
