@@ -229,20 +229,20 @@ namespace ULabs.VBulletinEntity.Models.User {
 
         [NotMapped]
         public DateTime LastVisitTime {
-            get { return DateTimeExtensions.ToDateTime(LastVisitTimeRaw); }
-            set { LastVisitTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
+            get => DateTimeExtensions.ToDateTime(LastVisitTimeRaw);
+            set => LastVisitTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
         }
 
         [NotMapped]
         public DateTime LastActivityTime {
-            get { return DateTimeExtensions.ToDateTime(LastActivityTimeRaw); }
-            set { LastActivityTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
+            get => DateTimeExtensions.ToDateTime(LastActivityTimeRaw);
+            set => LastActivityTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
         }
 
         [NotMapped]
         public DateTime LastPostTime {
-            get { return DateTimeExtensions.ToDateTime(LastPostTimeRaw); }
-            set { LastPostTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
+            get => DateTimeExtensions.ToDateTime(LastPostTimeRaw);
+            set => LastPostTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
         }
         public string GetAvatarUrl(string forumBaseUrl) {
             if (CustomAvatar == null) {
