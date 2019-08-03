@@ -166,6 +166,17 @@ namespace ULabs.VBulletinEntity.Models.User {
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
         public List<VBPost> Posts { get; set; }
 
+        #region Post Thanks
+        [Column("post_thanks_user_amount")]
+        public int PostThanksCount { get; set; }
+
+        [Column("post_thanks_thanked_posts")]
+        public int ThankedPostsCount { get; set; }
+
+        [Column("post_thanks_thanked_times")]
+        public int UserThankedCount { get; set; }
+        #endregion
+
         #region NotMapped 
         [NotMapped]
         public List<int> MemberGroupIds {

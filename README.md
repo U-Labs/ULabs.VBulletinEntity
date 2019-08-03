@@ -62,6 +62,33 @@ give something back for the community.
 
 Please see our [dedicated conventions documentation](./docs/conventions.md) related to C# coding style and also vBulletin. 
 
+## Addon support
+Some Addons apply modifications on the database like for example the [post thanks addon](https://www.vbulletin.org/forum/showthread.php?t=231666). 
+Commonly, the core-tables were extended by custom columns. My idea was to seperate this by inheritance. In this case, we had a `VBUser` entity 
+that only contains core-attributes from VB itself. For the Addon we create a inherited entity that adds the new addon fields: 
+
+```cs
+namespace ULabs.VBulletinEntity.Models.AddOns {
+    [Table("user")]
+    public class VBPostThanksUser : VBUser {
+        [Column("post_thanks_user_amount")]
+        public int PostThanksCount { get; set; }
+
+        [Column("post_thanks_thanked_posts")]
+        public int ThankedPostsCount { get; set; }
+        // ...
+    }
+}
+```
+Sadly this isn't possible yet since [EF Core forces _discriminator_ columns](https://stackoverflow.com/questions/52588922/force-inherited-classes-in-asp-net-core-entity-framework-core-to-dedicated-mysql).
+In case of inheritance, EF Core creates a column called _discriminator_ that contains the entity type (`VBUser` or `VBPostThanksUser` in this case). 
+This makes things complicated. 
+
+[Until EF Core introduced _Table-per-Concret Type_ as a fix](https://github.com/aspnet/EntityFrameworkCore/issues/3170), I decided not to spend more time
+on this . Instead, Addon support is keept at a absolute minimum. For us this is only the 
+[common post thanks addon](https://www.vbulletin.org/forum/showthread.php?t=231666), which is heavily used on U-Labs since years. 
+I'm open for ideas how we could seperate this better in the future. 
+
 ## Credits
 This project itself uses the following external open source libraries to which I would like to express my gratitude:
 * [Pomelo.EntityFrameworkCore.MySql](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql)
