@@ -7,7 +7,7 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 | Entity  | State | Comment |
 | ------------- | ------------- |
 | VBUserGroup  | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Forum & Admin permissions implemented, rest of the permissions missing
-| VBUser | x | x
+| VBUser | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Some enums need to figured out. A few values are unknown and implemented raw
 
 ![Complete](https://u-img.net/img/8798Dw.png) Full completed 
 ![Partly implemented](https://u-img.net/img/5113Ab.png) Partly implemented
