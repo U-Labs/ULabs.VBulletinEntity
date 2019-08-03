@@ -161,12 +161,35 @@ namespace ULabs.VBulletinEntity.Models.User {
         public int PcModeratedCount { get; set; }
         public int GmModeratedCount { get; set; }
 
+        [Column("fbuserid"), MaxLength(255)]
+        public string FacebookUserId { get; set; }
+
+        [Column("fbjoindate")]
+        public int FacebookJoinDateRaw { get; set; }
+
+        [Column("logintype")]
+        public string LoginTypeRaw { get; set; }
+
+        [Column("fbaccesstoken"), MaxLength(255)]
+        public string FacebookAccessToken { get; set; }
+
+        [Column("newreplcount")]
+        public int NewReplysCount { get; set; }
+
+        [Column("bloggroupreqcount")]
+        public int BlogGroupRequestsCount { get; set; }
+
+        // ToDo: Check what this is really used for - Seems boolean like from the values, but is a large int (11) in the scheme
+        public int ShowBlogCss { get; set; }
+        // ToDo: Check - Could be nullable according to scheme
+        public int? IndexPage { get; set; }
+
         // ToDo: Handle self referencing loops doesn't full work yet. On the session we get: 
         // JsonSerializationException: Self referencing loop detected with type 'ULabs.VBulletinEntity.Models.Forum.VBPost'. Path 'User.LastPost.Thread.Replys'.
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
         public List<VBPost> Posts { get; set; }
 
-        #region Post Thanks
+        #region Post Thanks Addon
         [Column("post_thanks_user_amount")]
         public int PostThanksCount { get; set; }
 
@@ -193,13 +216,28 @@ namespace ULabs.VBulletinEntity.Models.User {
                 MemberGroupIdsRaw = string.Join(",", value);
             }
         }
+
+        [NotMapped]
+        public VBUserLoginType LoginType {
+            get => (VBUserLoginType)Enum.Parse(typeof(VBUserLoginType), LoginTypeRaw);
+            set => LoginTypeRaw = value.ToString();
+        }
+
         [NotMapped]
         public DateTime Birthday {
             get => DateTime.Parse(BirthdayRaw);
-            set {
-                BirthdayRaw = value.ToString("MM-dd-yy");
+            set => BirthdayRaw = value.ToString("MM-dd-yy");
+        }
+
+        [NotMapped]
+        public string AvatarFileName {
+            get {
+                if (CustomAvatar == null)
+                    return "";
+                return $"avatar{Id}_{AvatarRevision}.gif";
             }
         }
+
         [NotMapped]
         public int TimezoneOffset {
             get => int.Parse(TimezoneOffsetRaw);
@@ -219,15 +257,6 @@ namespace ULabs.VBulletinEntity.Models.User {
         }
 
         [NotMapped]
-        public string AvatarFileName {
-            get {
-                if (CustomAvatar == null)
-                    return "";
-                return $"avatar{Id}_{AvatarRevision}.gif";
-            }
-        }
-
-        [NotMapped]
         public DateTime LastVisitTime {
             get => DateTimeExtensions.ToDateTime(LastVisitTimeRaw);
             set => LastVisitTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
@@ -244,6 +273,12 @@ namespace ULabs.VBulletinEntity.Models.User {
             get => DateTimeExtensions.ToDateTime(LastPostTimeRaw);
             set => LastPostTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
         }
+
+        [NotMapped]
+        public DateTime FacebookJoinDate {
+            get => DateTimeExtensions.ToDateTime(FacebookJoinDateRaw);
+            set => FacebookJoinDateRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
         public string GetAvatarUrl(string forumBaseUrl) {
             if (CustomAvatar == null) {
                 // ToDo: VB has not setting for the default Avatar. We should specify this in custom settings somewhere
@@ -252,6 +287,11 @@ namespace ULabs.VBulletinEntity.Models.User {
             return $"{forumBaseUrl}/customavatars/{AvatarFileName}";
         }
         #endregion
+    }
+
+    public enum VBUserLoginType {
+        Vb,
+        Fb
     }
 }
 
