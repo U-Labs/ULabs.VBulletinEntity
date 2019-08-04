@@ -29,6 +29,8 @@ namespace ULabs.VBulletinEntity {
 
         public static void AddVBManagers(this IServiceCollection services) {
             services.AddScoped<VBUserManager>();
+            services.AddScoped<VBThreadManager>();
+            services.AddScoped<VBForumManager>();
         }
     }
 }
