@@ -52,6 +52,10 @@ namespace ULabs.VBulletinEntity.Manager {
 
         public async Task IncrementPostCounterAsync(int userId, int lastPostId, DateTime lastPostDateTime, bool saveChanges = true) {
             var user = await db.Users.FindAsync(userId);
+            if (user == null) {
+                throw new Exception($"No user exists with id #{userId}!");
+            }
+
             user.LastActivityTime = user.LastVisitTime = DateTime.UtcNow;
             user.LastPostTime = lastPostDateTime;
             user.LastPostId = lastPostId;
