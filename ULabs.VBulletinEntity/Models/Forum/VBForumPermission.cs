@@ -8,7 +8,7 @@ using ULabs.VBulletinEntity.Models.Permission;
 namespace ULabs.VBulletinEntity.Models.Forum {
     [Table("forumpermission")]
     public class VBForumPermission {
-        [Key, Column("forumpermissionid")]
+        [Column("forumpermissionid")]
         public int Id { get; set; }
 
         public int ForumId { get; set; }
