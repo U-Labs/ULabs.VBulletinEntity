@@ -13,26 +13,19 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         [Column("dateline")]
         public int CreatedTimeRaw { get; set; }
 
-        [NotMapped]
-        public DateTime CreatedTime {
-            get { return CreatedTimeRaw.ToDateTime(); }
-            set { CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
-        }
         [Column("thumbnail_dateline")]
         public int ThumbnailCreatedTimeRaw { get; set; }
 
-        [NotMapped]
-        public DateTime ThumbnailCreatedTime {
-            get { return ThumbnailCreatedTimeRaw.ToDateTime(); }
-            set { ThumbnailCreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
-        }
-
-        // ToDo: Filedata/Thumb data if stored in db
+        [Column(TypeName = "MEDIUMBLOB")]
+        public byte[] FileData { get; set; }
 
         public int FileSize { get; set; }
 
         [MaxLength(32)]
         public string FileHash { get; set; }
+
+        [Column(TypeName = "MEDIUMBLOB")]
+        public byte[] Thumbnail { get; set; }
 
         [Column("thumbnail_filesize")]
         public int ThumbnailFileSize { get; set; }
@@ -50,5 +43,17 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         public int ThumbnailHeight { get; set; }
 
         public int RefCount { get; set; }
+
+        [NotMapped]
+        public DateTime CreatedTime {
+            get { return CreatedTimeRaw.ToDateTime(); }
+            set { CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
+        }
+
+        [NotMapped]
+        public DateTime ThumbnailCreatedTime {
+            get { return ThumbnailCreatedTimeRaw.ToDateTime(); }
+            set { ThumbnailCreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
+        }
     }
 }
