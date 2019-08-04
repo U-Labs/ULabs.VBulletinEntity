@@ -3,7 +3,11 @@ A vBulletin 4 database abstraction layer for Entity Framework Core - OSS under [
 It is based on the current V2.1 LTS release of Entity Framework Core.
 
 ## Feature state
+![Complete](https://u-img.net/img/8798Dw.png) Full completed 
+![Partly implemented](https://u-img.net/img/5113Ab.png) Partly implemented
+![Not implemented yet](https://u-img.net/img/2301Ja.png) Not implemented (yet)
 
+### Entities
 | Entity  | State | Comment |
 | ------------- | ------------- |
 | VBCommonSettings | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Designed as abstraction for setting groups
@@ -22,10 +26,6 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 | VBCustomAvatar | ![Complete](https://u-img.net/img/8798Dw.png)
 | VBUserGroup  | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Forum & Admin permissions implemented, rest of the permissions missing
 | VBUser | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Some enums need to figured out. A few values are unknown and implemented raw
-
-![Complete](https://u-img.net/img/8798Dw.png) Full completed 
-![Partly implemented](https://u-img.net/img/5113Ab.png) Partly implemented
-![Not implemented yet](https://u-img.net/img/2301Ja.png) Not implemented (yet)
 
 ## Get started
 ToDo: NuGet Package
