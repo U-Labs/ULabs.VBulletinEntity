@@ -19,6 +19,7 @@ namespace ULabs.VBulletinEntityDemo.Models {
                 .Take(limit)
                 .ToList();
             Posts = db.Posts.OrderByDescending(post => post.CreatedTimeRaw)
+                .Include(post => post.Thread)
                 .Take(limit)
                 .ToList();
             Users = db.Users.OrderByDescending(user => user.JoinDateRaw)
@@ -29,6 +30,16 @@ namespace ULabs.VBulletinEntityDemo.Models {
                 .Include(session => session.User)
                 .Include(session => session.InThread)
                 .Take(limit)
+                .ToList();
+            var pms = db.Messages.OrderByDescending(m => m.Id)
+                .Include(m => m.Text)
+                .Include(m => m.ParentMessage)
+                .Take(20)
+                .ToList();
+            var settings = db.Settings.ToList();
+            var forums = db.Forums.Include(f => f.Parent)
+                .Include(f => f.LastPostAuthor)
+                .Include(f => f.Permissions)
                 .ToList();
         }
     }
