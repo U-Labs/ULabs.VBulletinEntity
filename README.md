@@ -6,6 +6,7 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 
 | Entity  | State | Comment |
 | ------------- | ------------- |
+| VBSettings | ![Complete](https://u-img.net/img/8798Dw.png)
 | VBThreadRead | ![Complete](https://u-img.net/img/8798Dw.png)
 | VBThread | ![Complete](https://u-img.net/img/8798Dw.png)
 | VBPost | ![Complete](https://u-img.net/img/8798Dw.png)
