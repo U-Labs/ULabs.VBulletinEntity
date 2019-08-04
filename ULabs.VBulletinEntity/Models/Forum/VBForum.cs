@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
+using ULabs.VBulletinEntity.Models.User;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.Models.Forum {
@@ -11,35 +13,88 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         [Column("forumid")]
         public int Id { get; set; }
 
+        public int StyleId { get; set; }
         public string Title { get; set; }
 
-        [NotMapped]
-        public string SeoTitle {
-            get => ContentTools.SeoTitle(Title);
-        }
+        [Column("title_clean")]
+        public string TitleClean { get; set; }
 
-        public int LastThreadId { get; set; }
+        // ToDo: Implement enum
+        [Column("options")]
+        public int OptionsRaw { get; set; }
 
-        [Column("lastthread")]
-        public string LastThreadTitle { get; set; }
+        public bool ShowPrivate { get; set; }
 
-        public int LastPostId { get; set; }
-
-        [Column("lastposter")]
-        public string LastPosterUsername { get; set; }
+        // ToDo: Implement enum
+        [Column("displayorder")]
+        public int DisplayOrderRaw { get; set; }
 
         [Column("replycount")]
         public int PostCount { get; set; }
 
-        public int ThreadCount { get; set; }
-
         [Column("lastpost")]
         public int LastPostDateRaw { get; set; }
 
-        public List<VBForumPermission> Permissions { get; set; }
+        [Column("lastposter")]
+        public string LastPosterName { get; set; }
+        public int LastPostId { get; set; }
+        public VBPost LastPost { get; set; }
+
+        [Column("lastthread")]
+        public string LastThreadTitle { get; set; }
+        public int LastThreadId { get; set; }
+        public int LastIconId { get; set; }
+
+        [MaxLength(250)]
+        public string LastPrefixId { get; set; }
+
+        [Column("threadcount")]
+        public int ThreadsCount { get; set; }
+        public int ThreadCount { get; set; }
+        public int Daysprune { get; set; }
+        public string NewPostEmail { get; set; }
+        public string NewThreadEmail { get; set; }
+        public int? ParentId { get; set; }
+        public VBForum Parent { get; set; }
+
+        [Column("parentlist"), MaxLength(250)]
+        public string ParentListRaw { get; set; }
+
+        [MaxLength(50)]
+        public string Password { get; set; }
+
+        [MaxLength(200)]
+        public string Link { get; set; }
 
         [Column("childlist")]
         public string ChildListRaw { get; set; }
+
+        [MaxLength(50)]
+        public string DefaultSortField { get; set; }
+
+        [Column("defaultsortorder")]
+        public string DefaultSortOrderRaw { get; set; }
+
+        [MaxLength(100)]
+        public string ImagePrefix { get; set; }
+
+        [Column("lastposterid")]
+        public int LastPostAuthorId { get; set; }
+        public VBUser LastPostAuthor { get; set; }
+        public List<VBForumPermission> Permissions { get; set; }
+
+        [NotMapped]
+        public VBForumDefaultSortOrder DefaultSortOrder {
+            get {
+                // Convert the lowercase "desc" from vBulletin to uppercase "Desc" that matches our enum value
+                if(string.IsNullOrEmpty(DefaultSortOrderRaw) || DefaultSortOrderRaw.Length == 0) {
+                    return default;
+                }
+                string upperDefaultSortOrder = Char.ToUpperInvariant(DefaultSortOrderRaw[0]) + DefaultSortOrderRaw.Substring(1, DefaultSortOrderRaw.Length - 1);
+                return (VBForumDefaultSortOrder)Enum.Parse(typeof(VBForumDefaultSortOrder), upperDefaultSortOrder);
+            }
+            set => DefaultSortOrderRaw = value.ToString();
+        }
 
         [NotMapped]
         public List<int> ChildList {
@@ -59,10 +114,10 @@ namespace ULabs.VBulletinEntity.Models.Forum {
             }
         }
 
-        // ToDo: Some attributes missing
-
-        public int? ParentId { get; set; }
-        public VBForum Parent { get; set; }
+        [NotMapped]
+        public string SeoTitle {
+            get => ContentTools.SeoTitle(Title);
+        }
 
         [NotMapped]
         public DateTime LastPostDate {
@@ -72,10 +127,12 @@ namespace ULabs.VBulletinEntity.Models.Forum {
 
         [NotMapped]
         public string HtmlDecodedTitle {
-            get {
-                var decoded = HttpUtility.HtmlDecode(Title);
-                return decoded;
-            }
+            get => HttpUtility.HtmlDecode(Title);
         }
+    }
+
+    public enum VBForumDefaultSortOrder {
+        Asc,
+        Desc
     }
 }
