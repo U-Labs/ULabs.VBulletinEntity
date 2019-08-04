@@ -19,11 +19,12 @@ namespace ULabs.VBulletinEntity.Models.Message {
 
         public int FolderId { get; set; }
 
-        // ToDo: Check what messageread means (We have 0/1/2)
         [Column("messageread")]
         public int MessageReadRaw { get; set; }
 
-        public int ParentPmId { get; set; }
+        [Column("parentpmid")]
+        public int ParentMessageId { get; set; }
+        public VBMessage ParentMessage { get; set; }
 
         public VBMessageReadState MessageRead {
             get => (VBMessageReadState)Enum.Parse(typeof(VBMessageReadState), MessageReadRaw.ToString());
