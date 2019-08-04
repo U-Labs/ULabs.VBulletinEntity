@@ -11,20 +11,10 @@ namespace ULabs.VBulletinEntity.Models.Config {
         [Column("varname"), Key]
         public string Name { get; set; }
 
+        [MaxLength(50)]
         public string GroupTitle { get; set; }
-
-        [Column(TypeName = "MEDIUMTEXT")]
         public string Value { get; set; }
-        
-        [NotMapped]
-        public string StringValue {
-            get { return Value.ToString(); }
-        }
-
-        [NotMapped]
-        public int IntValue {
-            get { return int.Parse(StringValue); }
-        }
+        public string DefaultValue { get; set; }
 
         public string OptionCode { get; set; }
 
@@ -36,7 +26,23 @@ namespace ULabs.VBulletinEntity.Models.Config {
 
         [Column("datatype")]
         public string DataTypeRaw { get; set; }
-        
+
+        [MaxLength(25)]
+        public string Product { get; set; }
+
+        public string ValidationCode { get; set; }
+        public int Blacklist { get; set; }
+
+        [NotMapped]
+        public string StringValue {
+            get { return Value.ToString(); }
+        }
+
+        [NotMapped]
+        public int IntValue {
+            get { return int.Parse(StringValue); }
+        }
+
         [NotMapped]
         public VBSettingsType DataType {
             get {
@@ -48,11 +54,5 @@ namespace ULabs.VBulletinEntity.Models.Config {
             }
             set { DataTypeRaw = value.ToString().ToLower(); }
         }
-
-        public string Product { get; set; }
-
-        public string ValidationCode { get; set; }
-
-        public int Blacklist { get; set; }
     }
 }
