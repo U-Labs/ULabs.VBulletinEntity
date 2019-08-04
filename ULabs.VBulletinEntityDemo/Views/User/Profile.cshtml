@@ -1,0 +1,54 @@
+﻿@model VBUser
+<style>
+    table {
+        margin-top: 25px;
+    }
+    table tr td:first-child {
+        padding-right: 20px;
+        font-weight: bold;
+    }
+</style>
+<div class="row">
+    <div class="col-lg-12 ml-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Profile of @Model.UserName</li>
+            </ol>
+        </nav>
+
+        <h1>
+            @Model.UserName
+        </h1>
+        <div>Last Activity: @Model.LastActivityTime.ToString()</div>
+
+        <table>
+            <tr>
+                <td>Registration date</td>
+                <td>@Model.JoinDate.ToLocalTime().ToString()</td>
+            </tr>
+
+            <tr>
+                <td>Primary Group</td>
+                <td>@Html.Raw(Model.UserGroup.Title)</td>
+            </tr>
+
+            <tr>
+                <td>Posts</td>
+                <td>@Model.PostsCount</td>
+            </tr>
+
+            <tr>
+                <td>Mail</td>
+                <td>@Model.Email</td>
+            </tr>
+
+            @if (Model.Birthday.HasValue) {
+                <tr>
+                    <td>Birthday</td>
+                    <td>@Model.Birthday.Value.ToShortDateString()</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>

@@ -21,7 +21,7 @@ namespace ULabs.VBulletinEntityDemo {
 
         public void ConfigureServices(IServiceCollection services) {
             services.AddVBDbContext(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
-
+            services.AddVBManagers();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 

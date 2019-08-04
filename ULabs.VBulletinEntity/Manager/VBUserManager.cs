@@ -25,7 +25,7 @@ namespace ULabs.VBulletinEntity.Manager {
                 .Include(u => u.DisplayGroup)
                 .Where(predicate);
 
-            IOrderedQueryable<VBUser> orderedQuery = null;
+            IOrderedQueryable<VBUser> orderedQuery = query.OrderBy(u => u.Id);
             if (orderBy != null) {
                 if (descOrder) {
                     orderedQuery = query.OrderByDescending(orderBy);
