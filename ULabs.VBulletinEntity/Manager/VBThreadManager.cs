@@ -16,8 +16,6 @@ namespace ULabs.VBulletinEntity.Manager {
         readonly VBForumManager forumManager;
         readonly VBUserManager userManager;
         readonly IVBCache cache;
-        // ToDo: Not hardcoded
-        int[] ignoredForumIds = new int[] { 36 };
 
         public VBThreadManager(VBDbContext db, VBForumManager forumManager, VBUserManager userManager, IVBCache cache) {
             this.db = db;
@@ -125,7 +123,7 @@ namespace ULabs.VBulletinEntity.Manager {
             var filteredForums = forums.AsEnumerable();
 
             if (ignoredCategoryForumIds != null) {
-                filteredForums = filteredForums.Where(forumKvp => !ignoredForumIds.Contains(forumKvp.Key.Id))
+                filteredForums = filteredForums.Where(forumKvp => !ignoredCategoryForumIds.Contains(forumKvp.Key.Id))
                     .ToList();
             }
 
@@ -231,12 +229,12 @@ namespace ULabs.VBulletinEntity.Manager {
             return query;
         }
 
-        public async Task<List<VBThread>> GetNewestThreadsAsync(List<int> forumIds, int offset = 0, int count = 10) {
+        public async Task<List<VBThread>> GetNewestThreadsAsync(List<int> forumIds, List<int>ignoredForumIds = null, int offset = 0, int count = 10) {
             // Forum is required to build VBSEO like links in format {forumTitle}-{forumId}/{threadTitle}-{threadId}
             var threads = await db.Threads.Include(t => t.Forum)
                 .Include(t => t.Author)
                     .ThenInclude(a => a.CustomAvatar)
-                .Where(t => forumIds.Contains(t.ForumId) && !ignoredForumIds.Contains(t.ForumId))
+                .Where(t => forumIds.Contains(t.ForumId) && (ignoredForumIds == null || !ignoredForumIds.Contains(t.ForumId)))
                 .OrderByDescending(t => t.LastPostTimeRaw)
                 .Skip(offset)
                 .Take(count)
