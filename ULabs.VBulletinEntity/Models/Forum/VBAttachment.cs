@@ -10,11 +10,10 @@ using ULabs.VBulletinEntity.Tools;
 namespace ULabs.VBulletinEntity.Models.Forum {
     [Table("attachment")]
     public class VBAttachment {
-        [Column("attachmentid"), Key]
+        [Column("attachmentid")]
         public int Id { get; set; }
 
         public int ContentTypeId { get; set; }
-
         public int ContentId { get; set; }
 
         public int UserId { get; set; }
@@ -22,12 +21,6 @@ namespace ULabs.VBulletinEntity.Models.Forum {
 
         [Column("dateline")]
         public int CreatedTimeRaw { get; set; }
-
-        [NotMapped]
-        public DateTime CreatedTime {
-            get { return CreatedTimeRaw.ToDateTime(); }
-            set { CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
-        }
 
         public int FileDataId { get; set; }
         public VBFileData FileData { get; set; }
@@ -39,16 +32,17 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         public int DownloadsCount { get; set; }
 
         public string PostHash { get; set; }
-
         public string FileName { get; set; }
-
         public string Caption { get; set; }
-
         public int ReportThreadId { get; set; }
-
         public string Settings { get; set; }
-
         public int DisplayOrder { get; set; }
+
+        [NotMapped]
+        public DateTime CreatedTime {
+            get { return CreatedTimeRaw.ToDateTime(); }
+            set { CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
+        }
 
         [NotMapped]
         public string FilePath {
