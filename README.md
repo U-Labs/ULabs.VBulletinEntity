@@ -6,6 +6,8 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 
 | Entity  | State | Comment |
 | ------------- | ------------- |
+| VBFileData | ![Complete](https://u-img.net/img/8798Dw.png)
+| VBAttachment | ![Complete](https://u-img.net/img/8798Dw.png)
 | VBMessage | ![Complete](https://u-img.net/img/8798Dw.png)
 | VBMessageText | ![Complete](https://u-img.net/img/8798Dw.png)
 | VBSession | ![Complete](https://u-img.net/img/8798Dw.png)
