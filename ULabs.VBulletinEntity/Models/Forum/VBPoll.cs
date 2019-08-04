@@ -8,7 +8,7 @@ using ULabs.VBulletinEntity.Tools;
 namespace ULabs.VBulletinEntity.Models.Forum {
     [Table("poll")]
     public class VBPoll {
-        [Column("pollid"), Key]
+        [Column("pollid")]
         public int Id { get; set; }
 
         [MaxLength(100)]
@@ -16,12 +16,6 @@ namespace ULabs.VBulletinEntity.Models.Forum {
 
         [Column("dateline")]
         public int CreatedTimeRaw { get; set; }
-
-        [NotMapped]
-        public DateTime CreatedTime {
-            get { return CreatedTimeRaw.ToDateTime(); }
-            set { CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
-        }
 
         [Column("options")]
         public string OptionsRaw { get; set; }
@@ -37,12 +31,6 @@ namespace ULabs.VBulletinEntity.Models.Forum {
 
         [Column("timeout")]
         public int TimeoutDays { get; set; }
-
-        [NotMapped]
-        public DateTime Timeout {
-            get { return CreatedTime.AddMonths(TimeoutDays).ForceUtc(); }
-            set { TimeoutDays = (int)value.Subtract(CreatedTime).TotalDays; }
-        }
 
         [Column("multiple")]
         public bool MultipleOptionsPossible { get; set; }
@@ -60,6 +48,18 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         public DateTime LastVoteTime {
             get { return LastVoteTimeRaw.ToDateTime(); }
             set { LastVoteTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
+        }
+
+        [NotMapped]
+        public DateTime CreatedTime {
+            get => CreatedTimeRaw.ToDateTime();
+            set => CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
+
+        [NotMapped]
+        public DateTime Timeout {
+            get { return CreatedTime.AddMonths(TimeoutDays).ForceUtc(); }
+            set { TimeoutDays = (int)value.Subtract(CreatedTime).TotalDays; }
         }
     }
 }
