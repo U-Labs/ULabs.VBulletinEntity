@@ -14,7 +14,11 @@
 
             @foreach (var thread in Model.Threads) {
                 <tr>
-                    <td>@thread.Title</td>
+                    <td>
+                        <a asp-controller="Thread" asp-action="View" asp-route-id="@thread.Id">
+                            @thread.Title
+                        </a>
+                    </td>
                     <td>@thread.CreatedTime.ToString()</td>
                     <td>
                         <a asp-controller="User" asp-action="Profile" asp-route-id="@thread.AuthorId">

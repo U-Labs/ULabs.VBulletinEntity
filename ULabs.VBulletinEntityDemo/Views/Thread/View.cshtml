@@ -1,0 +1,7 @@
+﻿@model KeyValuePair<VBThread, List<VBPost>>
+@{ 
+    var thread = Model.Key;
+    var replys = Model.Value;
+}
+<h1>@thread.Title</h1>
+<div>@replys.Count  replys</div>
