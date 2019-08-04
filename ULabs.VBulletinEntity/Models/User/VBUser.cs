@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -225,7 +226,7 @@ namespace ULabs.VBulletinEntity.Models.User {
 
         [NotMapped]
         public DateTime? Birthday {
-            get => string.IsNullOrEmpty(BirthdayRaw) ? null : (DateTime?)DateTime.Parse(BirthdayRaw);
+            get => string.IsNullOrEmpty(BirthdayRaw) ? null : (DateTime?)DateTime.ParseExact(BirthdayRaw, "MM-dd-yyyy", CultureInfo.InvariantCulture);
             set {
                 if(value.HasValue) {
                     BirthdayRaw = value.Value.ToString("MM-dd-yy");
