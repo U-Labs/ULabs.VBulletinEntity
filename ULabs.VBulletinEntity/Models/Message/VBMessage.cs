@@ -7,7 +7,7 @@ using System.Text;
 namespace ULabs.VBulletinEntity.Models.Message {
     [Table("pm")]
     public class VBMessage {
-        [Column("pmid"), Key]
+        [Column("pmid")]
         public int Id { get; set; }
 
         [Column("pmtextid")]
@@ -24,5 +24,16 @@ namespace ULabs.VBulletinEntity.Models.Message {
         public int MessageReadRaw { get; set; }
 
         public int ParentPmId { get; set; }
+
+        public VBMessageReadState MessageRead {
+            get => (VBMessageReadState)Enum.Parse(typeof(VBMessageReadState), MessageReadRaw.ToString());
+            set => MessageReadRaw = (int)value;
+        }
+    }
+
+    public enum VBMessageReadState {
+        Unread = 0,
+        Read = 1,
+        Answered = 2
     }
 }
