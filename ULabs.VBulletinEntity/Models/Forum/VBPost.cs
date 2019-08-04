@@ -12,13 +12,9 @@ namespace ULabs.VBulletinEntity.Models.Forum {
     [Table("post")]
     [JsonObject(IsReference = true)]
     public class VBPost {
-        [Column("postid"), Key]
+        [Column("postid")]
         public int Id { get; set; }
 
-        [Column("title")]
-        public string Title { get; set; }
-
-        [Column("threadid")]
         public int ThreadId { get; set; }
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
         public VBThread Thread { get; set; }
@@ -28,7 +24,7 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
         public VBPost ParentPost { get; set; }
 
-        [Column("username")]
+        [Column("username"), MaxLength(100)]
         public string AuthorName { get; set; }
 
         [Column("userid")]
@@ -36,20 +32,14 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         [JsonProperty(ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
         public VBUser Author { get; set; }
 
+        [MaxLength(250)]
+        public string Title { get; set; }
+
         [Column("dateline")]
         public int CreatedTimeRaw { get; set; }
 
-        [NotMapped]
-        public DateTime CreatedTime {
-            get { return CreatedTimeRaw.ToDateTime(); }
-            set { CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value); }
-        }
-
         [Column("pagetext")]
         public string Text { get; set; }
-
-        [NotMapped]
-        public string HtmlText { get; set; }
 
         [Column("allowsmilie")]
         public bool AllowSmilies { get; set; }
@@ -58,19 +48,13 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         public bool ShowSignature { get; set; }
 
         [Column("ipaddress")]
-        public string IpAddress { get; set; } = "";
+        public string IpAddress { get; set; }
 
         [Column("iconid")]
         public int IconId { get; set; } = 0;
 
         [Column("visible")]
         public int VisibilityRaw { get; set; }
-
-        [NotMapped]
-        public VBPostVisibleState Visibility {
-            get => (VBPostVisibleState)VisibilityRaw;
-            set => VisibilityRaw = (int)value;
-        }
 
         [Column("attach")]
         public bool HasAttachment { get; set; }
@@ -85,14 +69,9 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         public int ThanksCount { get; set; }
 
         [Column("htmlstate")]
-        public string PosterCount { get; set; } = "on_nl2br";
+        public string HtmlStateRaw { get; set; } = "on_nl2br";
 
         public List<VBAttachment> Attachments { get; set; }
-
-        public static string RemoveIncompatibleCharsFromText(string source) {
-            string cleanText = Regex.Replace(source, @"\p{Cs}", "");
-            return cleanText;
-        }
 
         public VBPost() { }
 
@@ -109,10 +88,55 @@ namespace ULabs.VBulletinEntity.Models.Forum {
 
             Visibility = visibility;
         }
+
+        [NotMapped]
+        public VBPostHtmlState HtmlState {
+            // Mapping OnNl2Br enum value to VBs raw on_nl2br
+            get {
+                string rawState = HtmlStateRaw;
+                if(rawState.Contains("_")) {
+                    rawState = "OnNl2Br"; 
+                }
+                return (VBPostHtmlState)Enum.Parse(typeof(VBPostHtmlState), rawState);
+            }
+            set {
+                if(value == VBPostHtmlState.OnNl2Br) {
+                    HtmlStateRaw = "on_nl2br";
+                }else {
+                    HtmlStateRaw= value.ToString().ToLower();
+                }
+            }
+        }
+
+        [NotMapped]
+        public string HtmlText { get; set; }
+
+        [NotMapped]
+        public DateTime CreatedTime {
+            get => CreatedTimeRaw.ToDateTime();
+            set => CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
+
+        [NotMapped]
+        public VBPostVisibleState Visibility {
+            get => (VBPostVisibleState)VisibilityRaw;
+            set => VisibilityRaw = (int)value;
+        }
+
+        public static string RemoveIncompatibleCharsFromText(string source) {
+            string cleanText = Regex.Replace(source, @"\p{Cs}", "");
+            return cleanText;
+        }
     }
 
     public enum VBPostVisibleState {
         Visible = 1,
         Deleted = 2
+    }
+
+    public enum VBPostHtmlState {
+        Off,
+        On,
+        OnNl2Br
     }
 }
