@@ -48,6 +48,7 @@ Register the database services with the specified Connection String:
 ```cs
 using System;
 using ULabs.VBulletinEntity.DatabaseExtensions;
+using ULabs.VBulletinEntity.Caching;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
 namespace ULabs.VBulletinEntityDemo {
@@ -55,7 +56,7 @@ namespace ULabs.VBulletinEntityDemo {
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services) {
-            services.AddVBDbContext(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+            services.AddVBDbContext<VBNoCacheDummy>(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
             // For using Managers, see above
             services.AddVBManagers();
             // ...
@@ -68,6 +69,25 @@ Tipp for local developing: Use `appsettings.Development.json` to override the Co
 to your `.gitignore`, no credentials can be checked in by accident. This approach is used in our example project.  
 ASP.NET Core automatically adds files following the pattern `appsettings.{Environment}.json` when existing. 
 So keep in mind, that this only works while `ASPNETCORE_ENVIRONMENT` is set to `Development`. 
+
+### Caching
+Performance can be improved by caching data received from the database. This results in a faster page load time and less server load. When using the managers,
+you can enable in-memory caching by passing our cache-provider instead of the default dummy one: 
+
+```cs
+services.AddVBDbContext<VBCache>(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+```
+
+The `VBCache` provider simply uses 
+[Microsoft.Extensions.Caching.Memory](https://docs.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-2.1). So the data is 
+cached in the memory of your application server. But you also could use e.g. Redis or any other caching system by implemeting a provider based 
+on [IVBCache interface](file://ULabs.VBulletinEntity/Cache/IVBCache.cs).
+
+**Important**
+
+This cache is designed to work with our Manager abstractions. They care about invalidating the cache (e.g. post after modification). But it's not possible
+to automatically detect changes from outside, even not the DbContext. So **don't use** caching if you do write querys using raw DbContext, a vBulletin
+installation runs in parallel or any other software modifies the database from outside. 
 
 ## Usage
 You can choose between two ways of accessing VB data: 
