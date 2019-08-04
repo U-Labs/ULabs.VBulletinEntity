@@ -48,11 +48,12 @@ namespace ULabs.VBulletinEntity.Models.Config {
             get {
                 var names = Enum.GetNames(typeof(VBSettingsType))
                     .ToList();
-                if (Enum.TryParse(DataTypeRaw, out VBSettingsType settingsType))
+                if (Enum.TryParse(DataTypeRaw, out VBSettingsType settingsType)) {
                     return settingsType;
+                }
                 throw new Exception($"Invalid settings data type: {DataTypeRaw}");
             }
-            set { DataTypeRaw = value.ToString().ToLower(); }
+            set => DataTypeRaw = value.ToString().ToLower();
         }
     }
 }
