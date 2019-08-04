@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
+using ULabs.VBulletinEntity.Models.User;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.Models.Message {
     [Table("pmtext")]
     public class VBMessageText {
-        [Column("pmtextid"), Key]
+        [Column("pmtextid")]
         public int Id { get; set; }
 
         public int FromUserId { get; set; }
+        public VBUser FromUser { get; set; }
 
         public string FromUserName { get; set; }
-
         public string Title { get; set; }
-
         public string Message { get; set; }
 
         [Column("touserarray")]
