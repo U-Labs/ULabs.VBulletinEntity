@@ -226,6 +226,7 @@ namespace ULabs.VBulletinEntity.Models.User {
 
         [NotMapped]
         public DateTime? Birthday {
+            // https://stackoverflow.com/a/5938717/3276634
             get => string.IsNullOrEmpty(BirthdayRaw) ? null : (DateTime?)DateTime.ParseExact(BirthdayRaw, "MM-dd-yyyy", CultureInfo.InvariantCulture);
             set {
                 if(value.HasValue) {
