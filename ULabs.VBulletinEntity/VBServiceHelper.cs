@@ -35,6 +35,7 @@ namespace ULabs.VBulletinEntity {
             services.AddScoped<VBThreadManager>();
             services.AddScoped<VBForumManager>();
             services.AddScoped<VBSettingsManager>();
+            services.AddScoped<VBSessionManager>();
         }
     }
 }
