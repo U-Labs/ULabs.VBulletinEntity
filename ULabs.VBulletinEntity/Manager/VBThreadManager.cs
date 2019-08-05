@@ -301,7 +301,7 @@ namespace ULabs.VBulletinEntity.Manager {
             forum.LastThreadId = thread.Id;
             forum.LastThreadTitle = thread.Title;
             forum.PostCount++;
-            forum.ThreadCount++;
+            forum.ThreadsCount++;
             forum.LastPostDate = DateTime.UtcNow;
             await db.SaveChangesAsync();
 

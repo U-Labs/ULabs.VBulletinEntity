@@ -50,7 +50,6 @@ namespace ULabs.VBulletinEntity.Models.Forum {
 
         [Column("threadcount")]
         public int ThreadsCount { get; set; }
-        public int ThreadCount { get; set; }
         public int Daysprune { get; set; }
         public string NewPostEmail { get; set; }
         public string NewThreadEmail { get; set; }
