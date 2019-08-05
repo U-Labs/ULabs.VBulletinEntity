@@ -1,0 +1,14 @@
+﻿@model VBCommonSettings
+
+<h1>Common settings</h1>
+
+@{ 
+    var properties = Model.GetType().GetProperties();
+}
+
+@foreach(var property in properties) {
+    <div>
+        <strong>@property.Name</strong>
+        @property.GetValue(Model)
+    </div>
+}
