@@ -8,9 +8,10 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 ![Not implemented yet](https://u-img.net/img/2301Ja.png) Not implemented (yet)
 
 ### Entities
+Every entity represents a database table. The following list shows which are already implemented/need some work. 
+
 | Entity  | State | Comment |
 | ------------- | ------------- | -------------
-| VBCommonSettings | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Designed as abstraction for setting groups
 | VBSettings | ![Complete](https://u-img.net/img/8798Dw.png) |
 | VBThreadRead | ![Complete](https://u-img.net/img/8798Dw.png) |
 | VBThread | ![Complete](https://u-img.net/img/8798Dw.png) |
@@ -26,6 +27,13 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 | VBCustomAvatar | ![Complete](https://u-img.net/img/8798Dw.png) |
 | VBUserGroup  | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Forum & Admin permissions implemented, rest of the permissions missing
 | VBUser | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Some enums need to figured out. A few values are unknown and implemented raw
+
+### Settings
+Settings are stored in a single table, while `VBSettingsManager` map them to entity models similar as the ones above. 
+
+| Group model| State | Comment |
+| ------------- | ------------- | -------------
+| VBCommonSettings | ![Complete](https://u-img.net/img/8798Dw.png) | Designed as abstraction for setting groups
 
 ## Get started
 ToDo: NuGet Package
@@ -128,8 +136,14 @@ Currently this public repo contains the following managers:
 * [`VBUserManager`](./ULabs.VBulletinEntity/Manager/VBUserManager.cs)
 * [`VBThreadManager`](./ULabs.VBulletinEntity/Manager/VBThreadManager.cs)
 * [`VBForumManager`](./ULabs.VBulletinEntity/Manager/VBForumManager.cs)
+* [`VBSettingsManager`](./ULabs.VBulletinEntity/Manager/VBSettingsManager.cs)
 
 Simply register the required service in e.g. a controller constructor. 
+
+#### VBSettingsManager
+VBulletin has a lot of settings, divided into multiple groups. Addons can create their own settings groups. All of them got stored in the `setting` 
+table. To handle them in a clean and reuseable way, we use the `VBSettingsManager` to map every group to a entity model. The first one avaliable
+is `VBCommonSettings`. Find some working examples in the [SettingsController](./ULabs.VBulletinEntityDemo/Controllers/SettingsController.cs).
 
 ## Motivation
 This project is part of my approach to develop on a modern .NET Core application stack for vBulletin. I did some POCs, also on the database.
