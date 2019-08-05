@@ -60,7 +60,7 @@ We also sometimes changed the namings a bit to make it more clear. The column `l
 or for the timestamp. Since vBulletin itself added some suffixes (e.g. lastpost**id**), I made this more consistent. 
 
 ### `[Column("xyz")]` annotations
-Our `VBDbContext` automatically converts propertys to lowercase. So we don't need a column annotation if our property and the database column have
+Our `VBDbContext` automatically converts properties to lowercase. So we don't need a column annotation if our property and the database column have
 the same name and were only different by upper/lower case writing. Example: We have a database field called `avatarmaxsize`. Our model rewrite 
 it to `AvatarMaxSize`. No annotation is required. 
 
