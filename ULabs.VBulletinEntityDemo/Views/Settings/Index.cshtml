@@ -1,14 +1,19 @@
-﻿@model VBCommonSettings
+﻿@using System.Collections
+@model VBCommonSettings
 
 <h1>Common settings</h1>
 
-@{ 
+@{
     var properties = Model.GetType().GetProperties();
 }
 
-@foreach(var property in properties) {
-    <div>
-        <strong>@property.Name</strong>
-        @property.GetValue(Model)
-    </div>
+@foreach (var property in properties) {
+    var val = property.GetValue(Model);
+
+    @if (!(val is IList)) {
+        <div>
+            <strong>@property.Name</strong>
+            @val
+        </div>
+    }
 }
