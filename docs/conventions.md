@@ -36,6 +36,18 @@ As you can see, the entitys itself got a `VB` prefix. This should avoid confusio
 Fore sure you could work around this by using the full qualified name including it's namespace, but this messes up the code. So a simple prefix
 that make clear it's an vBulletin entity seems the better solution here. 
 
+### Property order
+We follow the column order of the database. Navigation properties for FKs are placed directly after the FK itself:
+
+```cs
+public int LastPostId { get; set; }
+public VBPost LastPost { get; set; }
+```
+
+Sometimes we need custom properties without db mapping. A common example are _raw data types_ like unix timestamps (see next section). Those properties
+were _not_ placed after their mapped database attributes. Instead, we first declare _all_ database properties, and then have a seperate section at the
+end for them. This should improve the overview, especially on larger models with many properties. 
+
 ### _Raw_ data types
 Another problem is the usage of low level data types like unix timestamps. Of course we could use this in C#. But the `DateTime` class 
 from .NET Core make life much easier when working with those data. So I decided to also convert those values. If this is the case, the 
