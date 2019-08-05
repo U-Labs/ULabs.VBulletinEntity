@@ -22,9 +22,8 @@ namespace ULabs.VBulletinEntity.Attributes {
             // Session shouldn't be null any more since we implemented guest sessions, too
             if (!userSession.LoggedIn) {
                 var settingsManager = GetService<VBSettingsManager>(context);
-                var resp = context.HttpContext.Response;
                 // ToDo: Redirect to specific login page if exists (login.php redirects to index)
-                context.Result = new RedirectResult(settingsManager.GetCommonSettings().BoardUrl);
+                context.Result = new RedirectResult(settingsManager.GetCommonSettings().BaseUrl);
             }
         }
 
