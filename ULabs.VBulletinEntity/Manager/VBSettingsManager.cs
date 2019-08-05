@@ -51,7 +51,10 @@ namespace ULabs.VBulletinEntity.Manager {
                 // ToDo: Handle other data types if required
                 if (prop.PropertyType == typeof(int)) {
                     prop.SetValue(settings, int.Parse(val));
-                } else {
+                } else if(prop.PropertyType == typeof(bool)) {
+                    bool boolValue = val == "1";
+                    prop.SetValue(settings, boolValue);
+                }else {
                     prop.SetValue(settings, val);
                 }
             });
