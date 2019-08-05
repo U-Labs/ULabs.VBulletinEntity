@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Reflection;
 using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Models.Config;
 
@@ -37,17 +39,26 @@ namespace ULabs.VBulletinEntity.Manager {
             var settings = new T();
             var props = settings.GetType()
                 .GetProperties()
-                // Column Attribute is required here to divide between real db properties and wrappers like CookieTimeout for CookieTimeoutRaw
-                .Where(prop => Attribute.IsDefined(prop, typeof(ColumnAttribute)))
-                .ToList();
-            var sqlKeys = props.Select(prop => GetAttributeFrom<ColumnAttribute>(settings, prop.Name).Name);
+                // NotMapped divides between real db properties and wrappers like CookieTimeout for CookieTimeoutRaw
+                .Where(prop => !Attribute.IsDefined(prop, typeof(NotMappedAttribute)))
+                .Select(prop => {
+                    // Convention: If we don't have a [Column] attribute, we use the property name in lowercase (same convention as for the db entity models)
+                    string keyName = prop.Name.ToLower();
+                    if (Attribute.IsDefined(prop, typeof(ColumnAttribute))) {
+                        keyName = GetAttributeFrom<ColumnAttribute>(settings, prop.Name).Name;
+                    }
+
+                    return new KeyValuePair<string, PropertyInfo>(keyName, prop);
+                })
+                .ToDictionary(x => x.Key, y => y.Value);
+
+            var sqlKeys = props.Select(prop => prop.Key);
             var rawSettings = db.Settings.Where(setting => sqlKeys.Contains(setting.Name))
                 .ToList();
 
-            props.ForEach(prop => {
-                var keyName = GetAttributeFrom<ColumnAttribute>(settings, prop.Name).Name;
-                var val = rawSettings.SingleOrDefault(setting => setting.Name == keyName).StringValue;
-
+            foreach(var kvp in props) { 
+                var val = rawSettings.SingleOrDefault(setting => setting.Name == kvp.Key).StringValue;
+                var prop = kvp.Value;
                 // ToDo: Handle other data types if required
                 if (prop.PropertyType == typeof(int)) {
                     prop.SetValue(settings, int.Parse(val));
@@ -57,7 +68,7 @@ namespace ULabs.VBulletinEntity.Manager {
                 }else {
                     prop.SetValue(settings, val);
                 }
-            });
+            }
 
             return settings;
         }

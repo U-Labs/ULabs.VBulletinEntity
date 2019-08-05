@@ -68,6 +68,17 @@ We only need them, when renaming a property is required to fit our needs or simp
 columns. Using this conventions, no annotations were required in most attributes. They should only be used when required so they don't 
 inflate the models unnecessarily.
 
+### Settings Manager
+Every settings group is an entity. But by the database structure, we can't simply query them as other entites. `VBSettingsManager` can fetch an complete
+settings group (e.g. `VBCommonSettings`) in a single query. The following conventions apply here:
+* Use `[NotMapped]` annotations for custom properties that doesn't exist in the databsae (e.g. timestamp to `DateTime` mapping fields)
+* Property names got converted lowercase to `varname` of the `settings` table (`TosUrl` ~> `tosurl`)
+* If the property doesn't match (e.g. by convention) to the `varname` field, add a `[Column("<varname>")]` annotation:
+    ```cs
+    [Column("contactusoptions")]
+    public string ContactUsSubjectsRaw { get; set; }
+    ```
+
 ### Naming of _VBulletin_
 We generally write VBulletin with capital V and also capital B, since it's a proper name of the brand product. While `Db` is just an abbreviation
 for `Database`, it's written in lowercase, as recommended for C#. 
