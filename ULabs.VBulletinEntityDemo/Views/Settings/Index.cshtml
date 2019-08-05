@@ -7,13 +7,24 @@
     var properties = Model.GetType().GetProperties();
 }
 
-@foreach (var property in properties) {
-    var val = property.GetValue(Model);
+<table class="table">
+    <tr>
+        <th>Key</th>
+        <th>Value</th>
+    </tr>
 
-    @if (!(val is IList)) {
-        <div>
-            <strong>@property.Name</strong>
-            @val
-        </div>
+    @foreach (var property in properties) {
+        var val = property.GetValue(Model);
+        // Same visualization as in the admin panel if we have longer lists (e.g. whitelist of domains) that got displayed in a textarea with one entry per line
+        if(property.PropertyType == typeof(string)) {
+            val = ((string)val).Replace("\n", "<br>");
+        }
+
+        @if (!(val is IList)) {
+            <tr>
+                <td>@property.Name</td>
+                <td>@Html.Raw(val)</td>
+            </tr>
+        }
     }
-}
+</table>
