@@ -109,3 +109,30 @@
         </table>
     </div>
 </div>
+
+@{ 
+    var categories = Model.Forums.Where(f => f.ParentId == null)
+        .ToList();
+}
+<div class="row">
+    <div class="col-lg-8">
+        <h1>Main forums without childs</h1>
+        <table class="table">
+            <tr>
+                <th>Name</th>
+                <th>Last thread</th>
+                <th>Threads</th>
+                <th>Posts</th>
+            </tr>
+
+            @foreach (var forum in categories) {
+                <tr>
+                    <td>@Html.Raw(forum.Title)</td>
+                    <td>@forum.LastThreadTitle</td>
+                    <td>@forum.ThreadsCount</td>
+                    <td>@forum.PostCount</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>

@@ -12,6 +12,7 @@ namespace ULabs.VBulletinEntityDemo.Models {
         public List<VBPost> Posts { get; set; }
         public List<VBUser> Users { get; set; }
         public List<VBSession> Sessions { get; set; }
+        public List<VBForum> Forums { get; set; }
 
         public NewestContentModel(VBDbContext db, int limit) {
             Threads = db.Threads.OrderByDescending(thread => thread.CreatedTimeRaw)
@@ -31,13 +32,7 @@ namespace ULabs.VBulletinEntityDemo.Models {
                 .Include(session => session.InThread)
                 .Take(limit)
                 .ToList();
-            var pms = db.Messages.OrderByDescending(m => m.Id)
-                .Include(m => m.Text)
-                .Include(m => m.ParentMessage)
-                .Take(20)
-                .ToList();
-            var settings = db.Settings.ToList();
-            var forums = db.Forums.Include(f => f.Parent)
+            Forums = db.Forums.Include(f => f.Parent)
                 .Include(f => f.LastPostAuthor)
                 .Include(f => f.Permissions)
                 .ToList();
