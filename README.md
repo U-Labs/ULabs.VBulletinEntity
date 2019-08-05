@@ -162,6 +162,7 @@ Currently this public repo contains the following managers:
 * [`VBThreadManager`](./ULabs.VBulletinEntity/Manager/VBThreadManager.cs)
 * [`VBForumManager`](./ULabs.VBulletinEntity/Manager/VBForumManager.cs)
 * [`VBSettingsManager`](./ULabs.VBulletinEntity/Manager/VBSettingsManager.cs)
+* [`VBSessionManager`](./ULabs.VBulletinEntity/Manager/VBSessionManager.cs)
 
 Simply register the required service in e.g. a controller constructor. 
 
