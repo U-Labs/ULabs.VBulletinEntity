@@ -117,7 +117,7 @@ Now use the instance to write your LINQ queries. See the [NewestContentModel.cs]
 in our example project. It shows how to fetch the newest users, threads, posts and active sessions. Also relations are included, for example
 the forum of a thread. 
 
-### [High level Managers](./ULabs.VBulletinEntity/Managers)
+### High level Managers
 
 Our managers try to cover common use-cases for developing a .NET based board. This helps keeping VB and database related logic outside of your application
 project. While the managers will extended if needed, they doesn't aim to cover every special use-case. 
@@ -126,6 +126,8 @@ Managers are registered by adding `services.AddVBManagers()` to our `Startup.Con
 Currently this public repo contains the following managers:
 
 * [`VBUserManager`](./ULabs.VBulletinEntity/Manager/VBUserManager.cs)
+* [`VBThreadManager`](./ULabs.VBulletinEntity/Manager/VBThreadManager.cs)
+* [`VBForumManager`](./ULabs.VBulletinEntity/Manager/VBForumManager.cs)
 
 Simply register the required service in e.g. a controller constructor. 
 
