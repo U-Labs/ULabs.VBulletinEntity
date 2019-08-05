@@ -9,7 +9,7 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 
 ### Entities
 | Entity  | State | Comment |
-| ------------- | ------------- |
+| ------------- | ------------- | -------------
 | VBCommonSettings | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Designed as abstraction for setting groups
 | VBSettings | ![Complete](https://u-img.net/img/8798Dw.png) |
 | VBThreadRead | ![Complete](https://u-img.net/img/8798Dw.png) |
