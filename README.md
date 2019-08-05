@@ -11,19 +11,19 @@ It is based on the current V2.1 LTS release of Entity Framework Core.
 | Entity  | State | Comment |
 | ------------- | ------------- |
 | VBCommonSettings | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Designed as abstraction for setting groups
-| VBSettings | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBThreadRead | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBThread | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBPost | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBPoll | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBForumPermission | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBForum | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBFileData | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBAttachment | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBMessage | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBMessageText | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBSession | ![Complete](https://u-img.net/img/8798Dw.png)
-| VBCustomAvatar | ![Complete](https://u-img.net/img/8798Dw.png)
+| VBSettings | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBThreadRead | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBThread | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBPost | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBPoll | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBForumPermission | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBForum | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBFileData | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBAttachment | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBMessage | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBMessageText | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBSession | ![Complete](https://u-img.net/img/8798Dw.png) |
+| VBCustomAvatar | ![Complete](https://u-img.net/img/8798Dw.png) |
 | VBUserGroup  | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Forum & Admin permissions implemented, rest of the permissions missing
 | VBUser | ![Partly implemented](https://u-img.net/img/5113Ab.png) | Some enums need to figured out. A few values are unknown and implemented raw
 
