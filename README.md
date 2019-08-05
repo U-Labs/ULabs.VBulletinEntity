@@ -163,6 +163,7 @@ Currently this public repo contains the following managers:
 * [`VBForumManager`](./ULabs.VBulletinEntity/Manager/VBForumManager.cs)
 * [`VBSettingsManager`](./ULabs.VBulletinEntity/Manager/VBSettingsManager.cs)
 * [`VBSessionManager`](./ULabs.VBulletinEntity/Manager/VBSessionManager.cs)
+* [`VBAttachmentManager`](./ULabs.VBulletinEntity/Manager/VBAttachmentManager.cs)
 
 Simply register the required service in e.g. a controller constructor. 
 
