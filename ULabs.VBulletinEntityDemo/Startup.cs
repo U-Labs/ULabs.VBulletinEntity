@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using ULabs.VBulletinEntity;
 using ULabs.VBulletinEntity.Caching;
+using ULabs.VBulletinEntity.Models.Config;
 
 namespace ULabs.VBulletinEntityDemo {
     public class Startup {
@@ -21,7 +22,8 @@ namespace ULabs.VBulletinEntityDemo {
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services) {
-            services.AddVBDbContext<VBNoCacheDummy>(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+            var vbConfig = new VBConfig(Configuration.GetValue<string>("VBCookieSalt"));
+            services.AddVBDbContext<VBNoCacheDummy>(vbConfig, Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
             services.AddVBManagers();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }

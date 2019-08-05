@@ -64,7 +64,8 @@ namespace ULabs.VBulletinEntityDemo {
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services) {
-            services.AddVBDbContext<VBNoCacheDummy>(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+            var vbConfig = new VBConfig(Configuration.GetValue<string>("VBCookieSalt"));
+            services.AddVBDbContext<VBNoCacheDummy>(vbConfig, Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
             // For using Managers, see above
             services.AddVBManagers();
             // ...
@@ -73,7 +74,31 @@ namespace ULabs.VBulletinEntityDemo {
 }
 ```
 
-Tipp for local developing: Use `appsettings.Development.json` to override the Connection String. If `appsettings.Development.json` is added
+`VBConfig` specifies configuration options which are only present in the VB filesystem like Cookie salt or cookie prefix (default `bb`). This is 
+currently _only used for session handling_. 
+
+#### Cookie salt
+
+You'll find this as `COOKIE_SALT` constant in `{vBulletinInstallationDir}/includes/functions.php` at line 34:
+
+```php
+define('COOKIE_SALT', 'xyz');
+```
+In this example, your salt is `xyz`. 
+
+#### Cookie prefix**
+
+Required to fetch session cookies. Defined in `{vBulletinInstallationDir}/includes/config.php`:
+
+```php
+$config['Misc']['cookieprefix'] = 'bb';
+```
+
+It's not required to pass the prefix if it wasn't manually changed. 
+
+#### Tipp for local developing:
+
+Use `appsettings.Development.json` to override the Connection String. If `appsettings.Development.json` is added
 to your `.gitignore`, no credentials can be checked in by accident. This approach is used in our example project.  
 ASP.NET Core automatically adds files following the pattern `appsettings.{Environment}.json` when existing. 
 So keep in mind, that this only works while `ASPNETCORE_ENVIRONMENT` is set to `Development`. 
@@ -83,7 +108,7 @@ Performance can be improved by caching data received from the database. This res
 you can enable in-memory caching by passing our cache-provider instead of the default dummy one: 
 
 ```cs
-services.AddVBDbContext<VBCache>(Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+services.AddVBDbContext<VBCache>(vbConfig, Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
 ```
 
 The `VBCache` provider simply uses 
@@ -91,7 +116,7 @@ The `VBCache` provider simply uses
 cached in the memory of your application server. But you also could use e.g. Redis or any other caching system by implemeting a provider based 
 on [IVBCache interface](file://ULabs.VBulletinEntity/Cache/IVBCache.cs).
 
-**Important**
+#### Important
 
 This cache is designed to work with our Manager abstractions. They care about invalidating the cache (e.g. post after modification). But it's not possible
 to automatically detect changes from outside, even not the DbContext. So **don't use** caching if you do write querys using raw DbContext, a vBulletin

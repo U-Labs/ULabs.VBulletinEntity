@@ -6,11 +6,14 @@ using System.Collections.Generic;
 using System.Text;
 using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Manager;
+using ULabs.VBulletinEntity.Models.Config;
 
 namespace ULabs.VBulletinEntity {
     public static class VBServiceHelper {
-        public static void AddVBDbContext<ICachingProvider>(this IServiceCollection services, string connectionString, Version serverVersion = null, ServerType serverType = ServerType.MariaDb, bool sensitiveDataLogging = false)
+        public static void AddVBDbContext<ICachingProvider>(this IServiceCollection services, VBConfig vbConfig, string connectionString, Version serverVersion = null, ServerType serverType = ServerType.MariaDb, bool sensitiveDataLogging = false)
             where ICachingProvider: IVBCache {
+            services.AddSingleton(vbConfig);
+
             services.AddDbContext<VBDbContext>(options => {
                 options.UseMySql(connectionString, mySqlOptions => mySqlOptions.ServerVersion(serverVersion, serverType));
 
