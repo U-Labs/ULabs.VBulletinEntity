@@ -2,6 +2,8 @@
 A vBulletin 4 database abstraction layer for Entity Framework Core - OSS under [GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/). 
 It is based on the current V2.1 LTS release of Entity Framework Core.
 
+![Demo project preview](https://u-img.net/img/6729Br.png)
+
 ## Feature state
 ![Complete](https://u-img.net/img/8798Dw.png) Full completed 
 ![Partly implemented](https://u-img.net/img/5113Ab.png) Partly implemented
