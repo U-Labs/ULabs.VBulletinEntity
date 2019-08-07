@@ -25,7 +25,7 @@
                             @thread.AuthorName
                         </a>
                     </td>
-                    <td>@thread.Forum.Title</td>
+                    <td>@Html.Raw(thread.Forum.Title)</td>
                     <td>@thread.ReplysCount</td>
                 </tr>
             }
