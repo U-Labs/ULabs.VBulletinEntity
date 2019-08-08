@@ -289,15 +289,6 @@ The warm-up request to ``WarmUp/Index` is done _after_ this and would be finishe
 the pod readiness. In other words: Durin an update, we could keep the first page load as fast as possible by warming up as much as possible
 until Kubernetes consider the pod as ready and route traffic to it. 
 
-## Motivation
-This project is part of my approach to develop on a modern .NET Core application stack for vBulletin. I did some POCs, also on the database.
-But now it's time to create a better structure. Since I believe in open source and also use a lot of OSS, I'd also like to share my work to
-give something back for the community.
-
-## Contributions/Coding Conventions
-
-Please see our [dedicated conventions documentation](./docs/conventions.md) related to C# coding style and also vBulletin. 
-
 ## Addon support
 Some Addons apply modifications on the database like for example the [post thanks addon](https://www.vbulletin.org/forum/showthread.php?t=231666). 
 Commonly, the core-tables were extended by custom columns. My idea was to seperate this by inheritance. In this case, we had a `VBUser` entity 
@@ -324,6 +315,15 @@ This makes things complicated.
 on this . Instead, Addon support is keept at a absolute minimum. For us this is only the 
 [common post thanks addon](https://www.vbulletin.org/forum/showthread.php?t=231666), which is heavily used on U-Labs since years. 
 I'm open for ideas how we could seperate this better in the future. 
+
+## Motivation
+This project is part of my approach to develop on a modern .NET Core application stack for vBulletin. I did some POCs, also on the database.
+But now it's time to create a better structure. Since I believe in open source and also use a lot of OSS, I'd also like to share my work to
+give something back for the community.
+
+## Contributions/Coding Conventions
+
+Please see our [dedicated conventions documentation](./docs/conventions.md) related to C# coding style and also vBulletin. 
 
 ## Credits
 This project itself uses the following external open source libraries to which I would like to express my gratitude:
