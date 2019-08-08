@@ -31,6 +31,10 @@ namespace ULabs.VBulletinEntity {
         }
 
         public static void AddVBManagers(this IServiceCollection services) {
+            // Required to inject IHttpContextAccessor in VBUserManager so that we can fetch the users session. From package Microsoft.AspNetCore.Http
+            // When missing: InvalidOperationException: Unable to resolve service for type 'Microsoft.AspNetCore.Http.IHttpContextAccessor' while attempting to activate 'ULabs.VBulletinEntity.Manager.VBUserManager'.
+            services.AddHttpContextAccessor();
+
             services.AddScoped<VBUserManager>();
             services.AddScoped<VBThreadManager>();
             services.AddScoped<VBForumManager>();

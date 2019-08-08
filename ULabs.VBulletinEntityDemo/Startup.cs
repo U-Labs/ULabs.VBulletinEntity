@@ -12,6 +12,7 @@ using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using ULabs.VBulletinEntity;
 using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Models.Config;
+using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntityDemo {
     public class Startup {
@@ -28,7 +29,9 @@ namespace ULabs.VBulletinEntityDemo {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLife) {
+            appLife.ApplicationStarted.Register(() => DatabaseWarmUp.WarmUpRequest("WarmUp/Index"));
+
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
                 app.UseBrowserLink();

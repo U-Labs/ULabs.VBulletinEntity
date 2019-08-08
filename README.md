@@ -130,7 +130,7 @@ This cache is designed to work with our Manager abstractions. They care about in
 to automatically detect changes from outside, even not the DbContext. So **don't use** caching if you do write querys using raw DbContext, a vBulletin
 installation runs in parallel or any other software modifies the database from outside. 
 
-## Usage
+## Data Access Layer
 You can choose between two ways of accessing VB data: 
 
 ### [Low level DbContext](./ULabs.VBulletinEntity/VBDbContext.cs)
@@ -179,6 +179,80 @@ Simply register the required service in e.g. a controller constructor.
 VBulletin has a lot of settings, divided into multiple groups. Addons can create their own settings groups. All of them got stored in the `setting` 
 table. To handle them in a clean and reuseable way, we use the `VBSettingsManager` to map every group to a entity model. The first one avaliable
 is `VBCommonSettings`. Find some working examples in the [SettingsController](./ULabs.VBulletinEntityDemo/Controllers/SettingsController.cs).
+
+## Database Warmup
+[A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
+This thread is a bit older, but the general problem also applys to EF Core as well as other ORMs: On the first request, everything needs to
+be initialized from scatch. So the first request can be relatively slow, where all following requests will be much faster. Since this is not good for user experience, it's a good idea to warm up our Database Context. By doing this, the first user gets a faster
+experience. There are to ways of doing this. 
+
+### Database queries
+
+This method is relatively simple: When starting our application, we create a `DbContext` instance and do a few requests on different 
+entity types. In the main method of `Program.cs` replace `CreateWebHostBuilder(args).Build().Run();` by
+
+```cs
+using ULabs.VBulletinEntity.Tools;
+
+namespace ULabs.VBulletinEntityDemo {
+    public class Program {
+        public static void Main(string[] args) {
+            CreateWebHostBuilder(args).Build()
+                .WarmUp()
+                .Run();
+        }
+        // ...
+    }
+}
+```
+and see the requests in our Kestrel console. 
+
+### HTTP Request
+More effective is doing some real requests. In the best case, we call a MVC action with database queries because it would warm up the 
+database as well as the MVC framework. But it's a bit more work. First we create a controller (here called `WarmUp`) with corresponding 
+view of the `Index` action:
+
+```cs
+using ULabs.VBulletinEntity.Tools;
+
+public class WarmUpController : Controller {
+    readonly VBDbContext db;
+    readonly VBThreadManager threadManager;
+    readonly VBSessionManager sessionManager;
+    readonly VBSettingsManager settingsManager;
+    readonly VBForumManager forumManager;
+    readonly VBUserManager userManager;
+
+    public WarmUpController(VBDbContext db, VBThreadManager threadManager, VBSessionManager sessionManager, VBSettingsManager settingsManager, VBForumManager forumManager, VBUserManager userManager) {
+        this.db = db;
+        this.threadManager = threadManager;
+        this.sessionManager = sessionManager;
+        this.settingsManager = settingsManager;
+        this.forumManager = forumManager;
+        this.userManager = userManager;
+    }
+
+    public ActionResult Index() {
+        DatabaseWarmUp.WarmUpServices(db, threadManager, sessionManager, settingsManager, forumManager, userManager);
+        return View();
+    }
+}
+```
+
+It's not required to render those data in the corresponding view. Something small that is generated dynamically like this would be fine: 
+
+```cs
+@DateTime.Now.ToString()
+```
+
+### Performance comparisation
+
+| Method | Page render time (ms)
+| ---  | --- 
+| No warmup | 2119
+| Database queries on startup only | 800
+| HTTP Request only | 97
+| Database queries on startup + HTTP Request | 88
 
 ## Motivation
 This project is part of my approach to develop on a modern .NET Core application stack for vBulletin. I did some POCs, also on the database.
