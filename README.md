@@ -94,7 +94,7 @@ define('COOKIE_SALT', 'xyz');
 ```
 In this example, your salt is `xyz`. 
 
-#### Cookie prefix**
+#### Cookie prefix
 
 Required to fetch session cookies. Defined in `{vBulletinInstallationDir}/includes/config.php`:
 
