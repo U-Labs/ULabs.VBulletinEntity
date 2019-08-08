@@ -168,8 +168,10 @@ namespace ULabs.VBulletinEntity.Manager {
                 StyleId = styleId,
                 LanguageId = languageId,
                 Host = GetClientIpAddress().ToString(),
-                LastActivity = DateTime.UtcNow
+                LastActivity = DateTime.UtcNow,
+                ApiAccessToken = ""
             };
+            
             await CreateAsync(session);
             return session;
         }
