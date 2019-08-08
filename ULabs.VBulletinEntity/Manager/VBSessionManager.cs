@@ -23,7 +23,7 @@ namespace ULabs.VBulletinEntity.Manager {
         const string sessionHashCookieName = "sessionhash";
         const int guestUserGroupId = 1;
 
-        public VBSessionManager(VBDbContext db, VBUserManager userManager, VBSettingsManager settingsManager, VBConfig vbConfig, IHttpContextAccessor contextAccessor, 
+        public VBSessionManager(VBDbContext db, VBUserManager userManager, VBSettingsManager settingsManager, VBConfig vbConfig, IHttpContextAccessor contextAccessor,
             IVBCache cache) {
 
             this.db = db;
@@ -57,38 +57,42 @@ namespace ULabs.VBulletinEntity.Manager {
         }
 
         public async Task<VBSession> GetCurrentAsync() {
-            if (currentSession == null) {
-                // ToDo: Consistent using the new prefix in ManualForumSettings instead of guessing the cookie
-                string sessionCookie = GetCookieWithoutPrefix(sessionHashCookieName);
-                currentSession = await GetAsync(sessionCookie, updateLastActivity: true);
-
-                if (currentSession == null) {
-                    var cookieUser = GetUserFromCookiePasswordAsync().Result;
-                    // No session detected: User must be a guest
-                    if (cookieUser == null) {
-                        currentSession = await CreateGuestSessionAsync();
-                        int cnt = db.SaveChanges();
-                        return currentSession;
-                    }
-
-                    // Cleanup old sessions that were invalid due to cookie timeout
-                    // ToDo: Document raw query
-                    int cookieTimeoutSpan = GetCookieTimeoutSpam();
-                    int deletedOldSessionsCount = await db.Database.ExecuteSqlCommandAsync($"delete from session where userid = {cookieUser.Id} and lastactivity < {cookieTimeoutSpan}");
-
-                    currentSession = await CreateAsync(cookieUser, location: contextAccessor.HttpContext.Request.Path);
-
-                    // ToDo: Set cookie for TLD when using subdomains (default is current subdomain if used)
-                    var context = contextAccessor.HttpContext;
-                    var cookieOptions = new CookieOptions() {
-                        Expires = DateTime.Now.Add(settingsManager.GetCommonSettings().CookieTimeout)
-                    };
-                    context.Response.Cookies.Append($"{vbConfig.CookiePrefix}{sessionHashCookieName}", currentSession.SessionHash, cookieOptions);
-
-                    return currentSession;
-                }
+            if (currentSession != null) {
+                return currentSession;
             }
+
+            // ToDo: Consistent using the new prefix in ManualForumSettings instead of guessing the cookie
+            string sessionCookie = GetCookieWithoutPrefix(sessionHashCookieName);
+            currentSession = await GetAsync(sessionCookie, updateLastActivity: true);
+
+            if (currentSession != null) {
+                return currentSession;
+            }
+
+            var cookieUser = GetUserFromCookiePasswordAsync().Result;
+            // No session detected: User must be a guest
+            if (cookieUser == null) {
+                currentSession = await CreateGuestSessionAsync();
+                int cnt = db.SaveChanges();
+                return currentSession;
+            }
+
+            // Cleanup old sessions that were invalid due to cookie timeout
+            // ToDo: Document raw query
+            int cookieTimeoutSpan = GetCookieTimeoutSpam();
+            int deletedOldSessionsCount = await db.Database.ExecuteSqlCommandAsync($"delete from session where userid = {cookieUser.Id} and lastactivity < {cookieTimeoutSpan}");
+
+            currentSession = await CreateAsync(cookieUser, location: contextAccessor.HttpContext.Request.Path);
+
+            // ToDo: Set cookie for TLD when using subdomains (default is current subdomain if used)
+            var context = contextAccessor.HttpContext;
+            var cookieOptions = new CookieOptions() {
+                Expires = DateTime.Now.Add(settingsManager.GetCommonSettings().CookieTimeout)
+            };
+            context.Response.Cookies.Append($"{vbConfig.CookiePrefix}{sessionHashCookieName}", currentSession.SessionHash, cookieOptions);
+
             return currentSession;
+
         }
 
         public VBSession GetCurrent() {
@@ -171,7 +175,7 @@ namespace ULabs.VBulletinEntity.Manager {
                 LastActivity = DateTime.UtcNow,
                 ApiAccessToken = ""
             };
-            
+
             await CreateAsync(session);
             return session;
         }
