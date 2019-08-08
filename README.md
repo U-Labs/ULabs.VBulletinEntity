@@ -37,10 +37,16 @@ Settings are stored in a single table, while `VBSettingsManager` map them to ent
 | ------------- | ------------- | -------------
 | VBCommonSettings | ![Complete](https://u-img.net/img/8798Dw.png) | Designed as abstraction for setting groups
 
-## Get started
-ToDo: NuGet Package
+## Usage
+Install [the official NuGet-Package ULabs.VBulletinEntity](https://www.nuget.org/packages/ULabs.VBulletinEntity):
+```
+# Visual Studio Package Manager Console
+Install-Package ULabs.VBulletinEntity
+# DotNet CLI (e.g. for VS Code)
+dotnet add package ULabs.VBulletinEntity
+```
 
-### Configure Connection Strings
+### Configure Connection Strings for Service Injection
 In your `appsettings.json` insert a [Connection String](https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-strings) for the
 vBulletin MySQL database in the corresponding section like this:
 

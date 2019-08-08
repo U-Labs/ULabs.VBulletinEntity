@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.1.0</Version>
+    <Authors>DMW007</Authors>
+    <Company>U-Labs</Company>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://u-labs.de/forum</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/U-Labs/ULabs.VBulletinEntity</RepositoryUrl>
+    <PackageTags>net-core,c-sharp,vbulletin,entity-framework,mysql,mariadb</PackageTags>
+    <Description>A vBulletin 4 database abstraction layer for Entity Framework Core</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +34,13 @@
     <Reference Include="Microsoft.Net.Http.Headers">
       <HintPath>..\..\..\..\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.net.http.headers\2.1.1\lib\netstandard2.0\Microsoft.Net.Http.Headers.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
