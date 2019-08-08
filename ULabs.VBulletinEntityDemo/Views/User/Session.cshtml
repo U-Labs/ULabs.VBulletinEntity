@@ -1,0 +1,8 @@
+﻿@model VBSession
+
+@{ 
+    string name = Model.User.UserName ?? "Anonymous";
+}
+<h1>Hello @name!</h1>
+
+Last activity: @Model.LastActivity.ToLocalTime().ToString()
