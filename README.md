@@ -180,7 +180,7 @@ VBulletin has a lot of settings, divided into multiple groups. Addons can create
 table. To handle them in a clean and reuseable way, we use the `VBSettingsManager` to map every group to a entity model. The first one avaliable
 is `VBCommonSettings`. Find some working examples in the [SettingsController](./ULabs.VBulletinEntityDemo/Controllers/SettingsController.cs).
 
-## Database Warmup
+## Application Warmup
 [A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
 This thread is a bit older, but the general problem also applys to EF Core as well as other ORMs: On the first request, everything needs to
 be initialized from scatch. So the first request can be relatively slow, where all following requests will be much faster. Since this is not good for user experience, it's a good idea to warm up our Database Context. By doing this, the first user gets a faster
