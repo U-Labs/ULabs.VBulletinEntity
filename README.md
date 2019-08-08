@@ -245,14 +245,49 @@ It's not required to render those data in the corresponding view. Something smal
 @DateTime.Now.ToString()
 ```
 
-### Performance comparisation
+Now add a injection of `IApplicationLifetime` to `Startup.Configure()` and reqister the warmup request on the event that got fired
+when your aplication is started:
 
+```cs
+using ULabs.VBulletinEntity.Tools;
+
+namespace ULabs.VBulletinEntityDemo {
+    public class Startup {
+        // ...
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLife) {
+            appLife.ApplicationStarted.Register(() => DatabaseWarmUp.WarmUpRequest("WarmUp/Index"));
+            // ...
+        }
+    }
+}
+```
+
+### Performance comparisation
 | Method | Page render time (ms)
 | ---  | --- 
 | No warmup | 2119
 | Database queries on startup only | 800
 | HTTP Request only | 97
 | Database queries on startup + HTTP Request | 88
+
+All tests run on Windows 10 x64 with the index page of our demo application, which contains multiple SQL queries with joins. 
+As you can see, the HTTP request with database queries is the most effective way which results in very fast pages. Combining it with the
+database queries on startup, there is not a huge improvement.
+
+#### Why using both methods? 
+
+This is related to the application startup order: 
+
+```cs
+CreateWebHostBuilder(args).Build()
+    .WarmUp()
+    .Run();
+```
+
+As you can see, our warmup queries runs _before_ the WebServer got started. This will already pre-warmup the database part of our application.
+The warm-up request to ``WarmUp/Index` is done _after_ this and would be finished faster. In a modern Kubernetes deployment, this affects
+the pod readiness. In other words: Durin an update, we could keep the first page load as fast as possible by warming up as much as possible
+until Kubernetes consider the pod as ready and route traffic to it. 
 
 ## Motivation
 This project is part of my approach to develop on a modern .NET Core application stack for vBulletin. I did some POCs, also on the database.
