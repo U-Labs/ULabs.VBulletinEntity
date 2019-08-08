@@ -130,7 +130,7 @@ namespace ULabs.VBulletinEntity.Manager {
                 return null;
             }
 
-            var cookieUser = await userManager.GetUser(cookieUserId);
+            var cookieUser = await userManager.GetUserAsync(cookieUserId);
             if (cookieUser == null) {
                 return null;
             }

@@ -12,7 +12,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             this.userManager = userManager;
         }
         public async Task<IActionResult> Profile(int id) {
-            var user = await userManager.GetUser(id);
+            var user = await userManager.GetUserAsync(id);
             return View(user);
         }
     }
