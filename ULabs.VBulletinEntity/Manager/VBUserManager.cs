@@ -15,12 +15,12 @@ namespace ULabs.VBulletinEntity.Manager {
             this.db = db;
         }
 
-        public async Task<VBUser> GetUser(int id) {
-            var user = await GetUser<int>(u => u.Id == id);
+        public async Task<VBUser> GetUserAsync(int id) {
+            var user = await GetUserAsync<int>(u => u.Id == id);
             return user?.FirstOrDefault();
         }
 
-        public async Task<List<VBUser>> GetUser<TOrderKey>(Expression<Func<VBUser, bool>> predicate, Expression<Func<VBUser, TOrderKey>> orderBy = null, bool descOrder = false, int limit = 50) {
+        public async Task<List<VBUser>> GetUserAsync<TOrderKey>(Expression<Func<VBUser, bool>> predicate, Expression<Func<VBUser, TOrderKey>> orderBy = null, bool descOrder = false, int limit = 50) {
             var query = db.Users.Include(u => u.UserGroup)
                 .Include(u => u.DisplayGroup)
                 .Where(predicate);
@@ -39,12 +39,12 @@ namespace ULabs.VBulletinEntity.Manager {
             return users;
         }
 
-        public async Task<VBUserGroup> GetUserGroup(int id) {
+        public async Task<VBUserGroup> GetUserGroupAsync(int id) {
             var group = await db.UserGroups.FindAsync(id);
             return group;
         }
 
-        public async Task<List<VBUserGroup>> GetUserGroups(List<int> ids) {
+        public async Task<List<VBUserGroup>> GetUserGroupsAsync(List<int> ids) {
             var groups = await db.UserGroups.Where(g => ids.Contains(g.Id))
                 .ToListAsync();
             return groups;
@@ -71,11 +71,11 @@ namespace ULabs.VBulletinEntity.Manager {
                 return true;
             }
 
-            var allGroups = await GetAllMemberGroups(user);
+            var allGroups = await GetAllMemberGroupsAsync(user);
             return allGroups.Any(group => group.AdminPermissions.HasFlag(VBAdminFlags.IsModerator));
         }
 
-        public async Task<List<VBUserGroup>> GetAllMemberGroups(VBUser user) {
+        public async Task<List<VBUserGroup>> GetAllMemberGroupsAsync(VBUser user) {
             if (user.UserGroup == null) {
                 throw new Exception($"UserGroup is null for {user.Id}");
             }
@@ -83,7 +83,7 @@ namespace ULabs.VBulletinEntity.Manager {
             var groups = new List<VBUserGroup>() { user.UserGroup };
             if(user.MemberGroupIds.Any()) {
                 // ToDo: Load all groups in one query for better performance
-                var memberGroups = await GetUserGroups(user.MemberGroupIds);
+                var memberGroups = await GetUserGroupsAsync(user.MemberGroupIds);
                 groups.AddRange(memberGroups);
             }
             return groups;
