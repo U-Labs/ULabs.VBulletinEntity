@@ -204,6 +204,23 @@ like localhost. [According to the RFC](https://stackoverflow.com/a/16328399/3276
 So for example port 80 for a LAMP stack that hosts vBulletin, while a .NET Core application is accessed on port 3000. But I never tested this.
 Keep in mind that the hostnames must match - both `localhost`. 
 
+#### VBThreadManager
+The following examples assumes that a instance of `VBThreadManager` was injected as `threadManager`.
+
+##### Create thread
+```csharp
+string userId = 1;
+int forumId = 1;
+string title = "Thread created by ULabs.VBulletinEntity";
+string text = "This thread was automatically generated using .NET Core!";
+string ip = "127.0.0.1";
+
+var user = await userManager.GetUserAsync(userId);
+var thread = await threadManager.CreateThreadAsync(user, ip, forumId, title, text);
+```
+`CreateThreadAsync()` throws an exception if the forum passed as `forumId` parameter doesn't exist. All timestamps are set to the current
+UTC date. 
+
 ## Application Warmup
 [A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
 This thread is a bit older, but the general problem also applys to EF Core as well as other ORMs: On the first request, everything needs to
