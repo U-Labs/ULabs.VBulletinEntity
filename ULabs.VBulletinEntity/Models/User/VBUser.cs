@@ -220,7 +220,7 @@ namespace ULabs.VBulletinEntity.Models.User {
 
         [NotMapped]
         public VBUserLoginType LoginType {
-            get => (VBUserLoginType)Enum.Parse(typeof(VBUserLoginType), LoginTypeRaw);
+            get => (VBUserLoginType)Enum.Parse(typeof(VBUserLoginType), ContentTools.ToPascalCase(LoginTypeRaw));
             set => LoginTypeRaw = value.ToString();
         }
 
