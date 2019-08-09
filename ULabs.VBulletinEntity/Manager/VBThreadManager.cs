@@ -302,7 +302,6 @@ namespace ULabs.VBulletinEntity.Manager {
             post.ThreadId = thread.Id;
             await db.SaveChangesAsync();
 
-            var forum = db.Forums.Find(thread.ForumId);
             forum.LastPostId = post.Id;
             forum.LastThreadId = thread.Id;
             forum.LastThreadTitle = thread.Title;
@@ -312,7 +311,6 @@ namespace ULabs.VBulletinEntity.Manager {
             await db.SaveChangesAsync();
 
             await userManager.IncrementPostCounterAsync(author.Id, post.Id, post.CreatedTime);
-
             return thread;
         }
 
