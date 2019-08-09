@@ -76,13 +76,13 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         public VBPost() { }
 
         // ToDo: IP shouldn't be optional
-        public VBPost(VBUser author, string title, string text, string ipAddress = "", int threadId = 0, bool allowSmilies = true, VBPostVisibleState visibility = VBPostVisibleState.Visible) {
+        public VBPost(VBUser author, string title, string text, string ipAddress, int threadId = 0, bool allowSmilies = true, VBPostVisibleState visibility = VBPostVisibleState.Visible) {
             ThreadId = threadId;
             AuthorName = author.UserName;
             AuthorId = author.Id;
             Title = title;
             Text = text;
-            IpAddress = IpAddress;
+            IpAddress = ipAddress;
             CreatedTime = DateTime.Now;
             AllowSmilies = allowSmilies;
 
