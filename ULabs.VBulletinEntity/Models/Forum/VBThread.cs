@@ -128,15 +128,25 @@ namespace ULabs.VBulletinEntity.Models.Forum {
 
         [NotMapped]
         public List<int> SimilarThreadIds {
-            get => SimilarThreadIdsRaw.Split(',')
-                .Select(int.Parse)
-                .ToList();
+            get {
+                if (string.IsNullOrEmpty(SimilarThreadIdsRaw)) {
+                    return new List<int>();
+                }
+                return SimilarThreadIdsRaw.Split(',')
+                    .Select(int.Parse)
+                    .ToList();
+            }
             set => SimilarThreadIdsRaw = string.Join(",", value);
         }
 
         [NotMapped]
         public List<string> Keywords {
-            get => KeywordsRaw.Split(',').ToList();
+            get {
+                if (string.IsNullOrEmpty(KeywordsRaw)) {
+                    return new List<string>();
+                }
+                return KeywordsRaw.Split(',').ToList();
+            }
             set => KeywordsRaw = string.Join(",", value);
         }
 
