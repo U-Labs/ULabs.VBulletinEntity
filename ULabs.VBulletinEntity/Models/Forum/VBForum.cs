@@ -86,10 +86,7 @@ namespace ULabs.VBulletinEntity.Models.Forum {
         public VBForumDefaultSortOrder DefaultSortOrder {
             get {
                 // Convert the lowercase "desc" from vBulletin to uppercase "Desc" that matches our enum value
-                if(string.IsNullOrEmpty(DefaultSortOrderRaw) || DefaultSortOrderRaw.Length == 0) {
-                    return default;
-                }
-                string upperDefaultSortOrder = Char.ToUpperInvariant(DefaultSortOrderRaw[0]) + DefaultSortOrderRaw.Substring(1, DefaultSortOrderRaw.Length - 1);
+                string upperDefaultSortOrder = ContentTools.ToPascalCase(DefaultSortOrderRaw);
                 return (VBForumDefaultSortOrder)Enum.Parse(typeof(VBForumDefaultSortOrder), upperDefaultSortOrder);
             }
             set => DefaultSortOrderRaw = value.ToString();

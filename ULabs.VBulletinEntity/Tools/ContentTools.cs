@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -34,6 +35,16 @@ namespace ULabs.VBulletinEntity.Tools {
             seoTitle = seoTitle.Replace("--", "")
                 .Trim('-');
             return seoTitle;
+        }
+
+        /// <summary>
+        /// Converts lowercasestring to LowerCaseString. Usefull for mapping VB lowercase variables to C#s PascalCase, e.g. "desc" to "Desc".
+        /// </summary>
+        public static string ToPascalCase(string str) {
+            if (!string.IsNullOrEmpty(str) && str.Length > 1) {
+                return char.ToUpperInvariant(str[0]) + str.Substring(1);
+            }
+            return str;
         }
     }
 }
