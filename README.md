@@ -204,7 +204,7 @@ var user = await userManager.GetUserAsync(userId);
 var thread = await threadManager.CreateThreadAsync(user, ip, forumId, title, text);
 ```
 `CreateThreadAsync()` throws an exception if the forum passed as `forumId` parameter doesn't exist. All timestamps are set to the current
-UTC date. 
+UTC date. You can test this in the demo project with the following url: http://localhost:5000/thread/create?userId=1&forumId=1&title=TestApiThread&text=SomeText
 
 ## Application Warmup
 [A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
