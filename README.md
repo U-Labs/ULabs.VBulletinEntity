@@ -186,23 +186,8 @@ return a `VBSession` object with the related `VBUser` if he has an authenticated
 ASP.NET Core has access to the cookies. So it's required that VBulletin and your .NET Core application were hosted on the same domain. If VB runs on a subdomain (forum.example.com), 
 the Cookie-Domain must be set to the TLD (example.com) in VBs Cookie settings. 
 
-In my development environment, VB runs in Docker on a Debian server in my local network. This server has a small nginx container that proxies
-all traffic to my development machine like this: 
-
-```conf
-server {
-  listen 80;
-
-  location / {
-    proxy_pass http://dani-pc.fritz.box:5000;
-  }
-}
-```
-
-The less error-proune way is using subdomains, where VB is hosted on the TLD. You could alternatively use a single domain
-like localhost. [According to the RFC](https://stackoverflow.com/a/16328399/3276634), it should simply work using different ports on localhost.
-So for example port 80 for a LAMP stack that hosts vBulletin, while a .NET Core application is accessed on port 3000. But I never tested this.
-Keep in mind that the hostnames must match - both `localhost`. 
+This can be archived in the simplest way by running some XAMPP/LAMPP stack on `localhost` default configuration. When you sign in, cookies
+were set for `localhost`. Now start the demo application and access it using http://localhost:5000 and SSO should work. 
 
 #### VBThreadManager
 The following examples assumes that a instance of `VBThreadManager` was injected as `threadManager`.
