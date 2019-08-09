@@ -124,6 +124,8 @@ namespace ULabs.VBulletinEntity.Models.Forum {
             Views = views;
             Notes = notes;
             PrefixId = prefixId;
+            // Cannot be null. If we don't have similar ones it seems that VB also set it to an empty string
+            SimilarThreadIdsRaw = string.Empty;
         }
 
         [NotMapped]
