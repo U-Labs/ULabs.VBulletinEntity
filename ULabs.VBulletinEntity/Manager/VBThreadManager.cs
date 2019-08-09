@@ -285,6 +285,12 @@ namespace ULabs.VBulletinEntity.Manager {
 
         // ToDo: More additional parameters which can be passed to the constructor of Thread/Post class
         public async Task<VBThread> CreateThreadAsync(VBUser author, string authorIpAddress, int forumId, string title, string text) {
+            // We check the forum first so that no thread is created when Forum id doesn't exist
+            var forum = db.Forums.Find(forumId);
+            if (forum == null) {
+                throw new Exception($"No forum with id #{forumId.ToString()} exists!");
+            }
+
             var post = new VBPost(author, title, text, authorIpAddress);
             db.Posts.Add(post);
             await db.SaveChangesAsync();
