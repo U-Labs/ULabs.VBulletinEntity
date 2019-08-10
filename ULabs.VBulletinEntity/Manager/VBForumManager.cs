@@ -83,6 +83,11 @@ namespace ULabs.VBulletinEntity.Manager {
             return permittedForums;
         }
 
+        public async Task<VBForum> GetForumAsync(int forumId) {
+            var forum = await db.Forums.FindAsync(forumId);
+            return forum;
+        }
+
         public Dictionary<VBForum, VBForumFlags> FetchForumsWithFlags(List<VBForum> forums, VBUserGroup userGroup) {
             var permissionDict = forums.Select(forum => {
                 var highestPerms = FetchHighestPermissionFlagForUser(forum, userGroup);
