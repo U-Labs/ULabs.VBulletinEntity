@@ -206,6 +206,23 @@ var thread = await threadManager.CreateThreadAsync(user, ip, forumId, title, tex
 `CreateThreadAsync()` throws an exception if the forum passed as `forumId` parameter doesn't exist. All timestamps are set to the current
 UTC date. You can test this in the demo project with the following url: http://localhost:5000/thread/create?userId=1&forumId=1&title=TestApiThread&text=SomeText
 
+##### Check permissions
+We use `CheckAsync` suffixed methods to perform checks if a user is allowed to perform some action. Creating 
+a reply would be such an example, where you want to check permissions before creating posts:
+
+```csharp
+var session = await sessionManager.GetCurrentAsync();
+var replyModel = new CreateReplyModel(session.User, threadId: 1, text: "Some reply content", ipAddress: "127.0.0.1");
+var replyCheck = await threadManager.CreateReplyCheckAsync(replyModel);
+
+if(replyCheck == CanReplyResult.Ok) {
+    var reply = await threadManager.CreateReplyAsync(replyModel);
+}else {
+    // Show some information about the error
+}
+```
+
+
 ## Application Warmup
 [A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
 This thread is a bit older, but the general problem also applys to EF Core as well as other ORMs: On the first request, everything needs to

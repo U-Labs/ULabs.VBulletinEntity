@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Models.AddOns;
 using ULabs.VBulletinEntity.Models.Forum;
+using ULabs.VBulletinEntity.Models.Manager;
 using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntity.Models.User;
 using ULabs.VBulletinEntity.Tools;
@@ -314,11 +315,11 @@ namespace ULabs.VBulletinEntity.Manager {
             return thread;
         }
 
-        public async Task<VBPost> CreateReplyAsync(VBUser author, int threadId, string text, string ipAddress, string title = "", bool updatePostCounter = true) {
-            var thread = await db.Threads.FindAsync(threadId);
-            var post = new VBPost(author, title, text, ipAddress, thread.Id);
+        public async Task<VBPost> CreateReplyAsync(CreateReplyModel replyModel) {
+            var thread = await db.Threads.FindAsync(replyModel.ThreadId);
+            var post = new VBPost(replyModel.Author, replyModel.Title, replyModel.Text, replyModel.IpAddress, thread.Id);
 
-            var lastPost = await db.Posts.Where(p => p.ThreadId == threadId)
+            var lastPost = await db.Posts.Where(p => p.ThreadId == replyModel.ThreadId)
                 .OrderByDescending(p => p.CreatedTimeRaw)
                 .FirstOrDefaultAsync();
             if (lastPost != null) {
@@ -332,24 +333,28 @@ namespace ULabs.VBulletinEntity.Manager {
                 throw new Exception("Couldnt save post: No id generated from database!");
             }
 
-            thread.LastPostAuthorId = author.Id;
-            thread.LastPostAuthorName = author.UserName;
+            thread.LastPostAuthorId = replyModel.Author.Id;
+            thread.LastPostAuthorName = replyModel.Author.UserName;
             thread.LastPostId = post.Id;
             thread.LastPostTime = DateTime.UtcNow;
             thread.ReplysCount++;
             // ToDo: Maybe also increment author counter if user hasn't posted before there
 
-            bool userPostedInThread = await db.Posts.AnyAsync(p => p.ThreadId == thread.Id && p.AuthorId == author.Id);
+            bool userPostedInThread = await db.Posts.AnyAsync(p => p.ThreadId == thread.Id && p.AuthorId == replyModel.Author.Id);
             if (!userPostedInThread) {
                 thread.PosterCount++;
             }
 
-            await userManager.IncrementPostCounterAsync(author.Id, post.Id, post.CreatedTime);
+            await userManager.IncrementPostCounterAsync(replyModel.Author.Id, post.Id, post.CreatedTime);
             await db.SaveChangesAsync();
 
             cache.Remove(VBCacheKey.Thread, thread.Id.ToString());
             cache.Remove(VBCacheKey.ThreadReplys, thread.Id.ToString());
             return post;
+        }
+
+        public async CanReplyResult CreateReplyCheck(CreateReplyModel replyModel) {
+
         }
     }
 }
