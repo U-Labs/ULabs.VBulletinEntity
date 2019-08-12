@@ -353,8 +353,25 @@ namespace ULabs.VBulletinEntity.Manager {
             return post;
         }
 
-        public async CanReplyResult CreateReplyCheck(CreateReplyModel replyModel) {
+        public async Task<CanReplyResult> CreateReplyCheckAsync(CreateReplyModel replyModel) {
+            var thread = await GetThreadAsync(replyModel.ThreadId);
+            if (thread == null || !thread.IsVisible) {
+                return CanReplyResult.ThreadNotExisting;
+            } else if (!thread.IsOpen) {
+                return CanReplyResult.ThreadClosed;
+            }
 
+            // ToDo: Merge all Groups where the user is a member of and check them
+            if (replyModel.Author.UserGroup == null) {
+                replyModel.Author.UserGroup = await db.UserGroups.AsNoTracking()
+                    .FirstOrDefaultAsync(g => g.Id == replyModel.Author.UserGroupId);
+            }
+            var forumFlag = thread.AuthorId == replyModel.Author.Id ? VBForumFlags.CanReplyToOwnThreads : VBForumFlags.CanReplyToOtherThreads;
+            bool canPost = await forumManager.UserCanInForum(thread.ForumId, replyModel.Author.UserGroup, forumFlag);
+            if (!canPost) {
+                return CanReplyResult.NoReplyPermission;
+            }
+            return CanReplyResult.Ok;
         }
     }
 }
