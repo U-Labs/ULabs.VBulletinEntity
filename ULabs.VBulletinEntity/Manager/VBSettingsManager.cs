@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Models.Config;
+using ULabs.VBulletinEntity.Models.Config.AddOns;
 
 namespace ULabs.VBulletinEntity.Manager {
     public class VBSettingsManager {
@@ -23,8 +24,11 @@ namespace ULabs.VBulletinEntity.Manager {
         public VBCommonSettings GetCommonSettings() {
             return GetSettingsWithCache<VBCommonSettings>();
         }
+        public VBRecycleBinSettings GetVBRecycleBinSettings() {
+            return GetSettingsWithCache<VBRecycleBinSettings>();
+        }
 
-        T GetSettingsWithCache<T>() where T : new() {
+        public T GetSettingsWithCache<T>() where T : new() {
             string cacheSubKey = typeof(T).FullName;
             if (cache.TryGet(VBCacheKey.Settings, cacheSubKey, out T settings)) {
                 return settings;
