@@ -23,6 +23,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
         public async Task<IActionResult> Session() {
             var session = await sessionManager.GetCurrentAsync();
             var notViewableForumIds = lightDashboardManager.GetForumIdsWithoutViewPermission(session.User.UserGroupId);
+            var categoriesWithChilds = lightDashboardManager.GetCategoriesWithChilds();
             return View(session);
         }
     }
