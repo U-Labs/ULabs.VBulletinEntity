@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ULabs.VBulletinEntity.Caching;
+using ULabs.VBulletinEntity.LightManager;
 using ULabs.VBulletinEntity.Manager;
 using ULabs.VBulletinEntity.Models.Config;
 
@@ -41,6 +42,12 @@ namespace ULabs.VBulletinEntity {
             services.AddScoped<VBSettingsManager>();
             services.AddScoped<VBSessionManager>();
             services.AddScoped<VBAttachmentManager>();
+
+            AddLightVBManagers(services);
+        }
+
+        static void AddLightVBManagers(this IServiceCollection services) {
+            services.AddScoped<VBLightDashboardManager>();
         }
     }
 }
