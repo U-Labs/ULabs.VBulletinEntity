@@ -387,6 +387,7 @@ Please see our [dedicated conventions documentation](./docs/conventions.md) rela
 ## Credits
 This project itself uses the following external open source libraries to which I would like to express my gratitude:
 * [Pomelo.EntityFrameworkCore.MySql](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql)
+* [Dapper](https://github.com/StackExchange/Dapper)
 * Icons from made by [Flaticons](https://www.flaticon.com/) by [Freepik](https://www.flaticon.com/authors/freepik),
 [Maxim Basinski](https://www.flaticon.com/authors/maxim-basinski) 
 licensed with [CCC 3.0 BY](http://creativecommons.org/licenses/by/3.0/)
