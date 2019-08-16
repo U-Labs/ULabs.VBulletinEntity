@@ -131,7 +131,7 @@ to automatically detect changes from outside, even not the DbContext. So **don't
 installation runs in parallel or any other software modifies the database from outside. 
 
 ## Data Access Layer
-You can choose between two ways of accessing VB data: 
+You can choose between three ways of accessing VB data: 
 
 ### [Low level DbContext](./ULabs.VBulletinEntity/VBDbContext.cs)
 
@@ -222,6 +222,22 @@ if(replyCheck == CanReplyResult.Ok) {
 }
 ```
 
+### High level Light Managers
+Offering entities with common needed properties where you can work with using LINQ is fine. 
+On the other side, this costs performance. Depending on the use-case, it's not a problem if things take a few
+ms more or less. But at U-Labs we have situations, where fast page loading time is required. To also cover this case,
+I introduced _Light Managers_: They follow the idea of relatively high managers, but without the cost of too much 
+ressources usage.
+
+For this purpose, Light Managers doesn't query the database with LINQ to SQL. Instead, we use 
+[Dapper](https://github.com/StackExchange/Dapper), a known high performance ORM for .NET and .NET Core. Use managers
+if query performance is important, but you also want to have the comfort of high level apis. But please check if 
+the Light Managers can fit our needs. They're designed for special use cases and can't be such flexible than
+the regular managers. 
+
+Since Light Managers are very new, we currently only have one: 
+
+* [`VBLightDashboardManager`](./ULabs.VBulletinEntity/LightManager/VBLightDashboardManager.cs)
 
 ## Application Warmup
 [A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
