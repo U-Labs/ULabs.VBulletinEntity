@@ -13,7 +13,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             this.lightDashboardManager = lightDashboardManager;
         }
         public async Task<IActionResult> Dashboard() {
-            var newestThreads = lightDashboardManager.GetNewestThreads(10);
+            var newestThreads = await lightDashboardManager.GetNewestThreadsAsync(10);
             return View(newestThreads);
         }
     }
