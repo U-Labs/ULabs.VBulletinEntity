@@ -64,7 +64,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             var threads = db.Query(@"
                     SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastposterid as LastPosterUserId, t.lastpostid as LastPostId, 
-                        t.forumid as ForumId,
+                        t.forumid as ForumId, t.replycount as ReplysCount,
                     u.userid as UserId, u.avatarrevision as AvatarRevision,
                     f.forumid as ForumId, f.title as Title
                     FROM thread t
