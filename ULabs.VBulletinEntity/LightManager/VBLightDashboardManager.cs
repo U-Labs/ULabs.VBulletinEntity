@@ -46,5 +46,34 @@ namespace ULabs.VBulletinEntity.LightManager {
                 WHERE forum.parentid = -1");
             return categoryChildLists.ToList();
         }
+
+        /// <summary>
+        /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
+        /// </summary>
+        /// <param name="count">Limit the fetched rows</param>
+        /// <param name="forumIds">Optionally, you can pass a list of forum ids here to filter the threads</param>
+        public List<VBLightThread> GetNewestThreads(int count = 10, List<int> forumIds = null) {
+            var args = new {
+                childForumIds = forumIds,
+                count = count
+            };
+            Func<VBLightThread, VBLightUser, VBLightForum, VBLightThread> mappingFunc = (thread, user, forum) => {
+                thread.LastPoster = user;
+                thread.Forum = forum;
+                return thread;
+            };
+            var threads = db.Query(@"
+                    SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastposterid as LastPosterUserId, t.lastpostid as LastPostId, 
+                        t.forumid as ForumId,
+                    u.userid as UserId, u.avatarrevision as AvatarRevision,
+                    f.forumid as ForumId, f.title as Title
+                    FROM thread t
+                    LEFT JOIN user u ON (u.userid = t.lastposterid)
+                    LEFT JOIN forum f ON (f.forumid = t.forumid)" +
+                    (forumIds != null ? "WHERE t.forumid IN @childForumIds" : "") +
+                    @"ORDER BY t.lastpost DESC
+                    LIMIT @count", mappingFunc, args, splitOn: "LastPosterUserId,ForumId");
+            return threads.ToList();
+        }
     }
 }
