@@ -98,7 +98,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             string sql = @"
                 SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, s.loggedin AS LoggedInRaw, 
 	                s.isbot AS IsBot,
-                u.userid AS UserId, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.avatarrevision AS AvatarRevision
+                u.userid AS UserId, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
                 WHERE s.sessionhash = @sessionHash
