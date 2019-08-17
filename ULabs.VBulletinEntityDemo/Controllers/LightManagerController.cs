@@ -9,10 +9,13 @@ using ULabs.VBulletinEntity.Manager;
 namespace ULabs.VBulletinEntityDemo.Controllers {
     public class LightManagerController : Controller {
         readonly VBLightDashboardManager lightDashboardManager;
-        public LightManagerController(VBLightDashboardManager lightDashboardManager) {
+        readonly VBLightSessionManager lightSessionManager;
+        public LightManagerController(VBLightDashboardManager lightDashboardManager, VBLightSessionManager lightSessionManager) {
             this.lightDashboardManager = lightDashboardManager;
+            this.lightSessionManager = lightSessionManager;
         }
         public async Task<IActionResult> Dashboard() {
+            var session = lightSessionManager.GetCurrentAsync();
             var newestThreads = await lightDashboardManager.GetNewestThreadsAsync(10);
             return View(newestThreads);
         }
