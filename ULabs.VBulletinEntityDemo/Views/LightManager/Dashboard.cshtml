@@ -1,0 +1,32 @@
+﻿@model List<VBLightThread>
+
+<div class="row">
+    <div class="col-lg-8">
+        <h1>Newest Threads</h1>
+        <table class="table">
+            <tr>
+                <th>Title</th>
+                <th>Created at</th>
+                <th>Author</th>
+                <th>Forum name</th>
+                <th>Replys</th>
+            </tr>
+
+            @foreach (var thread in Model) {
+                <tr>
+                    <td>
+                        @thread.Title
+                    </td>
+                    <td>@thread.LastPostTime.ToLocalTime().ToString()</td>
+                    <td>
+                        @thread.LastPosterName
+                    </td>
+                    <td>@Html.Raw(thread.Forum.Title)</td>
+                    <td>
+                        @thread.ReplysCount
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
