@@ -73,12 +73,12 @@ namespace ULabs.VBulletinEntity.LightManager {
                 // Attemp 2: We don't have a valid VB session, but the users pw may be still stored in the cookie which we can use to generate a new session as some kind of SSO
                 // ToDo: Set location, delete old invalid sessions
                 int? cookieUserId = GetCookieUserId();
-                if(cookieUserId.HasValue && ValidateUserFromCookie(cookieUserId.Value)) {
+                if (cookieUserId.HasValue && ValidateUserFromCookie(cookieUserId.Value)) {
                     sessionHash = Create(cookieUserId.Value, "VBLightSessionManager");
-                }else {
+                } else {
                     sessionHash = Create(0, "VBLightSessionManagerGuest");
                 }
-                
+
                 session = Get(sessionHash);
                 // ToDo: Set session duration from config like VBSessionManager does
                 SetSessionCookie(session.SessionHash);
@@ -87,16 +87,22 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         public VBLightSession Get(string sessionHash, bool updateLastActivity = false, string location = "") {
+            Func<VBLightSession, VBLightUser, VBLightSession> mappingFunc = (dbSession, user) => {
+                dbSession.User = user;
+                return dbSession;
+            };
             // ToDo: Validate Cookie timeout 
             string sql = @"
                 SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, s.loggedin AS LoggedInRaw, 
 	                s.isbot AS IsBot,
-                u.usergroupid AS PrimaryUserGroupId, u.username AS UserName
+                u.userid AS UserId, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.avatarrevision AS AvatarRevision
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
-                WHERE s.sessionhash = @sessionHash";
+                WHERE s.sessionhash = @sessionHash
+                LIMIT 1";
             var args = new { sessionHash = sessionHash };
-            var session = db.QueryFirstOrDefault<VBLightSession>(sql, args);
+            var session = db.Query(sql, mappingFunc, args, splitOn: "UserId")
+                .SingleOrDefault();
 
             if (session != null && updateLastActivity) {
                 UpdateLastActivity(session.SessionHash, location);

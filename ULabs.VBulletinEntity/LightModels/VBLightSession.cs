@@ -8,9 +8,7 @@ namespace ULabs.VBulletinEntity.LightModels {
         public string SessionHash { get; set; }
 
         public int? UserId { get; set; }
-        public int? PrimaryUserGroupId { get; set; }
-        public string UserName { get; set; }
-        public string UserPassword { get; set; }
+        public VBLightUser User { get; set; }
         public string Host { get; set; }
         public string IdHash { get; set; }
         public int LastActivityRaw { get; set; }
