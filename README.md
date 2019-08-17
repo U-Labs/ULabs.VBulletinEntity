@@ -239,6 +239,10 @@ Since Light Managers are very new, we currently only have one:
 
 * [`VBLightDashboardManager`](./ULabs.VBulletinEntity/LightManager/VBLightDashboardManager.cs)
 
+Note that currently no async support is present because of 
+[a bug in Dapper](https://github.com/mysql-net/MySqlConnector/issues/523#issuecomment-399701445)
+that automatically closes the connection after each query. 
+
 ## Application Warmup
 [A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
 This thread is a bit older, but the general problem also applys to EF Core as well as other ORMs: On the first request, everything needs to
