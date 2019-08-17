@@ -71,13 +71,14 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             if (createIfRestoreable) {
                 // Attemp 2: We don't have a valid VB session, but the users pw may be still stored in the cookie which we can use to generate a new session as some kind of SSO
-                int? cookieUserId = GetCookieUserId();
-                if (!cookieUserId.HasValue || !ValidateUserFromCookie(cookieUserId.Value)) {
-                    // ToDo: Create guest session 
-                    return null;
-                }
                 // ToDo: Set location, delete old invalid sessions
-                sessionHash = Create(cookieUserId.Value, "VBLightSessionManager");
+                int? cookieUserId = GetCookieUserId();
+                if(cookieUserId.HasValue && ValidateUserFromCookie(cookieUserId.Value)) {
+                    sessionHash = Create(cookieUserId.Value, "VBLightSessionManager");
+                }else {
+                    sessionHash = Create(0, "VBLightSessionManagerGuest");
+                }
+                
                 session = Get(sessionHash);
                 // ToDo: Set session duration from config like VBSessionManager does
                 SetSessionCookie(session.SessionHash);
