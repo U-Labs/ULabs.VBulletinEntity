@@ -7,8 +7,9 @@ using ULabs.VBulletinEntity.Manager;
 namespace ULabs.VBulletinEntity.Attributes {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public class VBAuthorizeAttribute : Attribute, IResourceFilter {
-        public VBAuthorizeAttribute() {
-
+        string loginRedirectUrl;
+        public VBAuthorizeAttribute(string loginRedirectUrl = "") {
+            this.loginRedirectUrl = loginRedirectUrl;
         }
 
         T GetService<T>(ResourceExecutingContext context) {
@@ -21,9 +22,12 @@ namespace ULabs.VBulletinEntity.Attributes {
             var userSession = sessionManager.GetCurrentAsync().Result;
             // Session shouldn't be null any more since we implemented guest sessions, too
             if (!userSession.LoggedIn) {
-                var settingsManager = GetService<VBSettingsManager>(context);
-                // ToDo: Redirect to specific login page if exists (login.php redirects to index)
-                context.Result = new RedirectResult(settingsManager.GetCommonSettings().BaseUrl);
+                if (string.IsNullOrEmpty(loginRedirectUrl)) {
+                    var settingsManager = GetService<VBSettingsManager>(context);
+                    loginRedirectUrl = settingsManager.GetCommonSettings().BaseUrl;
+                }
+                
+                context.Result = new RedirectResult(loginRedirectUrl);
             }
         }
 
