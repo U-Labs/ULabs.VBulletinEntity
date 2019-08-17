@@ -38,10 +38,10 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
             return null;
         }
-        async Task<bool> ValidateUserFromCookie(int cookieUserId) {
+        bool ValidateUserFromCookie(int cookieUserId) {
             var cookiePassword = cookies[$"{cookiePrefix}_password"];
 
-            string userDbPassword = await db.QueryFirstAsync<string>("SELECT password FROM user WHERE userid = @userId", new { userId = cookieUserId });
+            string userDbPassword = db.QueryFirst<string>("SELECT password FROM user WHERE userid = @userId", new { userId = cookieUserId });
             if (string.IsNullOrEmpty(userDbPassword)) {
                 // The password is invalid. Now we don't have any chance to validate the users credentials
                 return false;
@@ -57,13 +57,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             context.Response.Cookies.Append($"{cookiePrefix}_sessionhash", sessionHash, cookieOptions);
         }
-        public async Task<VBLightSession> GetCurrentAsync(bool createIfRestoreable = true) {
+        public VBLightSession GetCurrent(bool createIfRestoreable = true) {
             VBLightSession session = null;
 
             if (cookies.TryGetValue($"{cookiePrefix}_sessionhash", out string sessionHash)) {
-                session = await GetAsync(sessionHash);
+                session = Get(sessionHash);
 
                 if (session != null) {
+                    UpdateLastActivity(sessionHash, "VBLightSessionManagerRefresh");
                     return session;
                 }
             }
@@ -71,20 +72,20 @@ namespace ULabs.VBulletinEntity.LightManager {
             if (createIfRestoreable) {
                 // Attemp 2: We don't have a valid VB session, but the users pw may be still stored in the cookie which we can use to generate a new session as some kind of SSO
                 int? cookieUserId = GetCookieUserId();
-                if (!cookieUserId.HasValue || !await ValidateUserFromCookie(cookieUserId.Value)) {
+                if (!cookieUserId.HasValue || !ValidateUserFromCookie(cookieUserId.Value)) {
                     // ToDo: Create guest session 
                     return null;
                 }
                 // ToDo: Set location, delete old invalid sessions
-                sessionHash = await CreateAsync(cookieUserId.Value, "VBLightSessionManager");
-                session = await GetAsync(sessionHash);
+                sessionHash = Create(cookieUserId.Value, "VBLightSessionManager");
+                session = Get(sessionHash);
                 // ToDo: Set session duration from config like VBSessionManager does
                 SetSessionCookie(session.SessionHash);
             }
             return session;
         }
 
-        public async Task<VBLightSession> GetAsync(string sessionHash, bool updateLastActivity = false, string location = "") {
+        public VBLightSession Get(string sessionHash, bool updateLastActivity = false, string location = "") {
             // ToDo: Validate Cookie timeout 
             string sql = @"
                 SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, s.loggedin AS LoggedInRaw, 
@@ -94,7 +95,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN user u ON (u.userid = s.userid)
                 WHERE s.sessionhash = @sessionHash";
             var args = new { sessionHash = sessionHash };
-            var session = await db.QueryFirstAsync<VBLightSession>(sql, args);
+            var session = db.QueryFirst<VBLightSession>(sql, args);
 
             if (session != null && updateLastActivity) {
                 UpdateLastActivity(session.SessionHash, location);
@@ -102,19 +103,19 @@ namespace ULabs.VBulletinEntity.LightManager {
             return session;
         }
 
-        public async void UpdateLastActivity(string sessionHash, string location) {
+        public void UpdateLastActivity(string sessionHash, string location) {
             var args = new {
                 sessionHash = sessionHash,
                 location = location
             };
-            await db.ExecuteAsync(@"
+            db.Execute(@"
                 UPDATE session
                 SET lastactivity = UNIX_TIMESTAMP(),
                 location = @location
                 WHERE sessionhash = @sessionHash
             ", args);
         }
-        public async Task<string> CreateAsync(int userId, string location, int inForumId = 0, int inThreadId = 0) {
+        public string Create(int userId, string location, int inForumId = 0, int inThreadId = 0) {
             // ToDo: Add forum/thread for location
             string sql = @"
                 INSERT into session
@@ -142,7 +143,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 inThreadId = inThreadId,
                 loggedIn = userId > 0 ? 1 : 0
             };
-            await db.ExecuteAsync(sql, args);
+            db.Execute(sql, args);
             return args.sessionHash;
         }
     }

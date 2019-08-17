@@ -14,9 +14,9 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             this.lightDashboardManager = lightDashboardManager;
             this.lightSessionManager = lightSessionManager;
         }
-        public async Task<IActionResult> Dashboard() {
-            var session = lightSessionManager.GetCurrentAsync();
-            var newestThreads = await lightDashboardManager.GetNewestThreadsAsync(10);
+        public IActionResult Dashboard() {
+            var session = lightSessionManager.GetCurrent();
+            var newestThreads = lightDashboardManager.GetNewestThreads(10);
             return View(newestThreads);
         }
     }
