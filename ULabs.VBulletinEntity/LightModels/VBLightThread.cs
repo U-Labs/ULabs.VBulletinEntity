@@ -24,12 +24,5 @@ namespace ULabs.VBulletinEntity.LightModels {
         public string HtmlDecodedTitle {
             get => HttpUtility.HtmlDecode(Title);
         }
-        public string GetLastPosterAvatarUrl(string forumBaseUrl) {
-            if (LastPoster == null) {
-                // ToDo: VB has not setting for the default Avatar. We should specify this in custom settings somewhere
-                return "https://u-img.net/img/4037Ld.png";
-            }
-            return $"{forumBaseUrl}/customavatars/avatar{LastPoster.UserId}_{LastPoster.AvatarRevision}.gif";
-        }
     }
 }
