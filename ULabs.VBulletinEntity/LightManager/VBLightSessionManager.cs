@@ -20,12 +20,6 @@ namespace ULabs.VBulletinEntity.LightManager {
         IRequestCookieCollection cookies;
         TimeSpan cookieTimeout = new TimeSpan(days: 30, 0, 0, 0);
 
-        string sessionBaseQuery = @"
-            SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, s.loggedin AS LoggedInRaw, 
-	            s.isbot AS IsBot,
-            u.usergroupid AS PrimaryUserGroupId, u.username AS UserName
-            FROM session s
-            LEFT JOIN user u ON (u.userid = s.userid)";
         public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, MySqlConnection db, string cookieSalt, string cookiePrefix) {
             this.contextAccessor = contextAccessor;
             this.sessionHelper = sessionHelper;
@@ -89,7 +83,13 @@ namespace ULabs.VBulletinEntity.LightManager {
 
         public async Task<VBLightSession> GetAsync(string sessionHash, bool updateLastActivity = false, string location = "") {
             // ToDo: Validate Cookie timeout 
-            string sql = $@"{sessionBaseQuery} WHERE s.sessionhash = @sessionHash";
+            string sql = @"
+                SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, s.loggedin AS LoggedInRaw, 
+	                s.isbot AS IsBot,
+                u.usergroupid AS PrimaryUserGroupId, u.username AS UserName
+                FROM session s
+                LEFT JOIN user u ON (u.userid = s.userid)
+                WHERE s.sessionhash = @sessionHash";
             var args = new { sessionHash = sessionHash };
             var session = await db.QueryFirstAsync<VBLightSession>(sql, args);
 
