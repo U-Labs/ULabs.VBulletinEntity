@@ -96,7 +96,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN user u ON (u.userid = s.userid)
                 WHERE s.sessionhash = @sessionHash";
             var args = new { sessionHash = sessionHash };
-            var session = db.QueryFirst<VBLightSession>(sql, args);
+            var session = db.QueryFirstOrDefault<VBLightSession>(sql, args);
 
             if (session != null && updateLastActivity) {
                 UpdateLastActivity(session.SessionHash, location);
