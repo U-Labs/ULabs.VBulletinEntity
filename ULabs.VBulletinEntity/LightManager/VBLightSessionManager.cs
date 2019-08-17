@@ -28,6 +28,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             this.cookieSalt = cookieSalt;
             cookies = contextAccessor.HttpContext.Request.Cookies;
         }
+        ~VBLightSessionManager() {
+            db.Close();
+        }
         int? GetCookieUserId() {
             string cookieUserIdRaw = cookies[$"{cookiePrefix}_userid"];
             if (int.TryParse(cookieUserIdRaw, out int cookieUserId)) {
