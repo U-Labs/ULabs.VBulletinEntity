@@ -5,6 +5,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ULabs.VBulletinEntity.LightModels;
@@ -17,12 +18,14 @@ namespace ULabs.VBulletinEntity.LightManager {
         readonly string cookiePrefix;
         readonly string cookieSalt;
         readonly VBSessionHelper sessionHelper;
+        readonly VBLightSettingsManager lightSettingsManager;
         IRequestCookieCollection cookies;
         TimeSpan cookieTimeout = new TimeSpan(days: 30, 0, 0, 0);
 
-        public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, MySqlConnection db, string cookieSalt, string cookiePrefix) {
+        public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, VBLightSettingsManager lightSettingsManager, MySqlConnection db, string cookieSalt, string cookiePrefix) {
             this.contextAccessor = contextAccessor;
             this.sessionHelper = sessionHelper;
+            this.lightSettingsManager = lightSettingsManager;
             this.db = db;
             this.cookiePrefix = cookiePrefix;
             this.cookieSalt = cookieSalt;
@@ -152,6 +155,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             db.Execute(sql, args);
             return args.sessionHash;
+        }
+
+        public string GetAvatarUrl(int userId, int avatarRevision) {
+            if (avatarRevision == 0) {
+                // ToDo: VB has not setting for the default Avatar. We should specify this in custom settings somewhere
+                return "https://u-img.net/img/4037Ld.png";
+            }
+            return $"{lightSettingsManager.CommonSettings.BaseUrl}/customavatars/avatar{userId}_{avatarRevision}.gif";
         }
     }
 }
