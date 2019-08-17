@@ -69,8 +69,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                     f.forumid as ForumId, f.title as Title
                     FROM thread t
                     LEFT JOIN user u ON (u.userid = t.lastposterid)
-                    LEFT JOIN forum f ON (f.forumid = t.forumid)" +
-                    (forumIds != null ? "WHERE t.forumid IN @childForumIds" : "") +
+                    LEFT JOIN forum f ON (f.forumid = t.forumid) " +
+                    (forumIds != null ? "WHERE t.forumid IN @childForumIds " : "") +
                     @"ORDER BY t.lastpost DESC
                     LIMIT @count", mappingFunc, args, splitOn: "LastPosterUserId,ForumId");
             return threads.ToList();
