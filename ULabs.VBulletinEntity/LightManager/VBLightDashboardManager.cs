@@ -6,13 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
 using ULabs.VBulletinEntity.LightModels;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightDashboardManager {
-        readonly DbConnection db;
-        public VBLightDashboardManager(VBDbContext db) {
-            this.db = db.Database.GetDbConnection();
+        readonly MySqlConnection db;
+        public VBLightDashboardManager(MySqlConnection db) {
+            this.db = db;
         }
 
         /// <summary>
