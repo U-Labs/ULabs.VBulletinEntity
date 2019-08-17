@@ -60,14 +60,27 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             context.Response.Cookies.Append($"{cookiePrefix}_sessionhash", sessionHash, cookieOptions);
         }
-        public VBLightSession GetCurrent(bool createIfRestoreable = true) {
+        string GetCurrentLocation(string location) {
+            if (!string.IsNullOrEmpty(location)) {
+                return location;
+            }
+
+            if(contextAccessor != null ) {
+                var request = contextAccessor.HttpContext.Request;
+                location = $"{request.PathBase}{request.Path}";
+            }
+            
+            return location;
+        }
+        public VBLightSession GetCurrent(bool createIfRestoreable = true, string location = "") {
             VBLightSession session = null;
+            location = GetCurrentLocation(location);
 
             if (cookies.TryGetValue($"{cookiePrefix}_sessionhash", out string sessionHash)) {
                 session = Get(sessionHash);
 
                 if (session != null) {
-                    UpdateLastActivity(sessionHash, "VBLightSessionManagerRefresh");
+                    UpdateLastActivity(sessionHash, location);
                     return session;
                 }
             }
@@ -77,9 +90,9 @@ namespace ULabs.VBulletinEntity.LightManager {
                 // ToDo: Set location, delete old invalid sessions
                 int? cookieUserId = GetCookieUserId();
                 if (cookieUserId.HasValue && ValidateUserFromCookie(cookieUserId.Value)) {
-                    sessionHash = Create(cookieUserId.Value, "VBLightSessionManager");
+                    sessionHash = Create(cookieUserId.Value, location);
                 } else {
-                    sessionHash = Create(0, "VBLightSessionManagerGuest");
+                    sessionHash = Create(0, location);
                 }
 
                 session = Get(sessionHash);
