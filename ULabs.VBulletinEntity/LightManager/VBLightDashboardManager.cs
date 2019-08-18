@@ -57,9 +57,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
         /// </summary>
         /// <param name="count">Limit the fetched rows</param>
+        /// <param name="onlyWithoutReplys">If true, only new threads without any reply will be fetched (good to display new threads without any reply)</param>
         /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
         /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        public List<VBLightThread> GetNewestThreads(int count = 10, List<int> includedForumIds = null, List<int> excludedForumIds = null) {
+        public List<VBLightThread> GetNewestThreads(int count = 10, bool onlyWithoutReplys = false, List<int> includedForumIds = null, List<int> excludedForumIds = null) {
             if (includedForumIds != null && excludedForumIds != null) {
                 throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
             }
@@ -74,6 +75,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 thread.Forum = forum;
                 return thread;
             };
+            bool hasExclude = excludedForumIds != null || includedForumIds != null;
+            bool hasWhere = hasExclude || onlyWithoutReplys;
             var threads = db.Query(@"
                     SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastposterid as LastPosterUserId, t.lastpostid as LastPostId, 
                         t.forumid as ForumId, t.replycount as ReplysCount,
@@ -82,8 +85,10 @@ namespace ULabs.VBulletinEntity.LightManager {
                     FROM thread t
                     LEFT JOIN user u ON (u.userid = t.lastposterid)
                     LEFT JOIN forum f ON (f.forumid = t.forumid)" +
-                    (includedForumIds != null ? "WHERE t.forumid IN @includedForumIds " : "") +
-                    (excludedForumIds != null ? "WHERE t.forumid NOT IN @excludedForumIds " : "") +
+                    (hasWhere ? "WHERE " : "") +
+                    (includedForumIds != null ? "t.forumid IN @includedForumIds " : "") +
+                    (excludedForumIds != null ? "t.forumid NOT IN @excludedForumIds " : "") +
+                    (onlyWithoutReplys ? (hasExclude ? "AND " : "") + "t.replycount = 0 " : "") +
                     @"ORDER BY t.lastpost DESC
                     LIMIT @count", mappingFunc, args, splitOn: "LastPosterUserId,ForumId");
             return threads.ToList();
