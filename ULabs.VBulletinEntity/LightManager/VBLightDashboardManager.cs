@@ -58,9 +58,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         /// <param name="count">Limit the fetched rows</param>
         /// <param name="onlyWithoutReplys">If true, only new threads without any reply will be fetched (good to display new threads without any reply)</param>
+        /// <param name="orderByLastPostDate">If true, the threads were ordered by the date of their last reply. Otherwise the creation time of the thread is used.</param>
         /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
         /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        public List<VBLightThread> GetNewestThreads(int count = 10, bool onlyWithoutReplys = false, List<int> includedForumIds = null, List<int> excludedForumIds = null) {
+        public List<VBLightThread> GetNewestThreads(int count = 10, bool onlyWithoutReplys = false, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null) {
             if (includedForumIds != null && excludedForumIds != null) {
                 throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
             }
@@ -89,7 +90,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                     (includedForumIds != null ? "t.forumid IN @includedForumIds " : "") +
                     (excludedForumIds != null ? "t.forumid NOT IN @excludedForumIds " : "") +
                     (onlyWithoutReplys ? (hasExclude ? "AND " : "") + "t.replycount = 0 " : "") +
-                    @"ORDER BY t.lastpost DESC
+                    @"ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") +  @"DESC
                     LIMIT @count", mappingFunc, args, splitOn: "LastPosterUserId,ForumId");
             return threads.ToList();
         }
