@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.2.5</Version>
+    <Version>0.2.6.2</Version>
     <Authors>DMW007</Authors>
     <Company>U-Labs</Company>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -10,6 +10,10 @@
     <RepositoryUrl>https://github.com/U-Labs/ULabs.VBulletinEntity</RepositoryUrl>
     <PackageTags>net-core,c-sharp,vbulletin,entity-framework,mysql,mariadb</PackageTags>
     <Description>A vBulletin 4 database abstraction layer for Entity Framework Core</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\Development\ULabs\ULabs.VBulletinEntity\ULabs.VBulletinEntity\ULabs.VBulletinEntity.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
