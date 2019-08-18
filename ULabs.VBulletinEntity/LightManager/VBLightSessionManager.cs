@@ -15,11 +15,10 @@ namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightSessionManager {
         readonly IHttpContextAccessor contextAccessor;
         readonly DbConnection db;
-        readonly string cookiePrefix;
         readonly string cookieSalt;
         readonly VBSessionHelper sessionHelper;
         readonly VBLightSettingsManager lightSettingsManager;
-        IRequestCookieCollection cookies;
+        IRequestCookieCollection contextCookies;
         TimeSpan cookieTimeout = new TimeSpan(days: 30, 0, 0, 0);
 
         public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, VBLightSettingsManager lightSettingsManager, MySqlConnection db, string cookieSalt, string cookiePrefix) {
@@ -27,22 +26,27 @@ namespace ULabs.VBulletinEntity.LightManager {
             this.sessionHelper = sessionHelper;
             this.lightSettingsManager = lightSettingsManager;
             this.db = db;
-            this.cookiePrefix = cookiePrefix;
+            CookiePrefix = cookiePrefix;
             this.cookieSalt = cookieSalt;
-            cookies = contextAccessor.HttpContext.Request.Cookies;
+            contextCookies = contextAccessor.HttpContext.Request.Cookies;
         }
+
+        /// <summary>
+        /// Allows other systems like SignalR to fetch the cookie prefix for custo, integrations
+        /// </summary>
+        public string CookiePrefix { get; private set; }
         ~VBLightSessionManager() {
             db.Close();
         }
-        int? GetCookieUserId() {
-            string cookieUserIdRaw = cookies[$"{cookiePrefix}_userid"];
+        int? GetCookieUserId(IRequestCookieCollection cookies) {
+            string cookieUserIdRaw = cookies[$"{CookiePrefix}_userid"];
             if (int.TryParse(cookieUserIdRaw, out int cookieUserId)) {
                 return cookieUserId;
             }
             return null;
         }
-        bool ValidateUserFromCookie(int cookieUserId) {
-            var cookiePassword = cookies[$"{cookiePrefix}_password"];
+        bool ValidateUserFromCookie(IRequestCookieCollection cookies, int cookieUserId) {
+            var cookiePassword = cookies[$"{CookiePrefix}_password"];
 
             string userDbPassword = db.QueryFirst<string>("SELECT password FROM user WHERE userid = @userId", new { userId = cookieUserId });
             if (string.IsNullOrEmpty(userDbPassword)) {
@@ -58,7 +62,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             var cookieOptions = new CookieOptions() {
                 Expires = DateTime.Now.Add(cookieTimeout)
             };
-            context.Response.Cookies.Append($"{cookiePrefix}_sessionhash", sessionHash, cookieOptions);
+            context.Response.Cookies.Append($"{CookiePrefix}_sessionhash", sessionHash, cookieOptions);
         }
         string GetCurrentLocation(string location) {
             if (!string.IsNullOrEmpty(location)) {
@@ -72,11 +76,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             
             return location;
         }
-        public VBLightSession GetCurrent(bool createIfRestoreable = true, string location = "") {
+        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool createIfRestoreable = true, string location = "") {
+            if(cookies == null) {
+                cookies = contextCookies;
+            }
             VBLightSession session = null;
             location = GetCurrentLocation(location);
 
-            if (cookies.TryGetValue($"{cookiePrefix}_sessionhash", out string sessionHash)) {
+            if (cookies.TryGetValue($"{CookiePrefix}_sessionhash", out string sessionHash)) {
                 session = Get(sessionHash);
 
                 if (session != null) {
@@ -88,8 +95,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             if (createIfRestoreable) {
                 // Attemp 2: We don't have a valid VB session, but the users pw may be still stored in the cookie which we can use to generate a new session as some kind of SSO
                 // ToDo: Set location, delete old invalid sessions
-                int? cookieUserId = GetCookieUserId();
-                if (cookieUserId.HasValue && ValidateUserFromCookie(cookieUserId.Value)) {
+                int? cookieUserId = GetCookieUserId(cookies);
+                if (cookieUserId.HasValue && ValidateUserFromCookie(cookies, cookieUserId.Value)) {
                     sessionHash = Create(cookieUserId.Value, location);
                 } else {
                     sessionHash = Create(0, location);
