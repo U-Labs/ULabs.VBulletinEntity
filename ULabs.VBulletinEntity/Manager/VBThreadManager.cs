@@ -316,7 +316,9 @@ namespace ULabs.VBulletinEntity.Manager {
         }
 
         public async Task<VBPost> CreateReplyAsync(CreateReplyModel replyModel) {
-            var thread = await db.Threads.FindAsync(replyModel.ThreadId);
+            // Forum is required to generate view thread url after reply is saved
+            var thread = await db.Threads.Include(t => t.Forum)
+                .FirstOrDefaultAsync(t => t.Id == replyModel.ThreadId);
             var post = new VBPost(replyModel.Author, replyModel.Title, replyModel.Text, replyModel.IpAddress, thread.Id);
 
             var lastPost = await db.Posts.Where(p => p.ThreadId == replyModel.ThreadId)
@@ -350,6 +352,7 @@ namespace ULabs.VBulletinEntity.Manager {
 
             cache.Remove(VBCacheKey.Thread, thread.Id.ToString());
             cache.Remove(VBCacheKey.ThreadReplys, thread.Id.ToString());
+            post.Thread = thread;
             return post;
         }
 
