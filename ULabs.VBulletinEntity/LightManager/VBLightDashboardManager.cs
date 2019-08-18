@@ -17,9 +17,9 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
-        /// Gets a list of forum ids where the user group doesn't have at least view permission
+        /// Gets a list of forum ids (key) with their corresponding childs (value) where the user group doesn't have at least view permission. The childs always contain the id of the parent forum (from VB DB)
         /// </summary>
-        public List<int> GetForumIdsWithoutViewPermission(int userGroupId) {
+        public Dictionary<int, List<int>> GetForumIdsWithoutViewPermission(int userGroupId) {
             var groupArgs = new { userGroupId };
             var groupPerm = db.QueryFirst<int>(@"
                 SELECT forumpermissions
@@ -29,12 +29,17 @@ namespace ULabs.VBulletinEntity.LightManager {
                 userGroupId = userGroupId,
                 groupPerm = groupPerm
             };
-            var nonVisibleForumIds = db.Query<int>(@"
-                SELECT forum.forumid
+            var nonVisibleForumIds = db.Query(@"
+                SELECT forum.forumid, forum.childlist
                 FROM forum
                 LEFT JOIN forumpermission ON(forumpermission.forumid = forum.forumid AND (forumpermission.forumpermissions = null or forumpermission.usergroupid = @userGroupId))
                 WHERE NOT (forumpermissions & 1) OR (forumpermissions IS NULL AND NOT (@groupPerm & 1));", args);
-            return nonVisibleForumIds.ToList();
+            return nonVisibleForumIds.ToDictionary(
+                x => (int)x.forumid, 
+                x => ((string)x.childlist).Split(',')
+                        .Select(int.Parse)
+                        .ToList()
+            );
         }
 
         /// <summary>
