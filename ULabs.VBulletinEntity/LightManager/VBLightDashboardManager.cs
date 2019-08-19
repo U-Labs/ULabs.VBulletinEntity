@@ -102,7 +102,6 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="userId">Id of the user to check for new replys in his active threads</param>
         /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
         /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
-        /// <returns></returns>
         public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, List<int> ignoredForumIds = null) {
             var args = new {
                 userId,
@@ -134,6 +133,23 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LIMIT @count";
             var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
             return unreadThreads.ToList();
+        }
+
+        /// <summary>
+        /// Updates the contentread table to mark VB content as read or inserts a new row for completely unread threads
+        /// </summary>
+        /// <param name="contentId">Id of the VB content (e.g. ThreadId)</param>
+        /// <param name="userId">Id of the user who read the content</param>
+        /// <param name="contentTypeId">2 for threads</param>
+        /// <param name="readType">VB enum: read, view or other</param>
+        public void MarkContentAsRead(int contentId, int userId, int contentTypeId = 2, string readType = "view") {
+            var args = new { contentId, userId, contentTypeId, readType };
+            string sql = @"
+                INSERT INTO contentread(contenttypeid, contentid, userid, readtype, dateline)
+                    VALUES (@contentTypeId, @contentId, @userId, @readType, UNIX_TIMESTAMP())
+                ON DUPLICATE KEY UPDATE dateline = UNIX_TIMESTAMP()
+            ";
+            db.Execute(sql, args);
         }
     }
 }
