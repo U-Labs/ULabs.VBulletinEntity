@@ -113,7 +113,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread
             // ContentId 2 = Threads
             string sql = @"
-                SELECT r.contentid AS ThreadId, r.dateline AS LastThreadReadTimeRaw, t.title AS ThreadTitle,
+                SELECT r.contentid AS ThreadId, 
+					t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
 				    f.forumid AS ForumId, f.title AS ForumTitle,
 					u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision
                 FROM contentread r, post p, thread t, forum f, user u
