@@ -94,5 +94,41 @@ namespace ULabs.VBulletinEntity.LightManager {
                     LIMIT @count", mappingFunc, args, splitOn: "LastPosterUserId,ForumId");
             return threads.ToList();
         }
+        
+        /// <summary>
+        /// Lists Threads with new replys from others in which the user was active (wrote at lest one post) ordered by last post time of the thread.
+        /// Note that you should disable auto deletion of the contentread in VB to use this! Otherwise users will get already seen new replys to older threads because of the contentread table purge!
+        /// </summary>
+        /// <param name="userId">Id of the user to check for new replys in his active threads</param>
+        /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
+        /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
+        /// <returns></returns>
+        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, List<int> ignoredForumIds = null) {
+            var args = new {
+                userId,
+                count,
+                ignoredForumIds
+            };
+
+            // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread
+            // ContentId 2 = Threads
+            string sql = @"
+                SELECT r.contentid AS ThreadId, r.dateline AS LastThreadReadTimeRaw, t.title AS ThreadTitle, f.forumid AS ForumId, f.title AS ForumTitle
+                FROM contentread r, post p, thread t, forum f
+                WHERE r.contenttypeid = 2
+                AND r.readtype = 'view'
+                AND r.contentid = p.threadid
+                AND t.threadid = r.contentid
+                AND p.userid = r.userid
+                AND t.lastpost > r.dateline
+                AND r.userid = @userId
+                AND t.lastposterid != r.userid " +
+                (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") + @"
+                GROUP BY r.contentid
+                ORDER BY t.lastpost DESC
+                LIMIT @count";
+            var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
+            return unreadThreads.ToList();
+        }
     }
 }
