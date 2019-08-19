@@ -10,6 +10,8 @@ namespace ULabs.VBulletinEntity.LightModels {
         public int LastThreadReadTimeRaw { get; set; }
         public int ForumId { get; set; }
         public string ForumTitle { get; set; }
+        public int LastPosterUserId { get; set; }
+        public int LastPosterAvatarRevision { get; set; }
 
         public DateTime LastThreadReadTime {
             get => LastThreadReadTimeRaw.ToDateTime();
