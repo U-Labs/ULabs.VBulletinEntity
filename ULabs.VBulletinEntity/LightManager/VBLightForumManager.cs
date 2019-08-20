@@ -38,7 +38,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="allForums">List of all existing forums to fetch childs from. Could be fetched using GetPermission when selecting the key.</param>
         /// <param name="parents">The forums which childs should get loaded</param>
         /// <returns></returns>
-        List<VBLightForum> GetChildsRecursive(List<VBLightForum> allForums, List<VBLightForum> parents) {
+        public List<VBLightForum> GetChildsRecursive(List<VBLightForum> allForums, List<VBLightForum> parents) {
             var all = new List<VBLightForum>();
             parents.ForEach(parent => {
                 // Childs of the first level from the current parent
