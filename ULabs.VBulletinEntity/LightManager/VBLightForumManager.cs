@@ -49,6 +49,32 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Lists all forums with their corresponding permissions for the specified group
+        /// </summary>
+        /// <param name="userGroupId">Id of the group, where permissions should be fetched</param>
+        /// <param name="onlyParentCategories">Per default, we fetch all forums. You can limit it to parent forums (parent = -1) by setting this to true.</param>
+        /// <returns></returns>
+        public Dictionary<VBLightForum, VBForumFlags> GetPermissions(int userGroupId, bool onlyParentCategories = false) {
+            Func<VBLightForum, dynamic, KeyValuePair<VBLightForum, VBForumFlags>> mappingFunc = (forum, permissionRaw) => {
+                string permissionValue = permissionRaw.Permission.ToString();
+                var permission = (VBForumFlags)Enum.Parse(typeof(VBForumFlags), permissionValue);
+                return new KeyValuePair<VBLightForum, VBForumFlags>(forum, permission);
+            };
+            // UserGroupId from permissions is only selected to have a split column for dapper. Instead we have to use parentlist, which needs mapping to VBLightForum by hand. 
+            string sql = @"
+                SELECT f.forumid AS ForumId, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw,
+                IF(fp.forumpermissions IS NULL, g.forumpermissions, fp.forumpermissions) AS Permission
+                FROM forum f
+                LEFT JOIN forumpermission fp ON(fp.usergroupid = @userGroupId AND FIND_IN_SET(fp.forumid, f.parentlist))
+                INNER JOIN usergroup g ON(g.usergroupid = @userGroupId) " +
+                (onlyParentCategories ? "AND f.parentid = -1" : "");
+
+            var permissions = db.Query(sql, mappingFunc, new { userGroupId }, splitOn: "Permission")
+                .ToDictionary(x => x.Key, x => x.Value);
+            return permissions;
+        }
+
+        /// <summary>
         /// Returns a list of all forums where the group can do certain actions specified by flags
         /// </summary>
         public List<VBLightForum> GetForumsWhereUserCan(int userGroupId, VBForumFlags flags, bool onlyParentCategories = false) {
