@@ -31,6 +31,32 @@ namespace ULabs.VBulletinEntity.LightManager {
             var forum = db.QueryFirstOrDefault<VBLightForum>(sql, new { forumId });
             return forum;
         }
+
+        /// <summary>
+        /// Lists ALL child forums of the parent forums recursively on any nesting level. Used in our U-Labs Dashboard where we want to create category boxes based on existing forums with including any subforum.
+        /// </summary>
+        /// <param name="allForums">List of all existing forums to fetch childs from. Could be fetched using GetPermission when selecting the key.</param>
+        /// <param name="parents">The forums which childs should get loaded</param>
+        /// <returns></returns>
+        List<VBLightForum> GetChildsRecursive(List<VBLightForum> allForums, List<VBLightForum> parents) {
+            var all = new List<VBLightForum>();
+            parents.ForEach(parent => {
+                // Childs of the first level from the current parent
+                var currentSubs = allForums.Where(f => f.ParentId == parent.ForumId).ToList();
+                bool subsExists = true;
+
+                do {
+                    all.AddRange(currentSubs);
+                    currentSubs = allForums.Where(f => f.ParentIds.Any(p => currentSubs.Any(c => c.ForumId == p)))
+                        .ToList();
+                    subsExists = currentSubs.Any(c => !all.Any(a => a.ForumId == c.ForumId));
+                } while (currentSubs != null && subsExists);
+            });
+
+            var uniqueChilds = all.Distinct().ToList();
+            return uniqueChilds;
+        }
+
         /// <summary>
         /// Get the VB bitfield permission for a given forum/usergroup. Checks the specific forum permission first and use group permission if forum permission doesnt exist.
         /// </summary>
