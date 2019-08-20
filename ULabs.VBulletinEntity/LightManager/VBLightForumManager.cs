@@ -63,20 +63,32 @@ namespace ULabs.VBulletinEntity.LightManager {
             return BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories);
         }
 
-        List<VBLightForum> BuildForumPermissionQuery(int userGroupId, VBForumFlags flags, bool negate, bool onlyParentCategories) {
+        List<VBLightForum> BuildForumPermissionQuery(int userGroupId, VBForumFlags? flags, bool negate, bool onlyParentCategories) {
             var args = new {
                 userGroupId,
                 flags = (int)flags
             };
-            string sql = @"
+            bool hasWhere = flags != null || onlyParentCategories;
+
+            var sql = new StringBuilder();
+            sql.Append(@"
                 SELECT f.forumid AS ForumId, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw
                 FROM forum f
                 INNER JOIN usergroup g ON(g.usergroupid = @userGroupId)
-                LEFT JOIN forumpermission fp ON(fp.usergroupid = g.usergroupid AND FIND_IN_SET(fp.forumid, f.parentlist))
-                WHERE " + (negate ? "NOT " : "") + @"IF(fp.forumpermissions IS NULL, g.forumpermissions, fp.forumpermissions) & @flags " +
-                (onlyParentCategories ? "AND f.parentid = -1 " : "") +
-                "GROUP BY f.forumid;";
-            var forums = db.Query<VBLightForum>(sql, args);
+                LEFT JOIN forumpermission fp ON(fp.usergroupid = g.usergroupid AND FIND_IN_SET(fp.forumid, f.parentlist))");
+
+            if (hasWhere) {
+                sql.Append("WHERE ");
+            }
+            if(flags != null) {
+                sql.Append((negate ? "NOT " : "") + "(IF(fp.forumpermissions IS NULL, g.forumpermissions, fp.forumpermissions) & @flags) ");
+            }
+            if(onlyParentCategories) {
+                sql.Append("AND f.parentid = -1 ");
+            }
+
+            sql.Append("GROUP BY f.forumid;");
+            var forums = db.Query<VBLightForum>(sql.ToString(), args);
             return forums.ToList();
         }
     }
