@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.LightManager;
+using ULabs.VBulletinEntity.LightModels.Thread;
 using ULabs.VBulletinEntity.Manager;
 using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Tools;
@@ -57,6 +58,7 @@ namespace ULabs.VBulletinEntity {
             services.AddScoped<VBLightDashboardManager>();
             services.AddScoped<VBLightSettingsManager>();
             services.AddScoped<VBLightForumManager>();
+            services.AddScoped<VBLightThreadManager>();
 
             services.AddScoped(x => new VBLightSessionManager(x.GetRequiredService<IHttpContextAccessor>(), x.GetRequiredService<VBSessionHelper>(), x.GetRequiredService<VBLightSettingsManager>(), 
                 x.GetRequiredService<MySqlConnection>(), vbCookieSalt, vbCookiePrefix));
