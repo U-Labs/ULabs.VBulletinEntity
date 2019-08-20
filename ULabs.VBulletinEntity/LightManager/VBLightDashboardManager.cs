@@ -32,11 +32,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
             }
 
-            var args = new {
-                includedForumIds = includedForumIds,
-                excludedForumIds = excludedForumIds,
-                count = count
-            };
+            var args = new { includedForumIds, excludedForumIds, count = count };
             Func<VBLightThread, VBLightUser, VBLightForum, VBLightThread> mappingFunc = (thread, user, forum) => {
                 thread.LastPoster = user;
                 thread.Forum = forum;
@@ -69,11 +65,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
         /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
         public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, List<int> ignoredForumIds = null) {
-            var args = new {
-                userId,
-                count,
-                ignoredForumIds
-            };
+            var args = new { userId, count, ignoredForumIds };
 
             // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread
             // ContentId 2 = Threads
