@@ -118,11 +118,17 @@ namespace ULabs.VBulletinEntity.LightManager {
         public VBLightSession Get(string sessionHash, bool updateLastActivity = false, string location = "") {
             Func<VBLightSession, VBLightUser, VBLightUserGroup, VBLightSession> mappingFunc = (dbSession, user, group) => {
                 // No related user and so no group exists on guest sessions
-                if(user != null) {
+                if(group != null) {
                     user.PrimaryUserGroup = group;
+                    dbSession.User = user;
+                }else {
+                    dbSession.User = new VBLightUser() {
+                        PrimaryUserGroup = new VBLightUserGroup() {
+                            Id = 2
+                        }
+                    };
                 }
 
-                dbSession.User = user;
                 return dbSession;
             };
             // ToDo: Validate Cookie timeout 
@@ -134,7 +140,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                     g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
-                LEFT JOIN usergroup g ON(g.usergroupid = IF(u.usergroupid IS NULL, 2, g.usergroupid))
+                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
                 WHERE s.sessionhash = @sessionHash
                 LIMIT 1";
             var args = new { sessionHash = sessionHash };

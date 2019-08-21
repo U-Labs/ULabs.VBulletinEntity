@@ -10,11 +10,12 @@ using ULabs.VBulletinEntity.Models.Permission;
 namespace ULabs.VBulletinEntityDemo.Models {
     public class LightDashboardModel {
         public List<VBLightThread> NewestThreads { get; set; }
-        public List<VBLightUnreadActiveThread> UnreadActiveThreads { get; set; }
         public List<VBLightForum> NotViewableCategories { get; set; }
         public List<VBLightForum> ViewableCategories { get; set; }
         public Dictionary<VBLightForum, VBForumFlags> CategoryPermissions { get; set; }
-        public List<VBLightPostThanks> RecentThanks { get; set; }
+        // Could both be null on guest users
+        public List<VBLightUnreadActiveThread> UnreadActiveThreads { get; set; } = new List<VBLightUnreadActiveThread>();
+        public List<VBLightPostThanks> RecentThanks { get; set; } = new List<VBLightPostThanks>();
         public LightDashboardModel(VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager, VBLightSessionManager lightSessionManager) {
             var session = lightSessionManager.GetCurrent();
             var forumsCanRead = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewThreads);
