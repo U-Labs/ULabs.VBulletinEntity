@@ -13,7 +13,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         string baseSplitOn = "LastPosterUserId,ForumId";
         // Order matters if SplitOn is set! All attributes from the first relation entity should be placed BEFORE the SplitOn key
         string baseQuery = @"
-            SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastpostid as LastPostId, 
+            SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastpostid as LastPostId, t.firstpostid as FirstPostId,
                         t.forumid as ForumId, t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, 
                     u.userid as UserId, u.avatarrevision as AvatarRevision,
                     f.forumid as ForumId, f.title as Title

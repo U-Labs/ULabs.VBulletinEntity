@@ -12,6 +12,7 @@ namespace ULabs.VBulletinEntity.LightModels {
         public string LastPosterName { get; set; }
         public VBLightUser LastPoster { get; set; }
         public int LastPosterUserId { get; set; }
+        public int FirstPostId { get; set; }
         public int LastPostId { get; set; }
         public int ForumId { get; set; }
         public VBLightForum Forum { get; set; }
