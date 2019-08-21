@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ULabs.VBulletinEntity.Tools;
 
-namespace ULabs.VBulletinEntity.LightModels {
+namespace ULabs.VBulletinEntity.LightModels.User {
     public class VBLightUser {
         public int UserId { get; set; }
         public string UserName { get; set; }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using ULabs.VBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightModels {

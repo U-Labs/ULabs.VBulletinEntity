@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Forum;
+using ULabs.VBulletinEntity.LightModels.User;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {

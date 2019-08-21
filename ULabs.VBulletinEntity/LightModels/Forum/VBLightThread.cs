@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Web;
+using ULabs.VBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightModels.Forum {
