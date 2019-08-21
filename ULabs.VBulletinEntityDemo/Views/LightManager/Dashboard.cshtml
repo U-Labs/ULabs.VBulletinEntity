@@ -1,7 +1,7 @@
-﻿@model List<VBLightThread>
+﻿@model LightDashboardModel
 
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-lg-7">
         <h1>Newest Threads</h1>
         <table class="table">
             <tr>
@@ -12,7 +12,7 @@
                 <th>Replys</th>
             </tr>
 
-            @foreach (var thread in Model) {
+            @foreach (var thread in Model.NewestThreads) {
                 <tr>
                     <td>
                         @thread.Title
@@ -25,6 +25,82 @@
                     <td>
                         @thread.ReplysCount
                     </td>
+                </tr>
+            }
+        </table>
+    </div>
+
+    <div class="col-lg-5">
+        <h1>New replys in active threads</h1>
+        <table class="table">
+            <tr>
+                <th>Title</th>
+                <th>Created at</th>
+            </tr>
+
+            @foreach (var thread in Model.UnreadActiveThreads) {
+                <tr>
+                    <td>
+                        @thread.ThreadTitle
+                    </td>
+                    <td>@thread.LastPostTime.ToLocalTime().ToString()</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <h1>Thanks since last activity</h1>
+        <table class="table">
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+            </tr>
+
+            @foreach (var thanks in Model.RecentThanks) {
+                <tr>
+                    <td>@thanks.ThreadTitle</td>
+                    <td>@thanks.Time.ToLocalTime().ToString()</td>
+                </tr>
+            }
+        </table>
+    </div>
+
+    <div class="col-lg-4">
+        <h1>Viewable categories</h1>
+        <table class="table">
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Permission</th>
+            </tr>
+
+            @foreach (var category in Model.ViewableCategories) {
+                var permission = Model.CategoryPermissions.FirstOrDefault(kvp => kvp.Key.ForumId == category.ForumId);
+
+                <tr>
+                    <td>@category.ForumId</td>
+                    <td>@category.Title</td>
+                    <td>@((int)permission.Value)</td>
+                </tr>
+            }
+        </table>
+    </div>
+
+    <div class="col-lg-4">
+        <h1>Not viewable categories</h1>
+        <table class="table">
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+            </tr>
+
+            @foreach (var category in Model.NotViewableCategories) {
+                <tr>
+                    <td>@category.ForumId</td>
+                    <td>@category.Title</td>
                 </tr>
             }
         </table>
