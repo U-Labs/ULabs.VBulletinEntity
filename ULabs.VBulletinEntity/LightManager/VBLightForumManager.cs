@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ULabs.VBulletinEntity.LightModels;
+using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.Models.Forum;
 using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntity.Tools;

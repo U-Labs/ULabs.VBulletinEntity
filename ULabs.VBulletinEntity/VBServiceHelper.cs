@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.LightManager;
-using ULabs.VBulletinEntity.LightModels.Thread;
+using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.Manager;
 using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Tools;

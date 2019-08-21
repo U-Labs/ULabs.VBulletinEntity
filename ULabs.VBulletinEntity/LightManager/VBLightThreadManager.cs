@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ULabs.VBulletinEntity.LightModels;
-using ULabs.VBulletinEntity.LightModels.Thread;
+using ULabs.VBulletinEntity.LightModels.Forum;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {

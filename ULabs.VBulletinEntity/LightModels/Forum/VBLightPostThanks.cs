@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ULabs.VBulletinEntity.Tools;
 
-namespace ULabs.VBulletinEntity.LightModels.Thread {
+namespace ULabs.VBulletinEntity.LightModels.Forum {
     public class VBLightPostThanks {
         public int PostId { get; set; }
         public int ThreadId { get; set; }

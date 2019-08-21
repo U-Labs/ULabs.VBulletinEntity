@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using ULabs.VBulletinEntity.Tools;
 
-namespace ULabs.VBulletinEntity.LightModels {
+namespace ULabs.VBulletinEntity.LightModels.Forum {
     public class VBLightForum {
         public int ForumId { get; set; }
         public string Title { get; set; }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ULabs.VBulletinEntity.LightManager;
 using ULabs.VBulletinEntity.LightModels;
-using ULabs.VBulletinEntity.LightModels.Thread;
+using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.Models.Permission;
 
 namespace ULabs.VBulletinEntityDemo.Models {

@@ -4,7 +4,7 @@ using System.Text;
 using System.Web;
 using ULabs.VBulletinEntity.Tools;
 
-namespace ULabs.VBulletinEntity.LightModels {
+namespace ULabs.VBulletinEntity.LightModels.Forum {
     public class VBLightThread {
         public string Title { get; set; }
         public int ThreadId { get; set; }
