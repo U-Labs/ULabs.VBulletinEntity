@@ -87,7 +87,9 @@ namespace ULabs.VBulletinEntity.LightManager {
                 session = Get(sessionHash, updateLastActivity, location);
 
                 if (session != null) {
-                    UpdateLastActivity(sessionHash, location);
+                    if (updateLastActivity) {
+                        UpdateLastActivity(sessionHash, location);
+                    }
                     return session;
                 }
             }
