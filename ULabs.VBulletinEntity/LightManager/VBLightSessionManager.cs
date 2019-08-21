@@ -76,7 +76,7 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             return location;
         }
-        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool createIfRestoreable = true, string location = "", bool updateLastActivity = true) {
+        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool createIfRestoreable = true, string location = "", bool updateLastActivity = false) {
             if (cookies == null) {
                 cookies = contextCookies;
             }
