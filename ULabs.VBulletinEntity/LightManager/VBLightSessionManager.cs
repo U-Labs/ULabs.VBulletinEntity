@@ -138,15 +138,16 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         public void UpdateLastActivity(string sessionHash, string location) {
-            var args = new {
-                sessionHash = sessionHash,
-                location = location
-            };
+            var args = new { sessionHash, location };
             db.Execute(@"
                 UPDATE session
                 SET lastactivity = UNIX_TIMESTAMP(),
                 location = @location
-                WHERE sessionhash = @sessionHash
+                WHERE sessionhash = @sessionHash;
+
+                UPDATE user
+                SET lastactivity = UNIX_TIMESTAMP()
+                WHERE userid = (SELECT userid FROM session WHERE sessionhash = @sessionHash);
             ", args);
         }
         public string Create(int userId, string location, int inForumId = 0, int inThreadId = 0) {
