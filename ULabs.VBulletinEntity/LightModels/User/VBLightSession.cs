@@ -7,8 +7,6 @@ using ULabs.VBulletinEntity.Tools;
 namespace ULabs.VBulletinEntity.LightModels.Session {
     public class VBLightSession {
         public string SessionHash { get; set; }
-
-        public int UserId { get; set; }
         public VBLightUser User { get; set; }
         public string Host { get; set; }
         public string IdHash { get; set; }

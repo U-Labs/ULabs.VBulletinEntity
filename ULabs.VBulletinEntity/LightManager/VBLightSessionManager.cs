@@ -122,15 +122,15 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             // ToDo: Validate Cookie timeout 
             string sql = @"
-                SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, 
+                SELECT s.sessionhash AS SessionHash, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, 
                         s.loggedin AS LoggedInRaw, s.isbot AS IsBot,
-                    u.userid AS UserId, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision
+                    s.userid AS Id, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
                 WHERE s.sessionhash = @sessionHash
                 LIMIT 1";
             var args = new { sessionHash = sessionHash };
-            var session = db.Query(sql, mappingFunc, args, splitOn: "UserId")
+            var session = db.Query(sql, mappingFunc, args)
                 .SingleOrDefault();
 
             if (session != null && updateLastActivity) {

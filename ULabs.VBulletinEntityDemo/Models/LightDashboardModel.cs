@@ -25,8 +25,8 @@ namespace ULabs.VBulletinEntityDemo.Models {
             CategoryPermissions = lightForumManager.GetPermissions(userGroupId: 2, onlyParentCategories: true);
 
             if (session.IsLoggedIn) {
-                UnreadActiveThreads = lightThreadManager.GetUnreadActiveThreads(session.UserId);
-                RecentThanks = lightThreadManager.GetThanks(session.UserId, afterTimestamp: session.User.LastActivityRaw);
+                UnreadActiveThreads = lightThreadManager.GetUnreadActiveThreads(session.User.Id);
+                RecentThanks = lightThreadManager.GetThanks(session.User.Id, afterTimestamp: session.User.LastActivityRaw);
             }
         }
     }
