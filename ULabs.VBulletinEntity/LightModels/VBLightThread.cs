@@ -26,5 +26,12 @@ namespace ULabs.VBulletinEntity.LightModels {
         public string HtmlDecodedTitle {
             get => HttpUtility.HtmlDecode(Title);
         }
+
+        /// <summary>
+        /// Generates the thread URL part from VBSEO by pattern {ForumId}-{ThreadTitle}
+        /// </summary>
+        public string SeoUrlPart {
+            get => $"{ContentTools.SeoTitle(Title)}-{ThreadId}";
+        }
     }
 }

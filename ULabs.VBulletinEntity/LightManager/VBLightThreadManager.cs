@@ -142,5 +142,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             var thanks = db.Query<VBLightPostThanks>(sql, new { userId, afterTimestamp, count });
             return thanks.ToList();
         }
+
+        /// <summary>
+        /// Checks if a SEO url provided by MVC arguments matches the full generated url of the thread (forum with thread). All variables prefixed with "received" are from the method arguments.
+        /// </summary>
+        public bool SeoUrlMatch(VBLightThread thread, string receivedForumTitle, int receivedForumId, string receivedThreadTitle, int receivedThreadId) {
+            string generated = $"{thread.Forum.SeoUrlPart}/{thread.SeoUrlPart}";
+            string received = $"{receivedForumTitle}-{receivedForumId}/{receivedThreadTitle}-{receivedThreadId}";
+            return received == generated;
+        }
     }
 }

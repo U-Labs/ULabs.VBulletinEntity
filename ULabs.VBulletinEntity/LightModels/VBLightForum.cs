@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightModels {
     public class VBLightForum {
@@ -13,6 +14,13 @@ namespace ULabs.VBulletinEntity.LightModels {
             get => ParentIdsRaw?.Split(',')
                 .Select(int.Parse)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Generates the thread URL part from VBSEO by pattern {ForumId}-{ForumTitle}
+        /// </summary>
+        public string SeoUrlPart {
+            get => $"{ContentTools.SeoTitle(Title)}-{ForumId}";
         }
     }
 }
