@@ -15,7 +15,7 @@
             @foreach (var thread in Model.NewestThreads) {
                 <tr>
                     <td>
-                        @thread.Title
+                        <a asp-action="ViewThread" asp-route-id="@thread.ThreadId">@thread.Title</a>
                     </td>
                     <td>@thread.LastPostTime.ToLocalTime().ToString()</td>
                     <td>

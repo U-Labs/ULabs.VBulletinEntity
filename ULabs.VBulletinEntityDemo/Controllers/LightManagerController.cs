@@ -26,6 +26,10 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             lightSessionManager.UpdateLastActivity(session.SessionHash, "/LightTest");
             return View(model);
         }
+        public IActionResult ViewThread(int id) {
+            var thread = lightThreadManager.Get(id);
+            return View(thread);
+        }
         [VBLightAuthorize]
         public IActionResult Authorized() {
             return Content("Youre authorized!");
