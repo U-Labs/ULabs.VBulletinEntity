@@ -130,7 +130,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             string sql = @"
                 SELECT s.sessionhash AS SessionHash, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, 
                         s.loggedin AS LoggedInRaw, s.isbot AS IsBot, s.userid AS Id, 
-                    u.usergroupid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision,
+                    u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision,
                     g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
