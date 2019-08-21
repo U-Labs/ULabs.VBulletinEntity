@@ -21,20 +21,8 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             this.lightForumManager = lightForumManager;
             this.lightThreadManager = lightThreadManager;
         }
-        public IActionResult NewestThreads() {
-            var session = lightSessionManager.GetCurrent();
-            var forumsCanRead = lightForumManager.GetForumsWhereUserCan(userGroupId: session.User.PrimaryUserGroupId, VBForumFlags.CanViewForum);
-            var newestThreads = lightDashboardManager.GetNewestThreads();
-            return View(newestThreads);
-        }
         public IActionResult Dashboard() {
             var session = lightSessionManager.GetCurrent();
-            lightDashboardManager.MarkContentAsRead(contentId: 39886, userId: 18);
-
-            var thanks = lightThreadManager.GetThanks(userId: 18);
-            var recentThanks = lightThreadManager.GetThanks(userId: 18, afterTimestamp: 1566338801);
-            
-
             var model = new LightDashboardModel(lightDashboardManager, lightForumManager, lightThreadManager, lightSessionManager);
 
             lightSessionManager.UpdateLastActivity(session.SessionHash, "/LightTest");
