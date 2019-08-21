@@ -7,7 +7,7 @@ namespace ULabs.VBulletinEntity.LightModels {
     public class VBLightSession {
         public string SessionHash { get; set; }
 
-        public int? UserId { get; set; }
+        public int UserId { get; set; }
         public VBLightUser User { get; set; }
         public string Host { get; set; }
         public string IdHash { get; set; }
@@ -21,7 +21,7 @@ namespace ULabs.VBulletinEntity.LightModels {
             get => DateTimeExtensions.ToDateTime(LastActivityRaw);
             set => LastActivityRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
         }
-        public bool LoggedIn {
+        public bool IsLoggedIn {
             get { return LoggedInRaw == 2 || LoggedInRaw == 1; }
         }
     }

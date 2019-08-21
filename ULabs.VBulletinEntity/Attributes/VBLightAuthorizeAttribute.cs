@@ -22,7 +22,7 @@ namespace ULabs.VBulletinEntity.Attributes {
             var lightSessionManager = GetService<VBLightSessionManager>(context);
             var userSession = lightSessionManager.GetCurrent();
             // Session shouldn't be null any more since we implemented guest sessions, too
-            if (!userSession.LoggedIn) {
+            if (!userSession.IsLoggedIn) {
                 if (string.IsNullOrEmpty(loginRedirectUrl)) {
                     var settingsManager = GetService<VBSettingsManager>(context);
                     loginRedirectUrl = settingsManager.GetCommonSettings().BaseUrl;
