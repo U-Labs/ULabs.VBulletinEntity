@@ -55,7 +55,6 @@ namespace ULabs.VBulletinEntity {
         }
 
         static void AddLightVBManagers(this IServiceCollection services, string vbCookieSalt, string vbCookiePrefix) {
-            services.AddScoped<VBLightDashboardManager>();
             services.AddScoped<VBLightSettingsManager>();
             services.AddScoped<VBLightForumManager>();
             services.AddScoped<VBLightThreadManager>();

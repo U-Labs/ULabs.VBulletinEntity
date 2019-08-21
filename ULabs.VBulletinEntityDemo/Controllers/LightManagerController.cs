@@ -11,19 +11,17 @@ using ULabs.VBulletinEntityDemo.Models;
 
 namespace ULabs.VBulletinEntityDemo.Controllers {
     public class LightManagerController : Controller {
-        readonly VBLightDashboardManager lightDashboardManager;
         readonly VBLightSessionManager lightSessionManager;
         readonly VBLightForumManager lightForumManager;
         readonly VBLightThreadManager lightThreadManager;
-        public LightManagerController(VBLightDashboardManager lightDashboardManager, VBLightSessionManager lightSessionManager, VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager) {
-            this.lightDashboardManager = lightDashboardManager;
+        public LightManagerController(VBLightSessionManager lightSessionManager, VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager) {
             this.lightSessionManager = lightSessionManager;
             this.lightForumManager = lightForumManager;
             this.lightThreadManager = lightThreadManager;
         }
         public IActionResult Dashboard() {
             var session = lightSessionManager.GetCurrent();
-            var model = new LightDashboardModel(lightDashboardManager, lightForumManager, lightThreadManager, lightSessionManager);
+            var model = new LightDashboardModel(lightForumManager, lightThreadManager, lightSessionManager);
 
             lightSessionManager.UpdateLastActivity(session.SessionHash, "/LightTest");
             return View(model);

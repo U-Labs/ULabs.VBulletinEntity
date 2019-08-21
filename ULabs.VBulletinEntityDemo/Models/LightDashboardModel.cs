@@ -15,17 +15,17 @@ namespace ULabs.VBulletinEntityDemo.Models {
         public List<VBLightForum> ViewableCategories { get; set; }
         public Dictionary<VBLightForum, VBForumFlags> CategoryPermissions { get; set; }
         public List<VBLightPostThanks> RecentThanks { get; set; }
-        public LightDashboardModel(VBLightDashboardManager lightDashboardManager, VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager, VBLightSessionManager lightSessionManager) {
+        public LightDashboardModel(VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager, VBLightSessionManager lightSessionManager) {
             var session = lightSessionManager.GetCurrent();
             var forumsCanRead = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroupId, VBForumFlags.CanViewThreads);
 
-            NewestThreads = lightDashboardManager.GetNewestThreads(includedForumIds: forumsCanRead.Select(f => f.ForumId).ToList());
+            NewestThreads = lightThreadManager.GetNewestThreads(includedForumIds: forumsCanRead.Select(f => f.ForumId).ToList());
             NotViewableCategories = lightForumManager.GetForumsWhereUserCanNot(session.User.PrimaryUserGroupId, VBForumFlags.CanViewForum, onlyParentCategories: true);
             ViewableCategories = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroupId, VBForumFlags.CanViewForum, onlyParentCategories: true);
             CategoryPermissions = lightForumManager.GetPermissions(userGroupId: 2, onlyParentCategories: true);
 
             if (session.IsLoggedIn) {
-                UnreadActiveThreads = lightDashboardManager.GetUnreadActiveThreads(session.UserId);
+                UnreadActiveThreads = lightThreadManager.GetUnreadActiveThreads(session.UserId);
                 RecentThanks = lightThreadManager.GetThanks(session.UserId, afterTimestamp: session.User.LastActivityRaw);
             }
         }
