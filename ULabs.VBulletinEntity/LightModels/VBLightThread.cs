@@ -16,6 +16,8 @@ namespace ULabs.VBulletinEntity.LightModels {
         public int ForumId { get; set; }
         public VBLightForum Forum { get; set; }
         public int ReplysCount { get; set; }
+        public int DeletedReplysCount { get; set; }
+        public bool IsOpen { get; set; }
 
         public DateTime LastPostTime {
             get => LastPostTimeRaw.ToDateTime();
