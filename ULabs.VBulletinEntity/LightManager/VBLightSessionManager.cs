@@ -31,6 +31,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             contextCookies = contextAccessor.HttpContext.Request.Cookies;
         }
 
+        #region Private methods
         /// <summary>
         /// Allows other systems like SignalR to fetch the cookie prefix for custo, integrations
         /// </summary>
@@ -76,6 +77,7 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             return location;
         }
+        #endregion
         public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool createIfRestoreable = true, string location = "", bool updateLastActivity = false) {
             if (cookies == null) {
                 cookies = contextCookies;
@@ -118,9 +120,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             // ToDo: Validate Cookie timeout 
             string sql = @"
-                SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, s.loggedin AS LoggedInRaw, 
-	                s.isbot AS IsBot,
-                u.userid AS UserId, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision
+                SELECT s.sessionhash AS SessionHash, s.userid AS UserId, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, 
+                        s.loggedin AS LoggedInRaw, s.isbot AS IsBot,
+                    u.userid AS UserId, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
                 WHERE s.sessionhash = @sessionHash

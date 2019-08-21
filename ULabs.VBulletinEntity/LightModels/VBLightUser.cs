@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightModels {
     public class VBLightUser {
@@ -9,5 +10,10 @@ namespace ULabs.VBulletinEntity.LightModels {
         public string UserTitle { get; set; }
         public int PrimaryUserGroupId { get; set; }
         public int AvatarRevision { get; set; }
+        public int LastActivityRaw { get; set; }
+        public DateTime LastActivity {
+            get => DateTimeExtensions.ToDateTime(LastActivityRaw);
+            set => LastActivityRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
     }
 }
