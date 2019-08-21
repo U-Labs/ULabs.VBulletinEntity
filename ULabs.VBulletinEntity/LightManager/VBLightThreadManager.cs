@@ -10,8 +10,31 @@ using ULabs.VBulletinEntity.LightModels.Thread;
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {
         readonly MySqlConnection db;
+        string baseSplitOn = "LastPosterUserId,ForumId";
+        // Order matters if SplitOn is set! All attributes from the first relation entity should be placed BEFORE the SplitOn key
+        string baseQuery = @"
+            SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastpostid as LastPostId, 
+                        t.forumid as ForumId, t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, 
+                    u.userid as UserId, u.avatarrevision as AvatarRevision,
+                    f.forumid as ForumId, f.title as Title
+                FROM thread t
+                LEFT JOIN user u ON (u.userid = t.lastposterid)
+                LEFT JOIN forum f ON (f.forumid = t.forumid) ";
+        Func<VBLightThread, VBLightUser, VBLightForum, VBLightThread> baseMappingFunc = (thread, user, forum) => {
+            thread.LastPoster = user;
+            thread.Forum = forum;
+            return thread;
+        };
         public VBLightThreadManager(MySqlConnection db) {
             this.db = db;
+        }
+
+        public VBLightThread Get(int threadId) {
+            var args = new { threadId };
+            string sql = baseQuery + @"WHERE t.threadid = @threadId";
+            // Generic overload not possible with QueryFirstOrDefault()
+            var threads = db.Query(sql, baseMappingFunc, args, splitOn: baseSplitOn);
+            return threads.SingleOrDefault();
         }
         /// <summary>
         /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
@@ -27,27 +50,15 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
 
             var args = new { includedForumIds, excludedForumIds, count = count };
-            Func<VBLightThread, VBLightUser, VBLightForum, VBLightThread> mappingFunc = (thread, user, forum) => {
-                thread.LastPoster = user;
-                thread.Forum = forum;
-                return thread;
-            };
             bool hasExclude = excludedForumIds != null || includedForumIds != null;
             bool hasWhere = hasExclude || onlyWithoutReplys;
-            var threads = db.Query(@"
-                    SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastposterid as LastPosterUserId, t.lastpostid as LastPostId, 
-                        t.forumid as ForumId, t.replycount as ReplysCount,
-                    u.userid as UserId, u.avatarrevision as AvatarRevision,
-                    f.forumid as ForumId, f.title as Title
-                    FROM thread t
-                    LEFT JOIN user u ON (u.userid = t.lastposterid)
-                    LEFT JOIN forum f ON (f.forumid = t.forumid)" +
+            var threads = db.Query(baseQuery +
                     (hasWhere ? "WHERE " : "") +
                     (includedForumIds != null ? "t.forumid IN @includedForumIds " : "") +
                     (excludedForumIds != null ? "t.forumid NOT IN @excludedForumIds " : "") +
                     (onlyWithoutReplys ? (hasExclude ? "AND " : "") + "t.replycount = 0 " : "") +
                     @"ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
-                    LIMIT @count", mappingFunc, args, splitOn: "LastPosterUserId,ForumId");
+                    LIMIT @count", baseMappingFunc, args, splitOn: baseSplitOn);
             return threads.ToList();
         }
 
@@ -121,7 +132,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN thread AS t ON (t.threadid = p.threadid)
                 LEFT JOIN forum f ON(f.forumid = t.forumid)
                 WHERE p.userid = @userId ";
-            if(afterTimestamp.HasValue) {
+            if (afterTimestamp.HasValue) {
                 sql += "AND pt.date > @afterTimestamp";
             }
             sql += @"
