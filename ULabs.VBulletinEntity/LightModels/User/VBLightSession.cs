@@ -4,7 +4,7 @@ using System.Text;
 using ULabs.VBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Tools;
 
-namespace ULabs.VBulletinEntity.LightModels {
+namespace ULabs.VBulletinEntity.LightModels.Session {
     public class VBLightSession {
         public string SessionHash { get; set; }
 
