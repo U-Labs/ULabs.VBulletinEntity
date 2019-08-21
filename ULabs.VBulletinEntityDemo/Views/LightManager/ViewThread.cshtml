@@ -1,0 +1,80 @@
+﻿@model ULabs.VBulletinEntity.LightModels.VBLightThread
+
+@{
+    ViewData["Title"] = "ViewThread";
+}
+
+<h2>ViewThread</h2>
+
+<div>
+    <h4>VBLightThread</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ThreadId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ThreadId)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.LastPostTimeRaw)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.LastPostTimeRaw)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.LastPosterName)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.LastPosterName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.LastPosterUserId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.LastPosterUserId)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.LastPostId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.LastPostId)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ForumId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ForumId)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ReplysCount)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ReplysCount)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.DeletedReplysCount)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.DeletedReplysCount)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.IsOpen)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.IsOpen)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.LastPostTime)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.LastPostTime)
+        </dd>
+    </dl>
+</div>
