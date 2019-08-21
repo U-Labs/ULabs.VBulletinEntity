@@ -69,22 +69,22 @@ namespace ULabs.VBulletinEntity.LightManager {
                 return location;
             }
 
-            if(contextAccessor != null ) {
+            if (contextAccessor != null) {
                 var request = contextAccessor.HttpContext.Request;
                 location = $"{request.PathBase}{request.Path}";
             }
-            
+
             return location;
         }
-        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool createIfRestoreable = true, string location = "") {
-            if(cookies == null) {
+        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool createIfRestoreable = true, string location = "", bool updateLastActivity = true) {
+            if (cookies == null) {
                 cookies = contextCookies;
             }
             VBLightSession session = null;
             location = GetCurrentLocation(location);
 
             if (cookies.TryGetValue($"{CookiePrefix}_sessionhash", out string sessionHash)) {
-                session = Get(sessionHash);
+                session = Get(sessionHash, updateLastActivity, location);
 
                 if (session != null) {
                     UpdateLastActivity(sessionHash, location);
@@ -102,7 +102,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                     sessionHash = Create(0, location);
                 }
 
-                session = Get(sessionHash);
+                session = Get(sessionHash, updateLastActivity, location);
                 // ToDo: Set session duration from config like VBSessionManager does
                 SetSessionCookie(session.SessionHash);
             }
