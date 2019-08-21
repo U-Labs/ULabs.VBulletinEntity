@@ -134,7 +134,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                     g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
-                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                LEFT JOIN usergroup g ON(g.usergroupid = IF(u.usergroupid IS NULL, 2, g.usergroupid))
                 WHERE s.sessionhash = @sessionHash
                 LIMIT 1";
             var args = new { sessionHash = sessionHash };
