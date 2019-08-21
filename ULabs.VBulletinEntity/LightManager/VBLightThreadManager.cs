@@ -11,19 +11,21 @@ using ULabs.VBulletinEntity.LightModels.User;
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {
         readonly MySqlConnection db;
-        string baseSplitOn = "LastPosterUserId,ForumId";
-        // Order matters if SplitOn is set! All attributes from the first relation entity should be placed BEFORE the SplitOn key
+        // Order (also with Id and splitOn set): All attributes from the first relation entity should be placed BEFORE the (SplitOn) key
         string baseQuery = @"
-            SELECT t.title as Title, t.threadid as ThreadId, t.lastpost as LastPostTimeRaw, t.lastposter as LastPosterName, t.lastpostid as LastPostId, t.firstpostid as FirstPostId,
-                        t.forumid as ForumId, t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, 
-                    u.userid as UserId, u.avatarrevision as AvatarRevision,
-                    f.forumid as ForumId, f.title as Title
+            SELECT t.threadid as Id, t.title as Title, t.lastpost as LastPostTimeRaw, t.lastpostid as LastPostId, t.firstpostid as FirstPostId,
+                        t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, 
+                    u.userid as Id, u.avatarrevision as AvatarRevision, u.username as UserName, u.usertitle as UserTitle, u.lastactivity as LastActivityRaw,
+                    f.forumid as Id, f.title as Title,
+                    g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermission
                 FROM thread t
                 LEFT JOIN user u ON (u.userid = t.lastposterid)
-                LEFT JOIN forum f ON (f.forumid = t.forumid) ";
-        Func<VBLightThread, VBLightUser, VBLightForum, VBLightThread> baseMappingFunc = (thread, user, forum) => {
+                LEFT JOIN forum f ON (f.forumid = t.forumid)
+                LEFT JOIN usergroup g ON (g.usergroupid = u.usergroupid)";
+        Func<VBLightThread, VBLightUser, VBLightForum, VBLightUserGroup, VBLightThread> baseMappingFunc = (thread, user, forum, group) => {
             thread.LastPoster = user;
             thread.Forum = forum;
+            thread.LastPoster.PrimaryUserGroup = group;
             return thread;
         };
         public VBLightThreadManager(MySqlConnection db) {
@@ -34,7 +36,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             var args = new { threadId };
             string sql = baseQuery + @"WHERE t.threadid = @threadId";
             // Generic overload not possible with QueryFirstOrDefault()
-            var threads = db.Query(sql, baseMappingFunc, args, splitOn: baseSplitOn);
+            var threads = db.Query(sql, baseMappingFunc, args);
             return threads.SingleOrDefault();
         }
         /// <summary>
@@ -53,13 +55,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             var args = new { includedForumIds, excludedForumIds, count = count };
             bool hasExclude = excludedForumIds != null || includedForumIds != null;
             bool hasWhere = hasExclude || onlyWithoutReplys;
-            var threads = db.Query(baseQuery +
+            string sql = baseQuery +
                     (hasWhere ? "WHERE " : "") +
                     (includedForumIds != null ? "t.forumid IN @includedForumIds " : "") +
                     (excludedForumIds != null ? "t.forumid NOT IN @excludedForumIds " : "") +
                     (onlyWithoutReplys ? (hasExclude ? "AND " : "") + "t.replycount = 0 " : "") +
                     @"ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
-                    LIMIT @count", baseMappingFunc, args, splitOn: baseSplitOn);
+                    LIMIT @count";
+            var threads = db.Query(sql, baseMappingFunc, args);
             return threads.ToList();
         }
 

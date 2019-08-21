@@ -17,10 +17,10 @@
             @Html.DisplayFor(model => model.Title)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.ThreadId)
+            @Html.DisplayNameFor(model => model.Id)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.ThreadId)
+            @Html.DisplayFor(model => model.Id)
         </dd>
         <dt>
             @Html.DisplayNameFor(model => model.LastPostTimeRaw)
@@ -29,16 +29,16 @@
             @Html.DisplayFor(model => model.LastPostTimeRaw)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.LastPosterName)
+            @Html.DisplayNameFor(model => model.LastPoster.UserName)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.LastPosterName)
+            @Html.DisplayFor(model => model.LastPoster.UserName)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.LastPosterUserId)
+            @Html.DisplayNameFor(model => model.LastPoster.Id)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.LastPosterUserId)
+            @Html.DisplayFor(model => model.LastPoster.Id)
         </dd>
         <dt>
             @Html.DisplayNameFor(model => model.LastPostId)
@@ -47,10 +47,10 @@
             @Html.DisplayFor(model => model.LastPostId)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.ForumId)
+            @Html.DisplayNameFor(model => model.Forum.Id)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.ForumId)
+            @Html.DisplayFor(model => model.Forum.Id)
         </dd>
         <dt>
             @Html.DisplayNameFor(model => model.ReplysCount)

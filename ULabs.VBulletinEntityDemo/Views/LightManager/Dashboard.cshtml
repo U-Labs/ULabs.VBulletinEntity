@@ -15,11 +15,11 @@
             @foreach (var thread in Model.NewestThreads) {
                 <tr>
                     <td>
-                        <a asp-action="ViewThread" asp-route-id="@thread.ThreadId">@thread.Title</a>
+                        <a asp-action="ViewThread" asp-route-id="@thread.Id">@thread.Title</a>
                     </td>
                     <td>@thread.LastPostTime.ToLocalTime().ToString()</td>
                     <td>
-                        @thread.LastPosterName
+                        @thread.LastPoster.UserName
                     </td>
                     <td>@Html.Raw(thread.Forum.Title)</td>
                     <td>
@@ -78,10 +78,10 @@
             </tr>
 
             @foreach (var category in Model.ViewableCategories) {
-                var permission = Model.CategoryPermissions.FirstOrDefault(kvp => kvp.Key.ForumId == category.ForumId);
+                var permission = Model.CategoryPermissions.FirstOrDefault(kvp => kvp.Key.Id == category.Id);
 
                 <tr>
-                    <td>@category.ForumId</td>
+                    <td>@category.Id</td>
                     <td>@category.Title</td>
                     <td>@((int)permission.Value)</td>
                 </tr>
@@ -99,7 +99,7 @@
 
             @foreach (var category in Model.NotViewableCategories) {
                 <tr>
-                    <td>@category.ForumId</td>
+                    <td>@category.Id</td>
                     <td>@category.Title</td>
                 </tr>
             }

@@ -6,7 +6,7 @@ using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightModels.Forum {
     public class VBLightForum {
-        public int ForumId { get; set; }
+        public int Id { get; set; }
         public string Title { get; set; }
         public int ParentId { get; set; }
         public string ParentIdsRaw { get; set; }
@@ -20,7 +20,7 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         /// Generates the thread URL part from VBSEO by pattern {ForumId}-{ForumTitle}
         /// </summary>
         public string SeoUrlPart {
-            get => $"{ContentTools.SeoTitle(Title)}-{ForumId}";
+            get => $"{ContentTools.SeoTitle(Title)}-{Id}";
         }
     }
 }

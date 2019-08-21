@@ -19,7 +19,7 @@ namespace ULabs.VBulletinEntityDemo.Models {
             var session = lightSessionManager.GetCurrent();
             var forumsCanRead = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroupId, VBForumFlags.CanViewThreads);
 
-            NewestThreads = lightThreadManager.GetNewestThreads(includedForumIds: forumsCanRead.Select(f => f.ForumId).ToList());
+            NewestThreads = lightThreadManager.GetNewestThreads(includedForumIds: forumsCanRead.Select(f => f.Id).ToList());
             NotViewableCategories = lightForumManager.GetForumsWhereUserCanNot(session.User.PrimaryUserGroupId, VBForumFlags.CanViewForum, onlyParentCategories: true);
             ViewableCategories = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroupId, VBForumFlags.CanViewForum, onlyParentCategories: true);
             CategoryPermissions = lightForumManager.GetPermissions(userGroupId: 2, onlyParentCategories: true);

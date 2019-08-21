@@ -26,7 +26,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         public VBLightForum Get(int forumId) {
             string sql = @"
-                SELECT f.forumid AS ForumId, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw
+                SELECT f.forumid AS Id, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw
                 FROM forum f
                 WHERE f.forumid = @forumId";
             var forum = db.QueryFirstOrDefault<VBLightForum>(sql, new { forumId });
@@ -43,14 +43,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             var all = new List<VBLightForum>();
             parents.ForEach(parent => {
                 // Childs of the first level from the current parent
-                var currentSubs = allForums.Where(f => f.ParentId == parent.ForumId).ToList();
+                var currentSubs = allForums.Where(f => f.ParentId == parent.Id).ToList();
                 bool subsExists = true;
 
                 do {
                     all.AddRange(currentSubs);
-                    currentSubs = allForums.Where(f => f.ParentIds.Any(p => currentSubs.Any(c => c.ForumId == p)))
+                    currentSubs = allForums.Where(f => f.ParentIds.Any(p => currentSubs.Any(c => c.Id == p)))
                         .ToList();
-                    subsExists = currentSubs.Any(c => !all.Any(a => a.ForumId == c.ForumId));
+                    subsExists = currentSubs.Any(c => !all.Any(a => a.Id == c.Id));
                 } while (currentSubs != null && subsExists);
             });
 
@@ -89,7 +89,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             // UserGroupId from permissions is only selected to have a split column for dapper. Instead we have to use parentlist, which needs mapping to VBLightForum by hand. 
             string sql = @"
-                SELECT f.forumid AS ForumId, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw,
+                SELECT f.forumid AS Id, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw,
                 IF(fp.forumpermissions IS NULL, g.forumpermissions, fp.forumpermissions) AS Permission
                 FROM forum f
                 LEFT JOIN forumpermission fp ON(fp.usergroupid = @userGroupId AND FIND_IN_SET(fp.forumid, f.parentlist))
@@ -125,7 +125,7 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             var sql = new StringBuilder();
             sql.Append(@"
-                SELECT f.forumid AS ForumId, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw
+                SELECT f.forumid AS Id, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw
                 FROM forum f
                 INNER JOIN usergroup g ON(g.usergroupid = @userGroupId)
                 LEFT JOIN forumpermission fp ON(fp.usergroupid = g.usergroupid AND FIND_IN_SET(fp.forumid, f.parentlist))");

@@ -5,10 +5,11 @@ using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightModels.User {
     public class VBLightUser {
-        public int UserId { get; set; }
+        public int Id { get; set; }
         public string UserName { get; set; }
         public string UserTitle { get; set; }
         public int PrimaryUserGroupId { get; set; }
+        public VBLightUserGroup PrimaryUserGroup { get; set; }
         public int AvatarRevision { get; set; }
         public int LastActivityRaw { get; set; }
         public DateTime LastActivity {
