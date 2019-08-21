@@ -8,7 +8,6 @@ namespace ULabs.VBulletinEntity.LightModels.User {
         public int Id { get; set; }
         public string UserName { get; set; }
         public string UserTitle { get; set; }
-        public int PrimaryUserGroupId { get; set; }
         public VBLightUserGroup PrimaryUserGroup { get; set; }
         public int AvatarRevision { get; set; }
         public int LastActivityRaw { get; set; }

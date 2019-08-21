@@ -17,7 +17,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                         t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, 
                     u.userid as Id, u.avatarrevision as AvatarRevision, u.username as UserName, u.usertitle as UserTitle, u.lastactivity as LastActivityRaw,
                     f.forumid as Id, f.title as Title,
-                    g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermission
+                    g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
                 FROM thread t
                 LEFT JOIN user u ON (u.userid = t.lastposterid)
                 LEFT JOIN forum f ON (f.forumid = t.forumid)

@@ -17,11 +17,11 @@ namespace ULabs.VBulletinEntityDemo.Models {
         public List<VBLightPostThanks> RecentThanks { get; set; }
         public LightDashboardModel(VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager, VBLightSessionManager lightSessionManager) {
             var session = lightSessionManager.GetCurrent();
-            var forumsCanRead = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroupId, VBForumFlags.CanViewThreads);
+            var forumsCanRead = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewThreads);
 
             NewestThreads = lightThreadManager.GetNewestThreads(includedForumIds: forumsCanRead.Select(f => f.Id).ToList());
-            NotViewableCategories = lightForumManager.GetForumsWhereUserCanNot(session.User.PrimaryUserGroupId, VBForumFlags.CanViewForum, onlyParentCategories: true);
-            ViewableCategories = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroupId, VBForumFlags.CanViewForum, onlyParentCategories: true);
+            NotViewableCategories = lightForumManager.GetForumsWhereUserCanNot(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewForum, onlyParentCategories: true);
+            ViewableCategories = lightForumManager.GetForumsWhereUserCan(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewForum, onlyParentCategories: true);
             CategoryPermissions = lightForumManager.GetPermissions(userGroupId: 2, onlyParentCategories: true);
 
             if (session.IsLoggedIn) {

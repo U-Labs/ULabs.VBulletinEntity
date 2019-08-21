@@ -116,17 +116,25 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         public VBLightSession Get(string sessionHash, bool updateLastActivity = false, string location = "") {
-            Func<VBLightSession, VBLightUser, VBLightSession> mappingFunc = (dbSession, user) => {
+            Func<VBLightSession, VBLightUser, VBLightUserGroup, VBLightSession> mappingFunc = (dbSession, user, group) => {
+                // No related user and so no group exists on guest sessions
+                if(user != null) {
+                    user.PrimaryUserGroup = group;
+                }
+
                 dbSession.User = user;
                 return dbSession;
             };
             // ToDo: Validate Cookie timeout 
+            // LightThreadManager uses parts of this query for fetchinng the author user with its group
             string sql = @"
                 SELECT s.sessionhash AS SessionHash, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, 
-                        s.loggedin AS LoggedInRaw, s.isbot AS IsBot,
-                    s.userid AS Id, u.usergroupid AS PrimaryUserGroupId, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision
+                        s.loggedin AS LoggedInRaw, s.isbot AS IsBot, s.userid AS Id, 
+                    u.usergroupid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision,
+                    g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
+                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
                 WHERE s.sessionhash = @sessionHash
                 LIMIT 1";
             var args = new { sessionHash = sessionHash };
