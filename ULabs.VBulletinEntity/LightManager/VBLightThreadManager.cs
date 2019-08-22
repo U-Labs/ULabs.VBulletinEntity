@@ -40,6 +40,31 @@ namespace ULabs.VBulletinEntity.LightManager {
             return threads.SingleOrDefault();
         }
         /// <summary>
+        /// Fetches meta information about the thread replys which are required to calculate paging
+        /// </summary>
+        /// <param name="includeDeleted">Include deleted posts for moderators or admin users</param>
+        /// <param name="page">Number of the page to display, which is used for calculating which posts to skip</param>
+        /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 10.</param>
+        /// <returns></returns>
+        public ReplysInfo GetReplysInfo(int threadId, bool includeDeleted = false, int page = 1, int replysPerPage = 10) {
+            int offset = (page - 1) * replysPerPage;
+            var args = new { threadId, offset, replysPerPage };
+            var info = new ReplysInfo();
+
+            string sql = @"
+                SELECT p.postid 
+                FROM post p 
+                WHERE p.threadId = @threadId " +
+                (includeDeleted ? "" : "AND p.visible = 1 ") + @"
+                ORDER BY p.dateline
+                LIMIT @offset, @replysPerPage";
+            info.PostIds = db.Query<int>(sql, args)
+                .ToList();
+            info.TotalPages = (int)Math.Floor((decimal)info.PostIds.Count / replysPerPage) + 1;
+            return info;
+        }
+
+        /// <summary>
         /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
         /// </summary>
         /// <param name="count">Limit the fetched rows</param>
