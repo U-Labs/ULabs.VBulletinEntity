@@ -88,23 +88,27 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="includeDeleted">Include deleted posts for moderators or admin users</param>
         /// <param name="page">Number of the page to display, which is used for calculating which posts to skip</param>
         /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 10.</param>
-        /// <returns></returns>
         public ReplysInfo GetReplysInfo(int threadId, bool includeDeleted = false, int page = 1, int replysPerPage = 10) {
             int offset = (page - 1) * replysPerPage;
             var args = new { threadId, offset, replysPerPage };
             var info = new ReplysInfo(page, replysPerPage);
 
-            string sql = @"
-                SELECT p.postid 
+            string sqlWithoutSelect = @"
                 FROM post p 
                 WHERE p.threadId = @threadId " +
                 (includeDeleted ? "" : "AND p.visible = 1 ") + @"
-                ORDER BY p.dateline
+                ORDER BY p.dateline";
+
+            string sqlPostIds = $@"
+                SELECT p.postid 
+                {sqlWithoutSelect}
                 LIMIT @offset, @replysPerPage";
-            info.PostIds = db.Query<int>(sql, args)
+            info.PostIds = db.Query<int>(sqlPostIds, args)
                 .ToList();
 
-            info.TotalPages = (int)Math.Floor((decimal)info.PostIds.Count / replysPerPage) + 1;
+            // Cant calculate the total pages by Math.Ceiling((decimal)info.PostIds.Count / (decimal)replysPerPage); because we need all post ids for this = Bad performance on large threads
+            string sqlTotalPages = $"SELECT CEIL(COUNT(p.postid) / @replysPerPage) {sqlWithoutSelect}";
+            info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, args);
             return info;
         }
 
