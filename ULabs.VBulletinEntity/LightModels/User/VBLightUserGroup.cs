@@ -8,6 +8,7 @@ namespace ULabs.VBulletinEntity.LightModels.User {
         public int Id { get; set; }
         public string OpenTag { get; set; }
         public string CloseTag { get; set; }
+        // ToDo: Rename to Title
         public string UserTitle { get; set; }
         public VBAdminFlags AdminPermissions { get; set; }
     }
