@@ -175,7 +175,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
-        /// Gets received thanks from other users for the posts of the specified user id from "Post Thank you Hack" addon
+        /// Gets received thanks from other users for the posts of the specified user id from "Post Thank you Hack" addon.
+        /// For best performance, it's recommended to add an index (the table doesn't have any except on own id): ALTER TABLE post_thanks ADD INDEX userid_date(userid, DATE);
         /// </summary>
         /// <param name="userId">Id of the user that we should query for received thanks</param>
         /// <param name="afterTimestamp">If specified, only thanks after this timestamp are returned (optional)</param>
@@ -189,7 +190,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN post AS p ON (p.postid = pt.postid)
                 LEFT JOIN thread AS t ON (t.threadid = p.threadid)
                 LEFT JOIN forum f ON(f.forumid = t.forumid)
-                WHERE p.userid = @userId ";
+                WHERE pt.userid = @userId ";
             if (afterTimestamp.HasValue) {
                 sql += "AND pt.date > @afterTimestamp";
             }
