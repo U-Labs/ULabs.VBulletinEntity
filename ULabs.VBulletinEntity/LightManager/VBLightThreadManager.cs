@@ -179,7 +179,6 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="userId">Id of the user that we should query for received thanks</param>
         /// <param name="afterTimestamp">If specified, only thanks after this timestamp are returned (optional)</param>
         /// <param name="count">Limit the number of thanks to return. Recommended since older/larger boards can return a massive amount of data if no limit is specified.</param>
-        /// <returns></returns>
         public List<VBLightPostThanks> GetThanks(int userId, int? afterTimestamp = null, int count = 10) {
             string sql = @"
                 SELECT pt.date AS TimeRaw, pt.postid AS PostId,
@@ -213,6 +212,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             var thankedPostIds = db.Query<int>(sql, new { userId, postIds });
             return thankedPostIds.ToList();
         }
+
         /// <summary>
         /// Checks if a SEO url provided by MVC arguments matches the full generated url of the thread (forum with thread). All variables prefixed with "received" are from the method arguments.
         /// </summary>
