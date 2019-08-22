@@ -202,6 +202,18 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Get the list of post ids out of <paramref name="postIds"/> on which <paramref name="userId"/> has already thanked
+        /// </summary>
+        public List<int> GetPostsWhereUserThanked(int userId, List<int> postIds) {
+            string sql = @"
+                SELECT pt.postid
+                FROM post_thanks pt
+                WHERE pt.userid = @userId
+                AND pt.postid IN @postIds";
+            var thankedPostIds = db.Query<int>(sql, new { userId, postIds });
+            return thankedPostIds.ToList();
+        }
+        /// <summary>
         /// Checks if a SEO url provided by MVC arguments matches the full generated url of the thread (forum with thread). All variables prefixed with "received" are from the method arguments.
         /// </summary>
         public bool SeoUrlMatch(VBLightThread thread, string receivedForumTitle, int receivedForumId, string receivedThreadTitle, int receivedThreadId) {

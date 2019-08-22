@@ -10,11 +10,13 @@ namespace ULabs.VBulletinEntityDemo.Models {
         public VBLightThread Thread { get; set; }
         public ReplysInfo ReplysInfo { get; set; }
         public List<VBLightPost> Replys { get; set; }
+        public List<int> ThankedReplys { get; set; }
 
-        public ViewThreadModel(VBLightThreadManager lightThreadManager, int threadId, int page) {
+        public ViewThreadModel(VBLightThreadManager lightThreadManager, int threadId, int page, int userId) {
             Thread = lightThreadManager.Get(threadId);
             ReplysInfo = lightThreadManager.GetReplysInfo(Thread.Id, includeDeleted: false, page: page);
             Replys = lightThreadManager.GetReplys(ReplysInfo);
+            ThankedReplys = lightThreadManager.GetPostsWhereUserThanked(userId, Replys.Select(p => p.Id).ToList());
         }
     }
 }

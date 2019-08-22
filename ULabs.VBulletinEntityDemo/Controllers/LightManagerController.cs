@@ -27,7 +27,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             return View(model);
         }
         public IActionResult ViewThread(int id) {
-            var model = new ViewThreadModel(lightThreadManager, id, 1);
+            var model = new ViewThreadModel(lightThreadManager, id, page: 1, lightSessionManager.GetCurrent().User.Id);
             return View(model);
         }
         [VBLightAuthorize]
