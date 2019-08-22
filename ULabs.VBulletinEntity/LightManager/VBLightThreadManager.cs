@@ -7,6 +7,7 @@ using System.Text;
 using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.LightModels.User;
+using ULabs.VBulletinEntity.Models.Forum;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {
@@ -39,6 +40,32 @@ namespace ULabs.VBulletinEntity.LightManager {
             var threads = db.Query(sql, baseMappingFunc, args);
             return threads.SingleOrDefault();
         }
+
+        /// <summary>
+        /// Loads the replys of a thread for the page, which meta data were fetched by <see cref="VBLightThreadManager.GetReplysInfo(int, bool, int, int)"/>. 
+        /// </summary>
+        /// <param name="replysInfo"></param>
+        /// <returns></returns>
+        public List<VBLightPost> GetReplys(ReplysInfo replysInfo) {
+            Func<VBLightPost, VBLightUser, VBLightUserGroup, VBLightPost> mappingFunc = (post, author, group) => {
+                post.Author = author;
+                post.Author.PrimaryUserGroup = group;
+                return post;
+            };
+            string sql = @"
+                SELECT p.postid AS Id, p.parentid AS ParentId, p.dateline AS CreatedTimeRaw, p.pagetext AS TEXT, p.ipaddress AS IpAddress, p.visible AS VisibilityRaw, p.attach AS HasAttachments,
+                        p.post_thanks_amount AS ThanksCount,
+                    u.userid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision, u.lastactivity AS LastActivityRaw,
+                    g.usergroupid AS Id, g.opentag AS OpenTag, g.closetag AS CloseTag, g.usertitle AS UserTitle, g.adminpermissions AS AdminPermissions 
+                FROM post p
+                LEFT JOIN user u ON (u.userid = p.userid)
+                LEFT JOIN usergroup g ON (u.usergroupid = g.usergroupid)
+                WHERE p.postid IN @postIds
+                ORDER BY p.dateline";
+            var replys = db.Query(sql, mappingFunc, new { postIds = replysInfo.PostIds });
+            return replys.ToList();
+        }
+
         /// <summary>
         /// Fetches meta information about the thread replys which are required to calculate paging
         /// </summary>
@@ -60,7 +87,9 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LIMIT @offset, @replysPerPage";
             info.PostIds = db.Query<int>(sql, args)
                 .ToList();
+
             info.TotalPages = (int)Math.Floor((decimal)info.PostIds.Count / replysPerPage) + 1;
+            info.ReplysPerPage = replysPerPage;
             return info;
         }
 
