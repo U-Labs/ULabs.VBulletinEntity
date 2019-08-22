@@ -11,9 +11,10 @@ using ULabs.VBulletinEntity.Models.Forum;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {
+        #region Private attributes and methods
         readonly MySqlConnection db;
         // Order (also with Id and splitOn set): All attributes from the first relation entity should be placed BEFORE the (SplitOn) key
-        string baseQuery = @"
+        string threadBaseQuery = @"
             SELECT t.threadid as Id, t.title as Title, t.lastpost as LastPostTimeRaw, t.lastpostid as LastPostId, t.firstpostid as FirstPostId,
                         t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, 
                     u.userid as Id, u.avatarrevision as AvatarRevision, u.username as UserName, u.usertitle as UserTitle, u.lastactivity as LastActivityRaw,
@@ -22,22 +23,48 @@ namespace ULabs.VBulletinEntity.LightManager {
                 FROM thread t
                 LEFT JOIN user u ON (u.userid = t.lastposterid)
                 LEFT JOIN forum f ON (f.forumid = t.forumid)
-                LEFT JOIN usergroup g ON (g.usergroupid = u.usergroupid)";
-        Func<VBLightThread, VBLightUser, VBLightForum, VBLightUserGroup, VBLightThread> baseMappingFunc = (thread, user, forum, group) => {
+                LEFT JOIN usergroup g ON (g.usergroupid = u.usergroupid) ";
+        string postBaseQuery = @"
+                SELECT p.postid AS Id, p.parentid AS ParentPostId, p.dateline AS CreatedTimeRaw, p.pagetext AS TEXT, p.ipaddress AS IpAddress, p.visible AS VisibilityRaw, p.attach AS HasAttachments,
+                        p.post_thanks_amount AS ThanksCount,
+                    u.userid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision, u.lastactivity AS LastActivityRaw,
+                    g.usergroupid AS Id, g.opentag AS OpenTag, g.closetag AS CloseTag, g.usertitle AS UserTitle, g.adminpermissions AS AdminPermissions 
+                FROM post p
+                LEFT JOIN user u ON (u.userid = p.userid)
+                LEFT JOIN usergroup g ON (u.usergroupid = g.usergroupid) ";
+        Func<VBLightThread, VBLightUser, VBLightForum, VBLightUserGroup, VBLightThread> threadMappingFunc = (thread, user, forum, group) => {
             thread.LastPoster = user;
             thread.Forum = forum;
             thread.LastPoster.PrimaryUserGroup = group;
             return thread;
         };
+        Func<VBLightPost, VBLightUser, VBLightUserGroup, VBLightPost> postMappingFunc = (post, author, group) => {
+            if (author != null) {
+                post.Author = author;
+                post.Author.PrimaryUserGroup = group;
+            }
+            return post;
+        };
+        string GetReplysInfoBaseQuery(bool includeDeleted, string additionalWhere = "") {
+            string sql = @"
+                SELECT p.postid 
+                FROM post p 
+                WHERE p.threadId = @threadId " +
+                (includeDeleted ? "" : "AND p.visible = 1 ") +
+                additionalWhere + @"
+                ORDER BY p.dateline ";
+            return sql;
+        }
+        #endregion
         public VBLightThreadManager(MySqlConnection db) {
             this.db = db;
         }
 
         public VBLightThread Get(int threadId) {
             var args = new { threadId };
-            string sql = baseQuery + @"WHERE t.threadid = @threadId";
+            string sql = threadBaseQuery + @"WHERE t.threadid = @threadId";
             // Generic overload not possible with QueryFirstOrDefault()
-            var threads = db.Query(sql, baseMappingFunc, args);
+            var threads = db.Query(sql, threadMappingFunc, args);
             return threads.SingleOrDefault();
         }
 
@@ -47,24 +74,11 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="replysInfo"></param>
         /// <returns></returns>
         public List<VBLightPost> GetReplys(ReplysInfo replysInfo) {
-            Func<VBLightPost, VBLightUser, VBLightUserGroup, VBLightPost> mappingFunc = (post, author, group) => {
-                if (author != null) {
-                    post.Author = author;
-                    post.Author.PrimaryUserGroup = group;
-                }
-                return post;
-            };
-            string sql = @"
-                SELECT p.postid AS Id, p.parentid AS ParentId, p.dateline AS CreatedTimeRaw, p.pagetext AS TEXT, p.ipaddress AS IpAddress, p.visible AS VisibilityRaw, p.attach AS HasAttachments,
-                        p.post_thanks_amount AS ThanksCount,
-                    u.userid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision, u.lastactivity AS LastActivityRaw,
-                    g.usergroupid AS Id, g.opentag AS OpenTag, g.closetag AS CloseTag, g.usertitle AS UserTitle, g.adminpermissions AS AdminPermissions 
-                FROM post p
-                LEFT JOIN user u ON (u.userid = p.userid)
-                LEFT JOIN usergroup g ON (u.usergroupid = g.usergroupid)
+            string sql = $@"
+                {postBaseQuery}
                 WHERE p.postid IN @postIds
                 ORDER BY p.dateline";
-            var replys = db.Query(sql, mappingFunc, new { postIds = replysInfo.PostIds });
+            var replys = db.Query(sql, postMappingFunc, new { postIds = replysInfo.PostIds });
             return replys.ToList();
         }
 
@@ -110,14 +124,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             var args = new { includedForumIds, excludedForumIds, count = count };
             bool hasExclude = excludedForumIds != null || includedForumIds != null;
             bool hasWhere = hasExclude || onlyWithoutReplys;
-            string sql = baseQuery +
+            string sql = threadBaseQuery +
                     (hasWhere ? "WHERE " : "") +
                     (includedForumIds != null ? "t.forumid IN @includedForumIds " : "") +
                     (excludedForumIds != null ? "t.forumid NOT IN @excludedForumIds " : "") +
                     (onlyWithoutReplys ? (hasExclude ? "AND " : "") + "t.replycount = 0 " : "") +
                     @"ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
                     LIMIT @count";
-            var threads = db.Query(sql, baseMappingFunc, args);
+            var threads = db.Query(sql, threadMappingFunc, args);
             return threads.ToList();
         }
 
