@@ -48,8 +48,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <returns></returns>
         public List<VBLightPost> GetReplys(ReplysInfo replysInfo) {
             Func<VBLightPost, VBLightUser, VBLightUserGroup, VBLightPost> mappingFunc = (post, author, group) => {
-                post.Author = author;
-                post.Author.PrimaryUserGroup = group;
+                if (author != null) {
+                    post.Author = author;
+                    post.Author.PrimaryUserGroup = group;
+                }
                 return post;
             };
             string sql = @"
