@@ -76,7 +76,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         public ReplysInfo GetReplysInfo(int threadId, bool includeDeleted = false, int page = 1, int replysPerPage = 10) {
             int offset = (page - 1) * replysPerPage;
             var args = new { threadId, offset, replysPerPage };
-            var info = new ReplysInfo();
+            var info = new ReplysInfo(page, replysPerPage);
 
             string sql = @"
                 SELECT p.postid 
@@ -89,7 +89,6 @@ namespace ULabs.VBulletinEntity.LightManager {
                 .ToList();
 
             info.TotalPages = (int)Math.Floor((decimal)info.PostIds.Count / replysPerPage) + 1;
-            info.ReplysPerPage = replysPerPage;
             return info;
         }
 
