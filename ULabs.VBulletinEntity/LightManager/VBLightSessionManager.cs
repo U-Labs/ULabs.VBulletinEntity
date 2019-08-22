@@ -198,8 +198,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             return args.sessionHash;
         }
 
-        public string GetAvatarUrl(int userId, int avatarRevision) {
-            if (avatarRevision == 0) {
+        public string GetAvatarUrl(int? userId, int? avatarRevision) {
+            if (!userId.HasValue || !avatarRevision.HasValue || avatarRevision == 0) {
                 // ToDo: VB has not setting for the default Avatar. We should specify this in custom settings somewhere
                 return "https://u-img.net/img/4037Ld.png";
             }
