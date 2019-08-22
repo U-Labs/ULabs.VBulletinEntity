@@ -1,4 +1,4 @@
-﻿@model VBLightThread
+﻿@model ViewThreadModel
 
 @{
     ViewData["Title"] = "ViewThread";
@@ -11,70 +11,80 @@
     <hr />
     <dl class="dl-horizontal">
         <dt>
-            @Html.DisplayNameFor(model => model.Title)
+            @Html.DisplayNameFor(model => model.Thread.Title)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.Title)
+            @Html.DisplayFor(model => model.Thread.Title)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.Id)
+            @Html.DisplayNameFor(model => model.Thread.Id)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.Id)
+            @Html.DisplayFor(model => model.Thread.Id)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.LastPostTimeRaw)
+            @Html.DisplayNameFor(model => model.Thread.LastPostTimeRaw)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.LastPostTimeRaw)
+            @Html.DisplayFor(model => model.Thread.LastPostTimeRaw)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.LastPoster.UserName)
+            @Html.DisplayNameFor(model => model.Thread.LastPoster.UserName)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.LastPoster.UserName)
+            @Html.DisplayFor(model => model.Thread.LastPoster.UserName)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.LastPoster.Id)
+            @Html.DisplayNameFor(model => model.Thread.LastPoster.Id)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.LastPoster.Id)
+            @Html.DisplayFor(model => model.Thread.LastPoster.Id)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.LastPostId)
+            @Html.DisplayNameFor(model => model.Thread.LastPostId)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.LastPostId)
+            @Html.DisplayFor(model => model.Thread.LastPostId)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.Forum.Id)
+            @Html.DisplayNameFor(model => model.Thread.Forum.Id)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.Forum.Id)
+            @Html.DisplayFor(model => model.Thread.Forum.Id)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.ReplysCount)
+            @Html.DisplayNameFor(model => model.Thread.ReplysCount)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.ReplysCount)
+            @Html.DisplayFor(model => model.Thread.ReplysCount)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.DeletedReplysCount)
+            @Html.DisplayNameFor(model => model.Thread.DeletedReplysCount)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.DeletedReplysCount)
+            @Html.DisplayFor(model => model.Thread.DeletedReplysCount)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.IsOpen)
+            @Html.DisplayNameFor(model => model.Thread.IsOpen)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.IsOpen)
+            @Html.DisplayFor(model => model.Thread.IsOpen)
         </dd>
         <dt>
-            @Html.DisplayNameFor(model => model.LastPostTime)
+            @Html.DisplayNameFor(model => model.Thread.LastPostTime)
         </dt>
         <dd>
-            @Html.DisplayFor(model => model.LastPostTime)
+            @Html.DisplayFor(model => model.Thread.LastPostTime)
         </dd>
     </dl>
 </div>
+
+<table class="table">
+    @foreach(var reply in Model.Replys) {
+        <tr>
+            <td>@reply.Author.UserName</td>
+            <td>@reply.CreatedTime.ToLocalTime().ToString()</td>
+            <td>@reply.Text</td>
+        </tr>
+    }
+</table>
