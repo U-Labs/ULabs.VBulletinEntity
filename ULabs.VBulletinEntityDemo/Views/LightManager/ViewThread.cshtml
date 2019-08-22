@@ -82,7 +82,7 @@
 <table class="table">
     @foreach(var reply in Model.Replys) {
         <tr>
-            <td>@reply.Author.UserName</td>
+            <td>@reply.Author?.UserName</td>
             <td>@reply.CreatedTime.ToLocalTime().ToString()</td>
             <td>@reply.Text</td>
         </tr>
