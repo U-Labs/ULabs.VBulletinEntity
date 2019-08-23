@@ -275,8 +275,13 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// var check = lightThreadManager.CreateReplyCheck(model);
         /// </code>
         /// </example>
-        public CanReplyResult CreateReplyCheck(LightCreateReplyModel replyModel) {
-            var thread = Get(replyModel.ThreadId);
+        /// <param name="thread"><see cref="VBLightThread"></see> of <paramref name="replyModel"/> ThreadId. Optional to save one query in combination with 
+        /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"</param>
+        public CanReplyResult CreateReplyCheck(LightCreateReplyModel replyModel, VBLightThread thread = null) {
+            if (thread == null) {
+                thread = Get(replyModel.ThreadId);
+            }
+
             if (thread == null || !thread.IsVisible) {
                 return CanReplyResult.ThreadNotExisting;
                 // ToDo: Test mod check in full thread manager and test if we need to implement it there too  
