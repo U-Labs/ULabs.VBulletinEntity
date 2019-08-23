@@ -45,16 +45,6 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
             return post;
         };
-        string GetReplysInfoBaseQuery(bool includeDeleted, string additionalWhere = "") {
-            string sql = @"
-                SELECT p.postid 
-                FROM post p 
-                WHERE p.threadId = @threadId " +
-                (includeDeleted ? "" : "AND p.visible = 1 ") +
-                additionalWhere + @"
-                ORDER BY p.dateline ";
-            return sql;
-        }
         #endregion
         public VBLightThreadManager(MySqlConnection db) {
             this.db = db;
