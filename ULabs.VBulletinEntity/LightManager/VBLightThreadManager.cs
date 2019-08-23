@@ -296,5 +296,62 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
             return CanReplyResult.Ok;
         }
+
+        /// <summary>
+        /// Creates a new post reply to an existing thread and updates the thread as well as the corresponding forum with stats and meta info (last thread/timestamp etc)
+        /// </summary>
+        /// <param name="thread"><see cref="VBLightThread"></see> of <paramref name="replyModel"/> ThreadId. Optional to save one query in combination with 
+        /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"</param>
+        /// <param name="updateForum">Determinates if the forums lastpost etc will be updated. Could be set to false if you want to do this with a cron insted.</param>
+        public void CreateReply(LightCreateReplyModel replyModel, VBLightThread thread = null, bool updateForum = true) {
+            if (thread == null) {
+                thread = Get(replyModel.ThreadId);
+            }
+
+            var args = new {
+                threadTitle = thread.Title,
+                forumId = thread.Forum.Id,
+                replyModel.ThreadId, thread.LastPostId, replyModel.Author.UserName, replyModel.Author.Id, replyModel.Title, replyModel.Text, replyModel.IpAddress
+            };
+            string updateForumSql = @"
+                UPDATE forum
+                SET lastpost = @ts,
+                lastposter = @userName,
+                lastpostid = @postId,
+                lastthread = @threadTitle,
+                lastthreadid = @threadId,
+                replycount = replycount + 1
+                WHERE forumid = @forumId; ";
+            // ToDo: Support attachments
+            string sql = @"
+                START TRANSACTION;
+
+                SELECT UNIX_TIMESTAMP() INTO @ts;
+
+                INSERT INTO post
+                SET threadid = @threadId,
+	                parentid = @lastPostId,
+	                username = @userName, 
+	                userid = @id,
+	                title = @title,
+	                dateline = @ts,
+	                pagetext = @text,
+	                ipaddress = @ipAddress,
+	                visible = 1,
+	                attach = 0;
+
+                SELECT LAST_INSERT_ID() INTO @postId;
+
+                UPDATE thread
+                SET lastpostid = @postId,
+                lastpost = @ts,
+                lastposter = @userName
+                WHERE threadid = @threadId; " +
+                
+                (updateForum ? updateForumSql : "") + 
+
+                "COMMIT;";
+            db.Execute(sql, args);
+        }
     }
 }
