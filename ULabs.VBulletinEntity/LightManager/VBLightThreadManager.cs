@@ -70,7 +70,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
-        /// Loads the replys of a thread for the page, which meta data were fetched by <see cref="VBLightThreadManager.GetReplysInfo(int, bool, int, int)"/>. 
+        /// Loads the replys of a thread for the page, which meta data were fetched by <see cref="VBLightThreadManager.GetReplysInfo(int, int, bool, int, int)"/>. 
         /// </summary>
         /// <param name="replysInfo"></param>
         /// <returns></returns>
@@ -89,14 +89,15 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="includeDeleted">Include deleted posts for moderators or admin users</param>
         /// <param name="page">Number of the page to display, which is used for calculating which posts to skip</param>
         /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 10.</param>
-        public ReplysInfo GetReplysInfo(int threadId, bool includeDeleted = false, int page = 1, int replysPerPage = 10) {
+        public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, bool includeDeleted = false, int page = 1, int replysPerPage = 10) {
             int offset = (page - 1) * replysPerPage;
-            var args = new { threadId, offset, replysPerPage };
+            var args = new { threadId, offset, replysPerPage, threadFirstPostId };
             var info = new ReplysInfo(page, replysPerPage);
 
             string sqlWithoutSelect = @"
                 FROM post p 
-                WHERE p.threadId = @threadId " +
+                WHERE p.threadId = @threadId 
+                AND p.postid != @threadFirstPostId " +
                 (includeDeleted ? "" : "AND p.visible = 1 ") + @"
                 ORDER BY p.dateline";
 
