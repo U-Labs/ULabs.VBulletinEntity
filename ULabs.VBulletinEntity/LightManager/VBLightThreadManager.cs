@@ -10,6 +10,7 @@ using ULabs.VBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Models.Forum;
 using ULabs.VBulletinEntity.Models.Manager;
 using ULabs.VBulletinEntity.Models.Permission;
+using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {
@@ -344,11 +345,12 @@ namespace ULabs.VBulletinEntity.LightManager {
                 forumId = thread.Forum.Id,
                 replyModel.ThreadId, thread.LastPostId, replyModel.Author.UserName, replyModel.Author.Id, replyModel.Title, replyModel.Text, replyModel.IpAddress
             };
-            string updateRelatedCountersSql = @"
+            string updateCountersSql = @"
                 UPDATE forum
                 SET lastpost = @ts,
                 lastposter = @userName,
                 lastpostid = @postId,
+                lastposterid = @id,
                 lastthread = @threadTitle,
                 lastthreadid = @threadId,
                 replycount = replycount + 1
@@ -360,8 +362,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             // ToDo: Support attachments
             string sql = @"
                 START TRANSACTION;
-
-                SELECT UNIX_TIMESTAMP() INTO @ts;
+                SELECT " + (replyModel.TimeRaw.HasValue ? replyModel.TimeRaw.Value.ToString() : "UNIX_TIMESTAMP()") + @" INTO @ts;
 
                 INSERT INTO post
                 SET threadid = @threadId,
@@ -376,19 +377,56 @@ namespace ULabs.VBulletinEntity.LightManager {
 	                attach = 0;
 
                 SELECT LAST_INSERT_ID() INTO @postId;
-
                 UPDATE thread
                 SET lastpostid = @postId,
                 lastpost = @ts,
                 lastposter = @userName
                 WHERE threadid = @threadId; " +
                 
-                (updateCounters ? updateRelatedCountersSql : "") + @"
+                (updateCounters ? updateCountersSql : "") + @"
                 
                 SELECT @postId;
                 COMMIT;";
             int postId = db.QuerySingleOrDefault<int>(sql, args);
             return postId;
+        }
+
+
+        public int CreateThread(LightCreateThreadModel threadModel, bool updateCounters = true) {
+            long ts = DateTime.UtcNow.ToUnixTimestamp();
+
+            var args = new {
+                ts, threadModel.Title, threadModel.ForumId, threadModel.IsOpen, threadModel.Author.UserName,
+                authorUserId = threadModel.Author.Id
+            };
+            string sql = @"
+                START TRANSACTION;
+                INSERT INTO thread 
+                SET title = @title, lastpost = @ts, forumid = @forumId, open = @isOpen, postusername = @userName, postuserid = @authorUserId, lastposter = @userName, dateline = @ts, visible = 0, 
+                    lastposterid = @authorUserId;
+
+                SELECT LAST_INSERT_ID();
+                COMMIT;";
+            int threadId = db.QuerySingleOrDefault<int>(sql, args);
+            if(threadId <= 0) {
+                return -1;
+            }
+
+            var thread = Get(threadId);
+            var replyModel = new LightCreateReplyModel(threadModel.Author, threadModel.ForumId, threadId, threadModel.Text, threadModel.IpAddress, timeRaw: ts, updateCounters: updateCounters);
+            int postId = CreateReply(replyModel);
+            if (postId <= 0) {
+                return -2;
+            }
+
+            var updateThreadArgs = new {ts,  postId, threadId, threadModel.ForumId, threadModel.Author.UserName, threadModel.Author.Id, threadTitle = thread.Title };
+            string updateThreadSql = @"
+                UPDATE thread
+                SET visible = 1, firstpostid = @postId, lastpostid = @postId
+                WHERE threadid = @threadId;";
+            // Dont update any forum/user counters here. This is already done centralized in AddReply!
+            db.Execute(updateThreadSql, updateThreadArgs);
+            return threadId;
         }
     }
 }

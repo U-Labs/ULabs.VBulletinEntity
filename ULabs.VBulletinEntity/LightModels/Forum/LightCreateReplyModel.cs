@@ -14,15 +14,17 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public string Text { get; set; }
         public string IpAddress { get; set; }
         public string Title { get; set; }
-        public bool UpdatePostCounter { get; set; }
-        public LightCreateReplyModel(VBLightUser author, int forumId, int threadId, string text, string ipAddress, string title = "", bool updatePostCounter = true) {
+        public long? TimeRaw { get; set; }
+        public bool UpdateCounters { get; set; }
+        public LightCreateReplyModel(VBLightUser author, int forumId, int threadId, string text, string ipAddress, string title = "", long? timeRaw = null, bool updateCounters = true) {
             Author = author;
             ForumId = forumId;
             ThreadId = threadId;
             Text = text;
             IpAddress = ipAddress;
             Title = title;
-            UpdatePostCounter = updatePostCounter;
+            TimeRaw = timeRaw;
+            UpdateCounters = updateCounters;
         }
     }
 }
