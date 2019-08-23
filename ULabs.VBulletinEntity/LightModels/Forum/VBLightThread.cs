@@ -17,7 +17,7 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public int ReplysCount { get; set; }
         public int DeletedReplysCount { get; set; }
         public bool IsOpen { get; set; }
-        public int IsVisible { get; set; }
+        public bool IsVisible { get; set; }
 
         public DateTime LastPostTime {
             get => LastPostTimeRaw.ToDateTime();
