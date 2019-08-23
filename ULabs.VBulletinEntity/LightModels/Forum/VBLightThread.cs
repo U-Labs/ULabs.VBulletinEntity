@@ -13,6 +13,7 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public VBLightUser LastPoster { get; set; }
         public int FirstPostId { get; set; }
         public int LastPostId { get; set; }
+        public int AuthorUserId { get; set; }
         public VBLightForum Forum { get; set; }
         public int ReplysCount { get; set; }
         public int DeletedReplysCount { get; set; }
