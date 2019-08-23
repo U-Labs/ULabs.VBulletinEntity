@@ -303,7 +303,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="thread"><see cref="VBLightThread"></see> of <paramref name="replyModel"/> ThreadId. Optional to save one query in combination with 
         /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"</param>
         /// <param name="updateForum">Determinates if the forums lastpost etc will be updated. Could be set to false if you want to do this with a cron insted.</param>
-        public void CreateReply(LightCreateReplyModel replyModel, VBLightThread thread = null, bool updateForum = true) {
+        /// <returns>Id of the created post</returns>
+        public int CreateReply(LightCreateReplyModel replyModel, VBLightThread thread = null, bool updateForum = true) {
             if (thread == null) {
                 thread = Get(replyModel.ThreadId);
             }
@@ -348,10 +349,12 @@ namespace ULabs.VBulletinEntity.LightManager {
                 lastposter = @userName
                 WHERE threadid = @threadId; " +
                 
-                (updateForum ? updateForumSql : "") + 
-
-                "COMMIT;";
-            db.Execute(sql, args);
+                (updateForum ? updateForumSql : "") + @"
+                
+                SELECT @postId;
+                COMMIT;";
+            int postId = db.QuerySingleOrDefault<int>(sql, args);
+            return postId;
         }
     }
 }
