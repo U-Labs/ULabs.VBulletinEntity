@@ -87,12 +87,31 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
-        /// Fetches meta information about the thread replys which are required to calculate paging
+        /// Fetches the invisible posts between the first and last post of the page for moderator/administrator usage
+        /// </summary>
+        public List<VBLightPost> GetInvisibleReplys(int threadId, ReplysInfo replysInfo) {
+            var args = new {
+                threadId,
+                firstPagePostId = replysInfo.PostIds.FirstOrDefault(),
+                lastPagePostId = replysInfo.PostIds.LastOrDefault()
+            };
+            string sql = $@"
+                {postBaseQuery}
+                WHERE p.threadid = @threadId
+                AND p.visible != 1 
+                AND p.dateline >= (SELECT dateline FROM post WHERE postid = @firstPagePostId) " +
+                (args.lastPagePostId != 0 ? "AND p.dateline <= (SELECT dateline FROM post WHERE postid = @lastPagePostId) " : "") + @"
+                ORDER BY p.dateline";
+            var replys = db.Query(sql, postMappingFunc, args);
+            return replys.ToList();
+        }
+        /// <summary>
+        /// Fetches meta information about the thread replys which are required to calculate paging. Returns only visible posts.
         /// </summary>
         /// <param name="includeDeleted">Include deleted posts for moderators or admin users</param>
         /// <param name="page">Number of the page to display, which is used for calculating which posts to skip</param>
         /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 10.</param>
-        public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, bool includeDeleted = false, int page = 1, int replysPerPage = 10) {
+        public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, int page = 1, int replysPerPage = 10) {
             int offset = (page - 1) * replysPerPage;
             var args = new { threadId, offset, replysPerPage, threadFirstPostId };
             var info = new ReplysInfo(page, replysPerPage);
@@ -100,8 +119,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             string sqlWithoutSelect = @"
                 FROM post p 
                 WHERE p.threadId = @threadId 
-                AND p.postid != @threadFirstPostId " +
-                (includeDeleted ? "" : "AND p.visible = 1 ") + @"
+                AND p.postid != @threadFirstPostId 
+                AND p.visible = 1 
                 ORDER BY p.dateline";
 
             string sqlPostIds = $@"

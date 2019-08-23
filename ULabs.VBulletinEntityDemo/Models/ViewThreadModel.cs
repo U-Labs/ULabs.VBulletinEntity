@@ -14,7 +14,7 @@ namespace ULabs.VBulletinEntityDemo.Models {
 
         public ViewThreadModel(VBLightThreadManager lightThreadManager, int threadId, int page, int userId) {
             Thread = lightThreadManager.Get(threadId);
-            ReplysInfo = lightThreadManager.GetReplysInfo(Thread.Id, includeDeleted: false, page: page);
+            ReplysInfo = lightThreadManager.GetReplysInfo(Thread.Id, Thread.FirstPostId, page: page);
             Replys = lightThreadManager.GetReplys(ReplysInfo);
             ThankedReplys = lightThreadManager.GetPostsWhereUserThanked(userId, Replys.Select(p => p.Id).ToList());
         }
