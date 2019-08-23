@@ -347,13 +347,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             string updateCountersSql = @"
                 UPDATE forum
-                SET lastpost = @ts,
-                lastposter = @userName,
-                lastpostid = @postId,
-                lastposterid = @id,
-                lastthread = @threadTitle,
-                lastthreadid = @threadId,
-                replycount = replycount + 1
+                SET lastpost = @ts, lastposter = @userName, lastpostid = @postId, lastposterid = @id, lastthread = @threadTitle, lastthreadid = @threadId, replycount = replycount + 1
                 WHERE forumid = @forumId; 
 
                 UPDATE user
@@ -365,16 +359,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 SELECT " + (replyModel.TimeRaw.HasValue ? replyModel.TimeRaw.Value.ToString() : "UNIX_TIMESTAMP()") + @" INTO @ts;
 
                 INSERT INTO post
-                SET threadid = @threadId,
-	                parentid = @lastPostId,
-	                username = @userName, 
-	                userid = @id,
-	                title = @title,
-	                dateline = @ts,
-	                pagetext = @text,
-	                ipaddress = @ipAddress,
-	                visible = 1,
-	                attach = 0;
+                SET threadid = @threadId, parentid = @lastPostId, username = @userName, userid = @id, title = @title, dateline = @ts, pagetext = @text, ipaddress = @ipAddress,
+	                visible = 1, attach = 0;
 
                 SELECT LAST_INSERT_ID() INTO @postId;
                 UPDATE thread
