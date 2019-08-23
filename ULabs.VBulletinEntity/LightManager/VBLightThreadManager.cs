@@ -25,8 +25,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN forum f ON (f.forumid = t.forumid)
                 LEFT JOIN usergroup g ON (g.usergroupid = u.usergroupid) ";
         string postBaseQuery = @"
-                SELECT p.postid AS Id, p.parentid AS ParentPostId, p.dateline AS CreatedTimeRaw, p.pagetext AS TEXT, p.ipaddress AS IpAddress, p.visible AS VisibilityRaw, p.attach AS HasAttachments,
-                        p.post_thanks_amount AS ThanksCount,
+                SELECT p.postid AS Id, p.threadid AS ThreadId, p.parentid AS ParentPostId, p.dateline AS CreatedTimeRaw, p.pagetext AS TEXT, p.ipaddress AS IpAddress, p.visible AS VisibilityRaw, 
+                        p.attach AS HasAttachments, p.post_thanks_amount AS ThanksCount,
                     u.userid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision, u.lastactivity AS LastActivityRaw,
                     g.usergroupid AS Id, g.opentag AS OpenTag, g.closetag AS CloseTag, g.usertitle AS UserTitle, g.adminpermissions AS AdminPermissions 
                 FROM post p

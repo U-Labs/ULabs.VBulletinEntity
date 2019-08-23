@@ -9,6 +9,7 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
     public class VBLightPost {
         public int Id { get; set; }
         public int ParentPostId { get; set; }
+        public int ThreadId { get; set; }
         public VBLightUser Author { get; set; }
         public int CreatedTimeRaw { get; set; }
         public string Text { get; set; }
