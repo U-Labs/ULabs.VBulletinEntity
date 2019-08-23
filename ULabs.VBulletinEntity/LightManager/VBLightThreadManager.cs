@@ -8,11 +8,15 @@ using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Models.Forum;
+using ULabs.VBulletinEntity.Models.Manager;
+using ULabs.VBulletinEntity.Models.Permission;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightThreadManager {
         #region Private attributes and methods
         readonly MySqlConnection db;
+        readonly VBLightForumManager lightForumManager;
+
         // Order (also with Id and splitOn set): All attributes from the first relation entity should be placed BEFORE the (SplitOn) key
         string threadBaseQuery = @"
             SELECT t.threadid as Id, t.title as Title, t.lastpost as LastPostTimeRaw, t.lastpostid as LastPostId, t.firstpostid as FirstPostId,
@@ -46,8 +50,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             return post;
         };
         #endregion
-        public VBLightThreadManager(MySqlConnection db) {
+        public VBLightThreadManager(MySqlConnection db, VBLightForumManager lightForumManager) {
             this.db = db;
+            this.lightForumManager = lightForumManager;
         }
 
         public VBLightThread Get(int threadId) {
@@ -259,6 +264,32 @@ namespace ULabs.VBulletinEntity.LightManager {
             string generated = $"{thread.Forum.SeoUrlPart}/{thread.SeoUrlPart}";
             string received = $"{receivedForumTitle}-{receivedForumId}/{receivedThreadTitle}-{receivedThreadId}";
             return received == generated;
+        }
+
+        /// <summary>
+        /// Checks if the specified user has proper permission to reply on threads in the forum
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// var model = new LightCreateReplyModel(lightSessionManager.GetCurrent().User, forumId: 123, threadId: 456, text: "Testreply", ipAddress: "127.0.0.1");
+        /// var check = lightThreadManager.CreateReplyCheck(model);
+        /// </code>
+        /// </example>
+        public CanReplyResult CreateReplyCheck(LightCreateReplyModel replyModel) {
+            var thread = Get(replyModel.ThreadId);
+            if (thread == null || !thread.IsVisible) {
+                return CanReplyResult.ThreadNotExisting;
+                // ToDo: Test mod check in full thread manager and test if we need to implement it there too  
+            } else if (!thread.IsOpen && !replyModel.Author.PrimaryUserGroup.AdminPermissions.HasFlag(VBAdminFlags.IsModerator)) {
+                return CanReplyResult.ThreadClosed;
+            }
+
+            var createOtherOrMyThreadsFlag = thread.AuthorUserId == replyModel.Author.Id ? VBForumFlags.CanReplyToOwnThreads : VBForumFlags.CanReplyToOtherThreads;
+            var forumPermission = lightForumManager.GetPermission(replyModel.Author.PrimaryUserGroup.Id, replyModel.ForumId);
+            if(!forumPermission.HasFlag(createOtherOrMyThreadsFlag)) {
+                return CanReplyResult.NoReplyPermission;
+            }
+            return CanReplyResult.Ok;
         }
     }
 }
