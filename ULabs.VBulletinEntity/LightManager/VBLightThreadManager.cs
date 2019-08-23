@@ -377,7 +377,11 @@ namespace ULabs.VBulletinEntity.LightManager {
             return postId;
         }
 
-
+        /// <summary>
+        /// Creates a thread without performing any validation checks. Use UserGroupPermissions to check if the user can create threads in the specified forum
+        /// </summary>
+        /// <param name="updateCounters">Determinates if the forums lastpost etc and authors post counter will be updated. Could be set to false if you want to do this with a cron insted.</param>
+        /// <returns></returns>
         public int CreateThread(LightCreateThreadModel threadModel, bool updateCounters = true) {
             long ts = DateTime.UtcNow.ToUnixTimestamp();
 
