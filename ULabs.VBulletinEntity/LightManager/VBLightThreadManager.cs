@@ -253,6 +253,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="afterTimestamp">If specified, only thanks after this timestamp are returned (optional)</param>
         /// <param name="count">Limit the number of thanks to return. Recommended since older/larger boards can return a massive amount of data if no limit is specified.</param>
         public List<VBLightPostThanks> GetThanks(int userId, int? afterTimestamp = null, int count = 10) {
+            // Important to filter the UserId on Post (p) instead of the thanks! post_thanks.userid is the id of the user who gave the thanks, not the receiving user!
             string sql = @"
                 SELECT pt.date AS TimeRaw, pt.postid AS PostId,
 			        t.threadid AS ThreadId, t.title AS ThreadTitle,
@@ -261,7 +262,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN post AS p ON (p.postid = pt.postid)
                 LEFT JOIN thread AS t ON (t.threadid = p.threadid)
                 LEFT JOIN forum f ON(f.forumid = t.forumid)
-                WHERE pt.userid = @userId ";
+                WHERE p.userid = @userId ";
             if (afterTimestamp.HasValue) {
                 sql += "AND pt.date > @afterTimestamp";
             }
