@@ -312,9 +312,9 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         /// <param name="thread"><see cref="VBLightThread"></see> of <paramref name="replyModel"/> ThreadId. Optional to save one query in combination with 
         /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"</param>
-        /// <param name="updateForum">Determinates if the forums lastpost etc will be updated. Could be set to false if you want to do this with a cron insted.</param>
+        /// <param name="updateCounters">Determinates if the forums lastpost etc and authors post counter will be updated. Could be set to false if you want to do this with a cron insted.</param>
         /// <returns>Id of the created post</returns>
-        public int CreateReply(LightCreateReplyModel replyModel, VBLightThread thread = null, bool updateForum = true) {
+        public int CreateReply(LightCreateReplyModel replyModel, VBLightThread thread = null, bool updateCounters = true) {
             if (thread == null) {
                 thread = Get(replyModel.ThreadId);
             }
@@ -324,7 +324,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 forumId = thread.Forum.Id,
                 replyModel.ThreadId, thread.LastPostId, replyModel.Author.UserName, replyModel.Author.Id, replyModel.Title, replyModel.Text, replyModel.IpAddress
             };
-            string updateForumSql = @"
+            string updateRelatedCountersSql = @"
                 UPDATE forum
                 SET lastpost = @ts,
                 lastposter = @userName,
@@ -332,7 +332,11 @@ namespace ULabs.VBulletinEntity.LightManager {
                 lastthread = @threadTitle,
                 lastthreadid = @threadId,
                 replycount = replycount + 1
-                WHERE forumid = @forumId; ";
+                WHERE forumid = @forumId; 
+
+                UPDATE user
+                SET posts = posts + 1
+                WHERE userid = @id;";
             // ToDo: Support attachments
             string sql = @"
                 START TRANSACTION;
@@ -359,7 +363,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 lastposter = @userName
                 WHERE threadid = @threadId; " +
                 
-                (updateForum ? updateForumSql : "") + @"
+                (updateCounters ? updateRelatedCountersSql : "") + @"
                 
                 SELECT @postId;
                 COMMIT;";
