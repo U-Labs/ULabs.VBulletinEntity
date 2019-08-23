@@ -61,6 +61,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             // Generic overload not possible with QueryFirstOrDefault()
             var threads = db.Query(sql, threadMappingFunc, args);
             var thread = threads.SingleOrDefault();
+            if(thread == null) {
+                return null;
+            }
             
             // FirstPost is fetched seperately because the query would be complex (especially for dapper) if we include the multiple joins from the post to its author/group here
             string firstPostSql = $@"{postBaseQuery} WHERE p.postid = @postId";
