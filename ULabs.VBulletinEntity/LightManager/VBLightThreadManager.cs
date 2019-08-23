@@ -113,6 +113,17 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Gets a single post. Usefull when a user wants to edit its post.
+        /// </summary>
+        public VBLightPost GetPost(int postId) {
+            string sql = $@"
+                {postBaseQuery}
+                WHERE p.postid = @postId";
+            var reply = db.Query(sql, postMappingFunc, new { postId });
+            return reply.FirstOrDefault();
+        }
+
+        /// <summary>
         /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
         /// </summary>
         /// <param name="count">Limit the fetched rows</param>
