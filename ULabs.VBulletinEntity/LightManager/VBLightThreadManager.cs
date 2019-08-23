@@ -113,6 +113,24 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Calculates the page of a specific post reply
+        /// </summary>
+        public int GetPageOfReply(int threadId, int replyId, int replysPerPage = 10, bool includeDeleted = false) {
+            var args = new { threadId, replyId, replysPerPage };
+            // With the dateline we get 100% correct order. PostId should be working too in most cases, but not when posts were inserted with newer timestamp (e.g. import from other forum)
+            // Fetching the entire post list can slow down the performance a bit on large threads (not much, < 100ms). This approach is faster by letting the sql server do the work
+            string sql = @"
+ 		        SELECT CEIL(COUNT(p.postid) / @replysPerPage)
+                FROM post p 
+                WHERE p.threadId = @threadId " +
+                (includeDeleted ? "" : "AND p.visible = 1 ") + @"
+                AND p.dateline <= (SELECT dateline FROM post WHERE postid = @replyId)
+                ORDER BY p.dateline";
+            int page = db.QuerySingleOrDefault<int>(sql, args);
+            return page;
+        }
+
+        /// <summary>
         /// Gets a single post. Usefull when a user wants to edit its post.
         /// </summary>
         public VBLightPost GetPost(int postId) {
