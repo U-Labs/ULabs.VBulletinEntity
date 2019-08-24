@@ -254,10 +254,22 @@ namespace ULabs.VBulletinEntity.LightManager {
             string sql = @"
                 SELECT dateline
                 FROM contentread
-                WHERE contentid = @contentId AND userid = @userId AND contenttypeid = @contentTypeId AND readtype = @readType
-            ";
+                WHERE contentid = @contentId AND userid = @userId AND contenttypeid = @contentTypeId AND readtype = @readType";
             int ts = db.QueryFirstOrDefault<int>(sql, args);
             return ts;
+        }
+
+        /// <summary>
+        /// Gets the first unread post id after the provided timestamp. Can be used for building anker links to the first unread post since last threadread
+        /// </summary>
+        public int GetNextUnreadReplyId(int threadId, int lastReadTime) {
+            var args = new { threadId, lastReadTime };
+            string sql = @"
+                SELECT postid
+                FROM post
+                WHERE threadid = @threadId and dateline >= @lastReadTime";
+            int postId = db.QueryFirstOrDefault<int>(sql, args);
+            return postId;
         }
 
         /// <summary>
