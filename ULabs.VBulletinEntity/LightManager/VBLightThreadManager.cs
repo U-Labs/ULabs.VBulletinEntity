@@ -247,6 +247,20 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Gets the unix timestamp of the last readtime for a given content id of the given user. Usefull to resolve a "last unread post" threadlink
+        /// </summary>
+        public int GetContentReadTime(int contentId, int userId, int contentTypeId = 2, string readType = "view") {
+            var args = new { contentId, userId, contentTypeId, readType };
+            string sql = @"
+                SELECT dateline
+                FROM contentread
+                WHERE contentid = @contentId AND userid = @userId AND contenttypeid = @contentTypeId AND readtype = @readType
+            ";
+            int ts = db.QueryFirstOrDefault<int>(sql, args);
+            return ts;
+        }
+
+        /// <summary>
         /// Gets received thanks from other users for the posts of the specified user id from "Post Thank you Hack" addon.
         /// For best performance, it's recommended to add an index (the table doesn't have any except on own id): ALTER TABLE post_thanks ADD INDEX userid_date(userid, DATE);
         /// </summary>
