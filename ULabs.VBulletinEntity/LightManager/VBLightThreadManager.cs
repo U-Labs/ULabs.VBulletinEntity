@@ -114,6 +114,15 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 10.</param>
         public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, int page = 1, int replysPerPage = 10) {
             int offset = (page - 1) * replysPerPage;
+
+            // VB counts with the first posts per page, not only replys. To not break VBSeo links (which rely in the page) we skip one on the first page so that we have 10 posts instead of 11.
+            if(page == 1) {
+                replysPerPage -= 1;
+            }else {
+                // For all other pages we need to get one post back. Otherwise we would skip the first post on the second page
+                offset -= 1;
+            }
+
             var args = new { threadId, offset, replysPerPage, threadFirstPostId };
             var info = new ReplysInfo(page, replysPerPage);
 
@@ -132,7 +141,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 .ToList();
 
             // Cant calculate the total pages by Math.Ceiling((decimal)info.PostIds.Count / (decimal)replysPerPage); because we need all post ids for this = Bad performance on large threads
-            string sqlTotalPages = $"SELECT CEIL(COUNT(p.postid) / @replysPerPage) {sqlWithoutSelect}";
+            // +1 post is added to fix the skipped firstpost. Otherwise we missed the last page if it only contains a single post
+            string sqlTotalPages = $"SELECT CEIL((COUNT(p.postid) + 1) / @replysPerPage) {sqlWithoutSelect}";
             info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, args);
             return info;
         }
@@ -140,10 +150,12 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Calculates the page of a specific post reply
         /// </summary>
-        public int GetPageOfReply(int threadId, int replyId, int replysPerPage = 10, bool includeDeleted = false) {
+        public int GetPageOfReply(int threadId, int replyId, int? threadFirstPostId = null, int replysPerPage = 10, bool includeDeleted = false) {
             var args = new { threadId, replyId, replysPerPage };
             // With the dateline we get 100% correct order. PostId should be working too in most cases, but not when posts were inserted with newer timestamp (e.g. import from other forum)
             // Fetching the entire post list can slow down the performance a bit on large threads (not much, < 100ms). This approach is faster by letting the sql server do the work
+
+            // If we want to display 10 replys on every page (currently 9 on first page, 10 on every page > 1) we need to exclude the first post id here (currently not for compatibility reasons)
             string sql = @"
  		        SELECT CEIL(COUNT(p.postid) / @replysPerPage)
                 FROM post p 
