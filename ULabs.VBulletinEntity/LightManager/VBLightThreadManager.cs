@@ -148,6 +148,21 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Fetches the newest <paramref name="count"/> replys in a thread defined by <paramref name="threadId"/>
+        /// </summary>
+        public List<VBLightPost> GetNewestReplys(int threadId, int count = 10) {
+            var args = new { threadId, count };
+            string sql = $@"
+                {postBaseQuery}
+                WHERE p.threadid = @threadId
+                AND p.visible = 1
+                ORDER BY p.dateline DESC
+                LIMIT @count";
+            var replys = db.Query(sql, postMappingFunc, args);
+            return replys.ToList(); ;
+        }
+
+        /// <summary>
         /// Calculates the page of a specific post reply
         /// </summary>
         public int GetPageOfReply(int threadId, int replyId, int? threadFirstPostId = null, int replysPerPage = 10, bool includeDeleted = false) {
