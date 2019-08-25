@@ -30,7 +30,11 @@ namespace ULabs.VBulletinEntity.LightManager {
             this.db = db;
             CookiePrefix = cookiePrefix;
             this.cookieSalt = cookieSalt;
-            contextCookies = contextAccessor.HttpContext.Request.Cookies;
+            
+            // For the case that we are not in a  http request
+            if(contextAccessor.HttpContext != null) {
+                contextCookies = contextAccessor.HttpContext.Request.Cookies;
+            }
         }
 
         #region Private methods
