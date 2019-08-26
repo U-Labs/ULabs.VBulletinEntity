@@ -122,36 +122,37 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 10.</param>
         public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, int page = 1, int replysPerPage = 10) {
             int offset = (page - 1) * replysPerPage;
-
+            // The original replysPerPage is not touched for the pagination, since we don't count the posts rather than using VBs cache column for replys count
+            int replysPerPageForPostIds = replysPerPage;
             // VB counts with the first posts per page, not only replys. To not break VBSeo links (which rely in the page) we skip one on the first page so that we have 10 posts instead of 11.
             if(page == 1) {
-                replysPerPage -= 1;
+                replysPerPageForPostIds -= 1;
             }else {
                 // For all other pages we need to get one post back. Otherwise we would skip the first post on the second page
                 offset -= 1;
             }
 
-            var args = new { threadId, offset, replysPerPage, threadFirstPostId };
+            var postIdsArgs = new { threadId, offset, replysPerPageForPostIds, threadFirstPostId };
             var info = new ReplysInfo(page, replysPerPage);
 
-            string sqlWithoutSelect = @"
+            string sqlPostIds = $@"
+                SELECT p.postid 
                 FROM post p 
                 WHERE p.threadId = @threadId 
                 AND p.postid != @threadFirstPostId 
                 AND p.visible = 1 
-                ORDER BY p.dateline";
-
-            string sqlPostIds = $@"
-                SELECT p.postid 
-                {sqlWithoutSelect}
-                LIMIT @offset, @replysPerPage";
-            info.PostIds = db.Query<int>(sqlPostIds, args)
+                ORDER BY p.dateline
+                LIMIT @offset, @replysPerPageForPostIds";
+            info.PostIds = db.Query<int>(sqlPostIds, postIdsArgs)
                 .ToList();
 
-            // Cant calculate the total pages by Math.Ceiling((decimal)info.PostIds.Count / (decimal)replysPerPage); because we need all post ids for this = Bad performance on large threads
+            var totalPagesArgs = new { threadId, replysPerPage };
             // +1 post is added to fix the skipped firstpost. Otherwise we missed the last page if it only contains a single post
-            string sqlTotalPages = $"SELECT CEIL((COUNT(p.postid) + 1) / @replysPerPage) {sqlWithoutSelect}";
-            info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, args);
+            string sqlTotalPages = @"
+                SELECT CEIL((replycount - 1) / @replysPerPage)
+                FROM thread
+                WHERE threadId = @threadId";
+            info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, totalPagesArgs);
             return info;
         }
 
