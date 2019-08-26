@@ -56,7 +56,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             this.lightForumManager = lightForumManager;
         }
 
-        public VBLightThread Get(int threadId) {
+        public VBLightThread Get(int threadId, bool updateViews = true) {
             var args = new { threadId };
             string sql = threadBaseQuery + @"WHERE t.threadid = @threadId";
             // Generic overload not possible with QueryFirstOrDefault()
@@ -70,6 +70,14 @@ namespace ULabs.VBulletinEntity.LightManager {
             string firstPostSql = $@"{postBaseQuery} WHERE p.postid = @postId";
             thread.FirstPost = db.Query(firstPostSql, postMappingFunc, new { postId = thread.FirstPostId })
                 .FirstOrDefault();
+
+            if (updateViews) {
+                string viewSql = @"
+                    UPDATE thread
+                    SET views = views + 1
+                    WHERE threadid = @threadId";
+                db.Execute(viewSql, new { threadId });
+            }
             return thread;
         }
 
