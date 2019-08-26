@@ -147,9 +147,10 @@ namespace ULabs.VBulletinEntity.LightManager {
                 .ToList();
 
             var totalPagesArgs = new { threadId, replysPerPage };
-            // +1 post is added to fix the skipped firstpost. Otherwise we missed the last page if it only contains a single post
+            // +1 post is added to fix the skipped firstpost. Otherwise we missed the last page if it only contains a single post.
+            // The if condition handles new threads without replys (avoids -1 / 10 calculation)
             string sqlTotalPages = @"
-                SELECT CEIL((replycount - 1) / @replysPerPage)
+                SELECT IF(replycount = 0, 0, CEIL((replycount - 1) / @replysPerPage)) AS pages
                 FROM thread
                 WHERE threadId = @threadId";
             info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, totalPagesArgs);
