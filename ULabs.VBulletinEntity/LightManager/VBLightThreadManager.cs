@@ -62,10 +62,10 @@ namespace ULabs.VBulletinEntity.LightManager {
             // Generic overload not possible with QueryFirstOrDefault()
             var threads = db.Query(sql, threadMappingFunc, args);
             var thread = threads.SingleOrDefault();
-            if(thread == null) {
+            if (thread == null) {
                 return null;
             }
-            
+
             // FirstPost is fetched seperately because the query would be complex (especially for dapper) if we include the multiple joins from the post to its author/group here
             string firstPostSql = $@"{postBaseQuery} WHERE p.postid = @postId";
             thread.FirstPost = db.Query(firstPostSql, postMappingFunc, new { postId = thread.FirstPostId })
@@ -125,9 +125,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             // The original replysPerPage is not touched for the pagination, since we don't count the posts rather than using VBs cache column for replys count
             int replysPerPageForPostIds = replysPerPage;
             // VB counts with the first posts per page, not only replys. To not break VBSeo links (which rely in the page) we skip one on the first page so that we have 10 posts instead of 11.
-            if(page == 1) {
+            if (page == 1) {
                 replysPerPageForPostIds -= 1;
-            }else {
+            } else {
                 // For all other pages we need to get one post back. Otherwise we would skip the first post on the second page
                 offset -= 1;
             }
@@ -385,7 +385,7 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             var createOtherOrMyThreadsFlag = thread.AuthorUserId == replyModel.Author.Id ? VBForumFlags.CanReplyToOwnThreads : VBForumFlags.CanReplyToOtherThreads;
             var forumPermission = lightForumManager.GetPermission(replyModel.Author.PrimaryUserGroup.Id, replyModel.ForumId);
-            if(!forumPermission.HasFlag(createOtherOrMyThreadsFlag)) {
+            if (!forumPermission.HasFlag(createOtherOrMyThreadsFlag)) {
                 return CanReplyResult.NoReplyPermission;
             }
             return CanReplyResult.Ok;
@@ -406,7 +406,13 @@ namespace ULabs.VBulletinEntity.LightManager {
             var args = new {
                 threadTitle = thread.Title,
                 forumId = thread.Forum.Id,
-                replyModel.ThreadId, thread.LastPostId, replyModel.Author.UserName, replyModel.Author.Id, replyModel.Title, replyModel.Text, replyModel.IpAddress
+                replyModel.ThreadId,
+                thread.LastPostId,
+                replyModel.Author.UserName,
+                replyModel.Author.Id,
+                replyModel.Title,
+                replyModel.Text,
+                replyModel.IpAddress
             };
             string updateCountersSql = @"
                 UPDATE forum
@@ -432,7 +438,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 lastposter = @userName,
                 replycount = replycount + 1
                 WHERE threadid = @threadId; " +
-                
+
                 (updateCounters ? updateCountersSql : "") + @"
                 
                 SELECT @postId;
@@ -450,7 +456,11 @@ namespace ULabs.VBulletinEntity.LightManager {
             long ts = DateTime.UtcNow.ToUnixTimestamp();
 
             var args = new {
-                ts, threadModel.Title, threadModel.ForumId, threadModel.IsOpen, threadModel.Author.UserName,
+                ts,
+                threadModel.Title,
+                threadModel.ForumId,
+                threadModel.IsOpen,
+                threadModel.Author.UserName,
                 authorUserId = threadModel.Author.Id
             };
             string sql = @"
@@ -462,7 +472,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 SELECT LAST_INSERT_ID();
                 COMMIT;";
             int threadId = db.QuerySingleOrDefault<int>(sql, args);
-            if(threadId <= 0) {
+            if (threadId <= 0) {
                 return -1;
             }
 
@@ -473,7 +483,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 return -2;
             }
 
-            var updateThreadArgs = new {ts,  postId, threadId, threadModel.ForumId, threadModel.Author.UserName, threadModel.Author.Id, threadTitle = thread.Title };
+            var updateThreadArgs = new { ts, postId, threadId, threadModel.ForumId, threadModel.Author.UserName, threadModel.Author.Id, threadTitle = thread.Title };
             string updateThreadSql = @"
                 UPDATE thread
                 SET visible = 1, firstpostid = @postId, lastpostid = @postId
