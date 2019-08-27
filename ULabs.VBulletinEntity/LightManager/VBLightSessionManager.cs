@@ -55,7 +55,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         bool ValidateUserFromCookie(IRequestCookieCollection cookies, int cookieUserId) {
             var cookiePassword = cookies[$"{CookiePrefix}_password"];
 
-            string userDbPassword = db.QueryFirst<string>("SELECT password FROM user WHERE userid = @userId", new { userId = cookieUserId });
+            string userDbPassword = db.QueryFirstOrDefault<string>("SELECT password FROM user WHERE userid = @userId", new { userId = cookieUserId });
             if (string.IsNullOrEmpty(userDbPassword)) {
                 // The password is invalid. Now we don't have any chance to validate the users credentials
                 return false;
@@ -106,7 +106,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 // Attemp 2: We don't have a valid VB session, but the users pw may be still stored in the cookie which we can use to generate a new session as some kind of SSO
                 // ToDo: Set location, delete old invalid sessions
                 int? cookieUserId = GetCookieUserId(cookies);
-                if (cookieUserId.HasValue && ValidateUserFromCookie(cookies, cookieUserId.Value)) {
+                if (cookieUserId.HasValue && cookieUserId.Value > 0 && ValidateUserFromCookie(cookies, cookieUserId.Value)) {
                     sessionHash = Create(cookieUserId.Value, location);
                 } else {
                     sessionHash = Create(0, location);
