@@ -217,14 +217,21 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
 
             var args = new { includedForumIds, excludedForumIds, count = count };
-            bool hasExclude = excludedForumIds != null || includedForumIds != null;
+            bool hasExclude = excludedForumIds?.Count > 0 || includedForumIds?.Count > 0;
             bool hasWhere = hasExclude || onlyWithoutReplys;
             string sql = threadBaseQuery +
                     (hasWhere ? "WHERE " : "") +
-                    (includedForumIds != null ? "t.forumid IN @includedForumIds " : "") +
-                    (excludedForumIds != null ? "t.forumid NOT IN @excludedForumIds " : "") +
-                    (onlyWithoutReplys ? (hasExclude ? "AND " : "") + "t.replycount = 0 " : "") +
-                    @"ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
+                    (includedForumIds?.Count > 0 ? "t.forumid IN @includedForumIds " : "") +
+                    (excludedForumIds?.Count > 0 ? "t.forumid NOT IN @excludedForumIds " : "");
+
+            if (onlyWithoutReplys) {
+                if (hasExclude) {
+                    sql += "AND ";
+                }
+                sql += "t.replycount = 0 ";
+            }
+
+            sql += "ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
                     LIMIT @count";
             var threads = db.Query(sql, threadMappingFunc, args);
             return threads.ToList();
