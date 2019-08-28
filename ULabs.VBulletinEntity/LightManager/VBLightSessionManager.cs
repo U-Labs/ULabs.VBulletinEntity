@@ -20,16 +20,15 @@ namespace ULabs.VBulletinEntity.LightManager {
         readonly string cookieSalt;
         readonly VBSessionHelper sessionHelper;
         readonly VBLightSettingsManager lightSettingsManager;
+        readonly VBLightUserManager lightUserManager;
         IRequestCookieCollection contextCookies;
         TimeSpan cookieTimeout = new TimeSpan(days: 30, 0, 0, 0);
-        // No SELECT included for the flexibility to use this in complex queries
-        string userColumnSql = @"
-            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, 
-            g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions ";
-        public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, VBLightSettingsManager lightSettingsManager, MySqlConnection db, string cookieSalt, string cookiePrefix) {
+        public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, VBLightSettingsManager lightSettingsManager, VBLightUserManager lightUserManager,
+            MySqlConnection db, string cookieSalt, string cookiePrefix) {
             this.contextAccessor = contextAccessor;
             this.sessionHelper = sessionHelper;
             this.lightSettingsManager = lightSettingsManager;
+            this.lightUserManager = lightUserManager;
             this.db = db;
             CookiePrefix = cookiePrefix;
             this.cookieSalt = cookieSalt;
@@ -125,7 +124,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                     if(!saveRestored) {
                         // This is a pseudo session based on the users id and password that we verfied
                         session = new VBLightSession() {
-                            User = GetUser(cookieUserId.Value),
+                            User = lightUserManager.Get(cookieUserId.Value),
                             LoggedInRaw = 2
                         };
                         return session;
@@ -164,7 +163,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             string sql = $@"
                 SELECT s.sessionhash AS SessionHash, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, 
                         s.loggedin AS LoggedInRaw, s.isbot AS IsBot, s.userid AS Id, 
-                    {userColumnSql}
+                    {lightUserManager.UserColumnSql}
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
                 LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
@@ -223,19 +222,6 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             db.Execute(sql, args);
             return args.sessionHash;
-        }
-        VBLightUser GetUser(int userId) {
-            Func<VBLightUser, VBLightUserGroup, VBLightUser> mappingFunc = (dbUser, group) => {
-                dbUser.PrimaryUserGroup = group;
-                return dbUser;
-            };
-            string sql = $@"
-                SELECT {userColumnSql}
-                FROM user u
-                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
-                WHERE u.userid = @userId";
-            var user = db.Query(sql, mappingFunc, new { userId });
-            return user.FirstOrDefault();
         }
 
         public string GetAvatarUrl(int? userId, int? avatarRevision) {
