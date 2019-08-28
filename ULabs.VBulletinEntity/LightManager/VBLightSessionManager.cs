@@ -87,7 +87,19 @@ namespace ULabs.VBulletinEntity.LightManager {
             return location;
         }
         #endregion
-        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool createIfRestoreable = true, string location = "", bool updateLastActivity = false) {
+
+        /// <summary>
+        /// Fetches the current user session from the injected IHttpContextAccessor instance or a custom cookie collection
+        /// </summary>
+        /// <param name="cookies">If not null, the cookies are used for session fetching. Otherwise the HttpContext of the injected IHttpContextAccessor instance</param>
+        /// <param name="restore">We only use the sessionhash cookie to fetch sessions if set to true. Otherweise, the method try to fetch/create also new sessions using pw hash/userid cookies</param>
+        /// <param name="saveRestored"><paramref name="restore"/> is true, this determinates if we save a new generated session from restore (true) or create a pseudo session with user details (false).
+        /// Setting it to false can be usefull if used in a context where cookies can't be send (e.g. SignalR WebSocket application). 
+        /// </param>
+        /// <param name="location">Location to set/update on the session. Is not set on restored session if <paramref name="restore"/>if set to false</param>
+        /// <param name="updateLastActivity">Updates the sessions and users last activity if a session exists</param>
+        /// <returns>The user session or in case of <paramref name="restore"/> = true and <paramref name="saveRestored"/> = false a pseudo-session with User/Loggedin set to true.</returns>
+        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool restore = true, bool saveRestored = true, string location = "", bool updateLastActivity = false) {
             if (cookies == null) {
                 cookies = contextCookies;
             }
@@ -105,11 +117,20 @@ namespace ULabs.VBulletinEntity.LightManager {
                 }
             }
 
-            if (createIfRestoreable) {
+            if (restore) {
                 // Attemp 2: We don't have a valid VB session, but the users pw may be still stored in the cookie which we can use to generate a new session as some kind of SSO
                 // ToDo: Set location, delete old invalid sessions
                 int? cookieUserId = GetCookieUserId(cookies);
                 if (cookieUserId.HasValue && cookieUserId.Value > 0 && ValidateUserFromCookie(cookies, cookieUserId.Value)) {
+                    if(!saveRestored) {
+                        // This is a pseudo session based on the users id and password that we verfied
+                        session = new VBLightSession() {
+                            User = GetUser(cookieUserId.Value),
+                            LoggedInRaw = 2
+                        };
+                        return session;
+                    }
+
                     sessionHash = Create(cookieUserId.Value, location);
                 } else {
                     sessionHash = Create(0, location);
