@@ -22,7 +22,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         readonly VBLightSettingsManager lightSettingsManager;
         IRequestCookieCollection contextCookies;
         TimeSpan cookieTimeout = new TimeSpan(days: 30, 0, 0, 0);
-
+        // No SELECT included for the flexibility to use this in complex queries
+        string userColumnSql = @"
+            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, 
+            g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions ";
         public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, VBLightSettingsManager lightSettingsManager, MySqlConnection db, string cookieSalt, string cookiePrefix) {
             this.contextAccessor = contextAccessor;
             this.sessionHelper = sessionHelper;
@@ -137,11 +140,10 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             // ToDo: Validate Cookie timeout 
             // LightThreadManager uses parts of this query for fetchinng the author user with its group
-            string sql = @"
+            string sql = $@"
                 SELECT s.sessionhash AS SessionHash, s.idhash AS IdHash, s.lastactivity AS LastActivityRaw, s.location AS location, s.useragent AS UserAgent, 
                         s.loggedin AS LoggedInRaw, s.isbot AS IsBot, s.userid AS Id, 
-                    u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision,
-                    g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
+                    {userColumnSql}
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
                 LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
@@ -200,6 +202,19 @@ namespace ULabs.VBulletinEntity.LightManager {
             };
             db.Execute(sql, args);
             return args.sessionHash;
+        }
+        VBLightUser GetUser(int userId) {
+            Func<VBLightUser, VBLightUserGroup, VBLightUser> mappingFunc = (dbUser, group) => {
+                dbUser.PrimaryUserGroup = group;
+                return dbUser;
+            };
+            string sql = $@"
+                SELECT {userColumnSql}
+                FROM user u
+                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                WHERE u.userid = @userId";
+            var user = db.Query(sql, mappingFunc, new { userId });
+            return user.FirstOrDefault();
         }
 
         public string GetAvatarUrl(int? userId, int? avatarRevision) {
