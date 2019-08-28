@@ -15,7 +15,6 @@ using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightUserManager {
-        readonly IHttpContextAccessor contextAccessor;
         readonly DbConnection db;
         // No SELECT included for the flexibility to use this in complex queries
         internal string UserColumnSql = @"
