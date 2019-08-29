@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using MySql.Data.MySqlClient;
 using System;
@@ -23,8 +24,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         readonly VBLightUserManager lightUserManager;
         IRequestCookieCollection contextCookies;
         TimeSpan cookieTimeout = new TimeSpan(days: 30, 0, 0, 0);
+        readonly ILogger logger;
+
         public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, VBLightSettingsManager lightSettingsManager, VBLightUserManager lightUserManager,
-            MySqlConnection db, string cookieSalt, string cookiePrefix) {
+            MySqlConnection db, ILogger<VBLightSessionManager> logger, string cookieSalt, string cookiePrefix) {
             this.contextAccessor = contextAccessor;
             this.sessionHelper = sessionHelper;
             this.lightSettingsManager = lightSettingsManager;
@@ -32,8 +35,10 @@ namespace ULabs.VBulletinEntity.LightManager {
             this.db = db;
             CookiePrefix = cookiePrefix;
             this.cookieSalt = cookieSalt;
-            
+            this.logger = logger;
+
             // For the case that we are not in a  http request
+            logger.LogDebug($"HttpContext exists: {contextAccessor.HttpContext != null}");
             if(contextAccessor.HttpContext != null) {
                 contextCookies = contextAccessor.HttpContext.Request.Cookies;
             }
@@ -83,6 +88,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 location = $"{request.PathBase}{request.Path}";
             }
 
+            logger.LogDebug($"GetCurrentLocation() return {location}");
             return location;
         }
         #endregion
@@ -99,6 +105,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="updateLastActivity">Updates the sessions and users last activity if a session exists</param>
         /// <returns>The user session or in case of <paramref name="restore"/> = true and <paramref name="saveRestored"/> = false a pseudo-session with User/Loggedin set to true.</returns>
         public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool restore = true, bool saveRestored = true, string location = "", bool updateLastActivity = false) {
+            logger.LogDebug($"Call GetCurrent: Cookies = {cookies != null}, restore = {restore}, saveRestored = {saveRestored}, location = {location}, updateLastActivity = {updateLastActivity}");
             if (cookies == null) {
                 cookies = contextCookies;
             }
@@ -106,22 +113,27 @@ namespace ULabs.VBulletinEntity.LightManager {
             location = GetCurrentLocation(location);
 
             if (cookies.TryGetValue($"{CookiePrefix}_sessionhash", out string sessionHash)) {
+                logger.LogDebug($"GetCurrent: Found sessionhash cookie: ${sessionHash}");
                 session = Get(sessionHash, updateLastActivity, location);
 
+                logger.LogDebug($"GetCurrent: Fetched session by sessionhash: {session != null} for UserId = {session?.User.Id}");
                 if (session != null) {
-                    if (updateLastActivity) {
-                        UpdateLastActivity(sessionHash, location);
-                    }
                     return session;
                 }
             }
 
+            logger.LogDebug($"Havent found a session. Restore = {restore}");
             if (restore) {
                 // Attemp 2: We don't have a valid VB session, but the users pw may be still stored in the cookie which we can use to generate a new session as some kind of SSO
                 // ToDo: Set location, delete old invalid sessions
                 int? cookieUserId = GetCookieUserId(cookies);
-                if (cookieUserId.HasValue && cookieUserId.Value > 0 && ValidateUserFromCookie(cookies, cookieUserId.Value)) {
-                    if(!saveRestored) {
+                bool cookiePasswordIsValid = ValidateUserFromCookie(cookies, cookieUserId.Value);
+                logger.LogDebug($"GetCurrent: Validate user from cookie. UserId = {(cookieUserId.HasValue ? cookieUserId.Value : 0)}, CookiePasswordIsValid = {cookiePasswordIsValid}");
+
+                if (cookieUserId.HasValue && cookieUserId.Value > 0 && cookiePasswordIsValid) {
+                    logger.LogDebug($"GetCurrent: SaveRestored session for #{cookieUserId.Value}: {saveRestored}");
+
+                    if (!saveRestored) {
                         // This is a pseudo session based on the users id and password that we verfied
                         session = new VBLightSession() {
                             User = lightUserManager.Get(cookieUserId.Value),
@@ -130,8 +142,10 @@ namespace ULabs.VBulletinEntity.LightManager {
                         return session;
                     }
 
+                    logger.LogDebug($"GetCurrent: Create a new authorized session for #{cookieUserId.Value}");
                     sessionHash = Create(cookieUserId.Value, location);
                 } else {
+                    logger.LogDebug($"GetCurrent: Create guest session for location = {location}");
                     sessionHash = Create(0, location);
                 }
 
