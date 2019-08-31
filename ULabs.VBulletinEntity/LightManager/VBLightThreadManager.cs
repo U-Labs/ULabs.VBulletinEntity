@@ -404,8 +404,9 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="thread"><see cref="VBLightThread"></see> of <paramref name="replyModel"/> ThreadId. Optional to save one query in combination with 
         /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"</param>
         /// <param name="updateCounters">Determinates if the forums lastpost etc and authors post counter will be updated. Could be set to false if you want to do this with a cron insted.</param>
+        /// <param name="updateThreadReplysCount">If true, the reply count cache in the thread table is updated. Set to false if the reply is the first post of a new created thread</param>
         /// <returns>Id of the created post</returns>
-        public int CreateReply(LightCreateReplyModel replyModel, VBLightThread thread = null, bool updateCounters = true) {
+        public int CreateReply(LightCreateReplyModel replyModel, VBLightThread thread = null, bool updateCounters = true, bool updateThreadReplysCount = true) {
             if (thread == null) {
                 thread = Get(replyModel.ThreadId);
             }
@@ -442,8 +443,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 UPDATE thread
                 SET lastpostid = @postId,
                 lastpost = @ts,
-                lastposter = @userName,
-                replycount = replycount + 1
+                lastposter = @userName" +
+                (updateThreadReplysCount ? ", replycount = replycount + 1" : "") + @"
                 WHERE threadid = @threadId; " +
 
                 (updateCounters ? updateCountersSql : "") + @"
@@ -485,7 +486,8 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             var thread = Get(threadId);
             var replyModel = new LightCreateReplyModel(threadModel.Author, threadModel.ForumId, threadId, threadModel.Text, threadModel.IpAddress, timeRaw: ts, updateCounters: updateCounters);
-            int postId = CreateReply(replyModel);
+            // VBs behaviour is to count only real replys without first post. This make sure that our overview can properly detect new threads without or with less replys.
+            int postId = CreateReply(replyModel, updateThreadReplysCount: false);
             if (postId <= 0) {
                 return -2;
             }
