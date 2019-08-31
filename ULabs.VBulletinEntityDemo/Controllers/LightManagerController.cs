@@ -34,7 +34,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var session = lightSessionManager.GetCurrent();
             var model = new LightDashboardModel(lightForumManager, lightThreadManager, lightSessionManager);
             var thx = lightThreadManager.GetThanks(userId: 18, afterTimestamp: 1566595766);
-            lightSessionManager.UpdateLastActivity(session.SessionHash, "/LightTest");
+            //lightSessionManager.UpdateLastActivity(session.SessionHash, "/LightTest");
             var threadModel = new LightCreateThreadModel(session.User, forumId: 58, title: "Auto Testthread LightThreadManager", text: "Automatisch erzeugter Testthread", ipAddress: "127.0.0.1");
             //int tid = lightThreadManager.CreateThread(threadModel);
             int lastReadTs = lightThreadManager.GetContentReadTime(contentId: 38325, userId: 18);

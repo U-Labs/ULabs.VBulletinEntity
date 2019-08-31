@@ -36,7 +36,7 @@ namespace ULabs.VBulletinEntity.Attributes {
 
         public void OnResourceExecuting(ResourceExecutingContext context) {
             var lightSessionManager = GetService<VBLightSessionManager>(context);
-            var userSession = lightSessionManager.GetCurrent(saveRestored: false);
+            var userSession = lightSessionManager.GetCurrent();
 
             // Session shouldn't be null any more since we implemented guest sessions, too
             if (!userSession.IsLoggedIn) {
