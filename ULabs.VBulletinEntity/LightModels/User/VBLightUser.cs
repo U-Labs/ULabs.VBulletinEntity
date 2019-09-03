@@ -11,6 +11,7 @@ namespace ULabs.VBulletinEntity.LightModels.User {
         public VBLightUserGroup PrimaryUserGroup { get; set; }
         public int AvatarRevision { get; set; }
         public int LastActivityRaw { get; set; }
+        public int UnreadPmsCount { get; set; }
         public DateTime LastActivity {
             get => DateTimeExtensions.ToDateTime(LastActivityRaw);
             set => LastActivityRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);

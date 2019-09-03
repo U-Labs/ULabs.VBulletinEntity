@@ -18,7 +18,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         readonly DbConnection db;
         // No SELECT included for the flexibility to use this in complex queries
         internal string UserColumnSql = @"
-            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, 
+            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPms,
             g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions ";
         public VBLightUserManager(MySqlConnection db) {
             this.db = db;
@@ -72,21 +72,6 @@ namespace ULabs.VBulletinEntity.LightManager {
             var args = new { userId, readStateRaw, textPreviewWords, count };
             var pms = db.Query(sql, mappingFunc, args);
             return pms.ToList();
-        }
-
-        /// <summary>
-        /// Same as <see cref="GetPrivateMessages(int, VBPrivateMessageReadState?, int, int?)"/> but counts only the matching pms instead of fetching their data
-        /// </summary>
-        public int CountPrivateMessages(int userId, VBPrivateMessageReadState? readState = null) {
-            string sql = @"
-                SELECT COUNT(*)
-                FROM pm
-                WHERE pm.userid = @userId " +
-                (readState != null ? "AND pm.messageread = @readStateRaw " : "");
-
-            int readStateRaw = (readState.HasValue ? (int)readState.Value : 0);
-            int count = db.QueryFirstOrDefault<int>(sql, new { userId, readStateRaw });
-            return count;
         }
     }
 }
