@@ -244,8 +244,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="userId">Id of the user to check for new replys in his active threads</param>
         /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
         /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
-        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, List<int> ignoredForumIds = null) {
-            var args = new { userId, count, ignoredForumIds };
+        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, count, ignoredForumIds, ignoredThreadIds };
 
             // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread
             // ContentId 2 = Threads
@@ -265,7 +265,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 AND t.lastposterid != r.userid 
                 AND t.forumid = f.forumid
                 AND u.userid = t.lastposterid " +
-                (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") + @"
+                (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
+                (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "") + @"
                 GROUP BY r.contentid
                 ORDER BY t.lastpost DESC
                 LIMIT @count";
