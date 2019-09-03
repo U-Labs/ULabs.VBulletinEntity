@@ -87,8 +87,6 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="replysInfo"></param>
         /// <returns></returns>
         public List<VBLightPost> GetReplys(ReplysInfo replysInfo) {
-            // We dont have any replys on new threads (first post doesn't count as reply). Would cause broken conditions: WHERE p.postid IN (SELECT @postIds WHERE 1 = 0)
-            // Its also better for performance since we don't need any query from the DB at all.
             if (!replysInfo.PostIds.Any()) {
                 return new List<VBLightPost>();
             }
@@ -381,6 +379,12 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Get the list of post ids out of <paramref name="postIds"/> on which <paramref name="userId"/> has already thanked
         /// </summary>
         public List<int> GetPostsWhereUserThanked(int userId, List<int> postIds) {
+            // We dont have any thanked posts if no post ids are present. Would cause broken conditions: WHERE p.postid IN (SELECT @postIds WHERE 1 = 0). Also better for performance.
+            // This is just in case, since UL adds the first post id to this method call, so we always have at least one id to check (first post id on empty threads)
+            if (!postIds.Any()) {
+                return new List<int>();
+            }
+
             string sql = @"
                 SELECT pt.postid
                 FROM post_thanks pt
