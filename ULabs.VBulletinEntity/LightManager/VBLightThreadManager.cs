@@ -469,7 +469,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 UPDATE thread
                 SET lastpostid = @postId,
                 lastpost = @ts,
-                lastposter = @userName" +
+                lastposter = @userName,
+                lastposterid = @id " +
                 (updateThreadReplysCount ? ", replycount = replycount + 1" : "") + @"
                 WHERE threadid = @threadId; " +
 
