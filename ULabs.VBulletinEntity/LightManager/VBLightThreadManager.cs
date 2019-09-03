@@ -275,6 +275,31 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Same as <see cref="GetUnreadActiveThreads(int, int, List{int}, List{int})"/> but this methods only count unread active threads without fetching any data for better performance
+        /// </summary>
+        public int CountUnreadActiveThreads(int userId, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, ignoredForumIds, ignoredThreadIds };
+            // A bit of redundant for GetUnreadActiveThreads to reduce joins as much as possible. This is usefull since counting the notification would be used globally in the navigation bar, 
+            // so we will more often count than fetch the active threads. 
+            string sql = @"
+                SELECT COUNT(*)
+                FROM contentread r, post p, thread t
+                WHERE r.contenttypeid = 2
+                AND r.readtype = 'view'
+                AND r.contentid = p.threadid
+                AND t.threadid = r.contentid
+                AND p.userid = r.userid
+                AND t.lastpost > r.dateline
+                AND r.userid = @userId
+                AND t.lastposterid != r.userid " +
+                // Could be even more improved if removing joins when no forum/thread ids are specified. We'll skip this for now since ULabs always need to exclude the smalltalk thread
+                (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
+                (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "");
+            int count = db.QueryFirstOrDefault<int>(sql, args);
+            return count;
+        }
+
+        /// <summary>
         /// Updates the contentread table to mark VB content as read or inserts a new row for completely unread threads
         /// </summary>
         /// <param name="contentId">Id of the VB content (e.g. ThreadId)</param>
