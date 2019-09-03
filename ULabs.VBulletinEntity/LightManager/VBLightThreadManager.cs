@@ -87,6 +87,12 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="replysInfo"></param>
         /// <returns></returns>
         public List<VBLightPost> GetReplys(ReplysInfo replysInfo) {
+            // We dont have any replys on new threads (first post doesn't count as reply). Would cause broken conditions: WHERE p.postid IN (SELECT @postIds WHERE 1 = 0)
+            // Its also better for performance since we don't need any query from the DB at all.
+            if (!replysInfo.PostIds.Any()) {
+                return new List<VBLightPost>();
+            }
+
             string sql = $@"
                 {postBaseQuery}
                 WHERE p.postid IN @postIds
