@@ -188,6 +188,9 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         public void UpdateLastActivity(string sessionHash, string location) {
+            string censoredHash = $"{sessionHash.Substring(0, sessionHash.Length - 10)}-{new String('X', 10)}";
+            logger.LogInformation($"Update sessionhash = {censoredHash} with location = {location}");
+
             var args = new { sessionHash, location };
             db.Execute(@"
                 UPDATE session
