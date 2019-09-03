@@ -18,7 +18,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         readonly DbConnection db;
         // No SELECT included for the flexibility to use this in complex queries
         internal string UserColumnSql = @"
-            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPms,
+            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPmsCount,
             g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions ";
         public VBLightUserManager(MySqlConnection db) {
             this.db = db;
