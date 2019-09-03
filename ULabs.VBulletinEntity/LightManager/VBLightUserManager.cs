@@ -73,5 +73,20 @@ namespace ULabs.VBulletinEntity.LightManager {
             var pms = db.Query(sql, mappingFunc, args);
             return pms.ToList();
         }
+
+        /// <summary>
+        /// Same as <see cref="GetPrivateMessages(int, VBPrivateMessageReadState?, int, int?)"/> but counts only the matching pms instead of fetching their data
+        /// </summary>
+        public int CountPrivateMessages(int userId, VBPrivateMessageReadState? readState = null) {
+            string sql = @"
+                SELECT COUNT(*)
+                FROM pm
+                WHERE pm.userid = @userId " +
+                (readState != null ? "AND pm.messageread = @readStateRaw " : "");
+
+            int readStateRaw = (readState.HasValue ? (int)readState.Value : 0);
+            int count = db.QueryFirstOrDefault<int>(sql, new { userId, readStateRaw });
+            return count;
+        }
     }
 }
