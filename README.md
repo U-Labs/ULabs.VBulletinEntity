@@ -222,7 +222,7 @@ if(replyCheck == CanReplyResult.Ok) {
 }
 ```
 
-### High level Light Managers
+### [High level Light Managers](./docs/light-managers.md)
 Offering entities with common needed properties where you can work with using LINQ is fine. 
 On the other side, this costs performance. Depending on the use-case, it's not a problem if things take a few
 ms more or less. But at U-Labs we have situations, where fast page loading time is required. To also cover this case,
@@ -235,13 +235,7 @@ if query performance is important, but you also want to have the comfort of high
 the Light Managers can fit our needs. They're designed for special use cases and can't be such flexible than
 the regular managers. 
 
-Since Light Managers are very new, we currently only have one: 
-
-* [`VBLightDashboardManager`](./ULabs.VBulletinEntity/LightManager/VBLightDashboardManager.cs)
-
-Note that currently no async support is present because of 
-[a bug in Dapper](https://github.com/mysql-net/MySqlConnector/issues/523#issuecomment-399701445)
-that automatically closes the connection after each query. 
+See [the high level light managers documentation](./docs/light-managers.md) for more details. 
 
 ## Application Warmup
 [A _cold_ Database Context is much slower on the first usage than a _warm_ Context.](https://stackoverflow.com/questions/13250679/how-to-warm-up-entity-framework-when-does-it-get-cold). 
