@@ -262,11 +262,10 @@ namespace ULabs.VBulletinEntity.LightManager {
                 WHERE r.contenttypeid = 2
                 AND r.readtype = 'view'
                 AND r.contentid = p.threadid
-                AND t.threadid = r.contentid
-                AND p.userid = r.userid
-                AND t.lastpost > r.dateline
+                AND t.threadid = p.threadid
+                AND p.dateline > r.dateline
                 AND r.userid = @userId
-                AND t.lastposterid != r.userid 
+                AND p.userid != r.userid
                 AND t.forumid = f.forumid
                 AND u.userid = t.lastposterid " +
                 (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
@@ -286,19 +285,19 @@ namespace ULabs.VBulletinEntity.LightManager {
             // A bit of redundant for GetUnreadActiveThreads to reduce joins as much as possible. This is usefull since counting the notification would be used globally in the navigation bar, 
             // so we will more often count than fetch the active threads. 
             string sql = @"
-                SELECT COUNT(*)
-                FROM contentread r, post p, thread t
-                WHERE r.contenttypeid = 2
-                AND r.readtype = 'view'
-                AND r.contentid = p.threadid
-                AND t.threadid = r.contentid
-                AND p.userid = r.userid
-                AND t.lastpost > r.dateline
-                AND r.userid = @userId
-                AND t.lastposterid != r.userid " +
+                	  SELECT COUNT(DISTINCT r.contentid)
+                      FROM contentread r, post p, thread t
+                      WHERE r.contenttypeid = 2
+                      AND r.readtype = 'view'
+                      AND r.contentid = p.threadid
+                      AND t.threadid = p.threadid
+                      AND p.dateline > r.dateline
+                      AND r.userid = @userId
+                      AND p.userid != r.userid " +
                 // Could be even more improved if removing joins when no forum/thread ids are specified. We'll skip this for now since ULabs always need to exclude the smalltalk thread
                 (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
                 (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "");
+
             int count = db.QueryFirstOrDefault<int>(sql, args);
             return count;
         }
