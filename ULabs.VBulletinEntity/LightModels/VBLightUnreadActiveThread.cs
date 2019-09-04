@@ -12,7 +12,7 @@ namespace ULabs.VBulletinEntity.LightModels {
         public int LastPostTimeRaw { get; set; }
         public int LastPosterUserId { get; set; }
         public int LastPosterAvatarRevision { get; set; }
-
+        public int UnreadReplysCount { get; set; }
         public DateTime LastPostTime {
             get => LastPostTimeRaw.ToDateTime();
             set => LastPostTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
