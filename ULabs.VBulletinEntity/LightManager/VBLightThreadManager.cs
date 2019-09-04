@@ -50,6 +50,34 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
             return post;
         };
+        string BuildUnreadActiveThreadsQuery(string selectFields, string additionalJoins = "", List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null, bool groupByLastPostTs = true, 
+            bool hasLimit = false) {
+            string sql = $@"
+                SELECT {selectFields}
+	            FROM post p
+                INNER JOIN thread t ON(t.threadid = p.threadid)
+                LEFT JOIN contentread r on(r.contenttypeid = 2 AND r.readtype = 'view' AND r.userid = p.userid and r.contentid = p.threadid)
+                {additionalJoins}
+	            WHERE t.lastposterid != p.userid
+	            AND p.userid = @userId
+	            AND (
+		            t.lastpost > r.dateline OR (
+			            r.readid IS NULL 
+			            AND t.postuserid = p.userid 
+			            AND t.lastpost > p.dateline
+		            )
+	            )
+	            AND t.lastpost >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL @lastPostAgeDays DAY)) " +
+            (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
+            (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "") +
+            (groupByLastPostTs ? "GROUP BY p.threadid " : "") +
+	            "ORDER BY t.lastpost DESC ";
+
+            if (hasLimit) {
+                sql += "LIMIT @count";
+            }
+            return sql;
+        }
         #endregion
         public VBLightThreadManager(MySqlConnection db, VBLightForumManager lightForumManager) {
             this.db = db;
@@ -247,32 +275,24 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         /// <param name="userId">Id of the user to check for new replys in his active threads</param>
         /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
+        /// <param name="lastPostAgeDays">Max age in days of the threads last post to filter out older threads without any activity. Default is 180 days (= last 6 months)</param>
         /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
-        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
-            var args = new { userId, count, ignoredForumIds, ignoredThreadIds };
+        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, count, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
 
-            // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread
+            // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread.
+            // This query fetches threads where the user wrote at least one post and new replys from other users were written since last read.
+            // Since VB per default deletes the thread read by cron, we also check for threads created by the user containing new replys after the authors last post
             // ContentId 2 = Threads
-            string sql = @"
-                SELECT COUNT(r.contentid) as UnreadReplysCount, r.contentid AS ThreadId, 
-					t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
+            string selectFields = @"
+                    t.threadid AS ThreadId, t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
 				    f.forumid AS ForumId, f.title AS ForumTitle,
-					u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision
-                FROM contentread r, post p, thread t, forum f, user u
-                WHERE r.contenttypeid = 2
-                AND r.readtype = 'view'
-                AND r.contentid = p.threadid
-                AND t.threadid = p.threadid
-                AND p.dateline > r.dateline
-                AND r.userid = @userId
-                AND p.userid != r.userid
-                AND t.forumid = f.forumid
-                AND u.userid = t.lastposterid " +
-                (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
-                (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "") + @"
-                GROUP BY r.contentid
-                ORDER BY t.lastpost DESC
-                LIMIT @count";
+				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision,
+				    r.readid";
+            string additionalJoins = @"
+	            INNER JOIN forum f ON(f.forumid = t.forumid)
+	            INNER JOIN user u ON(u.userid = t.lastposterid)";
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds, hasLimit: true);
             var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
             return unreadThreads.ToList();
         }
@@ -280,23 +300,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Same as <see cref="GetUnreadActiveThreads(int, int, List{int}, List{int})"/> but this methods only count unread active threads without fetching any data for better performance
         /// </summary>
-        public int CountUnreadActiveThreads(int userId, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
-            var args = new { userId, ignoredForumIds, ignoredThreadIds };
-            // A bit of redundant for GetUnreadActiveThreads to reduce joins as much as possible. This is usefull since counting the notification would be used globally in the navigation bar, 
-            // so we will more often count than fetch the active threads. 
-            string sql = @"
-                	  SELECT COUNT(DISTINCT r.contentid)
-                      FROM contentread r, post p, thread t
-                      WHERE r.contenttypeid = 2
-                      AND r.readtype = 'view'
-                      AND r.contentid = p.threadid
-                      AND t.threadid = p.threadid
-                      AND p.dateline > r.dateline
-                      AND r.userid = @userId
-                      AND p.userid != r.userid " +
-                // Could be even more improved if removing joins when no forum/thread ids are specified. We'll skip this for now since ULabs always need to exclude the smalltalk thread
-                (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
-                (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "");
+        public int CountUnreadActiveThreads(int userId, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
+            string selectFields = "COUNT(DISTINCT p.threadid) AS cnt";
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins: "", ignoredForumIds, ignoredThreadIds, groupByLastPostTs: false);
 
             int count = db.QueryFirstOrDefault<int>(sql, args);
             return count;
