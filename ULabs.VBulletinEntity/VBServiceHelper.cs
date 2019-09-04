@@ -62,7 +62,8 @@ namespace ULabs.VBulletinEntity {
             services.AddScoped<VBLightUserManager>();
 
             services.AddScoped(x => new VBLightSessionManager(x.GetRequiredService<IHttpContextAccessor>(), x.GetRequiredService<VBSessionHelper>(), x.GetRequiredService<VBLightSettingsManager>(),
-                x.GetRequiredService<VBLightUserManager>(), x.GetRequiredService<MySqlConnection>(), x.GetRequiredService<ILogger<VBLightSessionManager>>(), vbCookieSalt, vbCookiePrefix));
+                x.GetRequiredService<VBLightUserManager>(), x.GetRequiredService<MySqlConnection>(), x.GetRequiredService<ILogger<VBLightSessionManager>>(), x.GetRequiredService<IVBCache>(), 
+                vbCookieSalt, vbCookiePrefix));
         }
     }
 }

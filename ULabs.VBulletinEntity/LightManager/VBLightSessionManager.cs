@@ -9,6 +9,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Session;
 using ULabs.VBulletinEntity.LightModels.User;
@@ -22,13 +23,14 @@ namespace ULabs.VBulletinEntity.LightManager {
         readonly VBSessionHelper sessionHelper;
         readonly VBLightSettingsManager lightSettingsManager;
         readonly VBLightUserManager lightUserManager;
+        readonly IVBCache cache;
         IRequestCookieCollection contextCookies;
         TimeSpan cookieTimeout = new TimeSpan(days: 30, 0, 0, 0);
         readonly ILogger logger;
         VBLightSession currentSession;
 
         public VBLightSessionManager(IHttpContextAccessor contextAccessor, VBSessionHelper sessionHelper, VBLightSettingsManager lightSettingsManager, VBLightUserManager lightUserManager,
-            MySqlConnection db, ILogger<VBLightSessionManager> logger, string cookieSalt, string cookiePrefix) {
+            MySqlConnection db, ILogger<VBLightSessionManager> logger, IVBCache cache, string cookieSalt, string cookiePrefix) {
             this.contextAccessor = contextAccessor;
             this.sessionHelper = sessionHelper;
             this.lightSettingsManager = lightSettingsManager;
@@ -37,9 +39,10 @@ namespace ULabs.VBulletinEntity.LightManager {
             CookiePrefix = cookiePrefix;
             this.cookieSalt = cookieSalt;
             this.logger = logger;
+            this.cache = cache;
 
             // For the case that we are not in a  http request
-            logger.LogDebug($"HttpContext exists: {contextAccessor.HttpContext != null}");
+            logger.LogDebug($"VBLightSessionManager HttpContext exists: {contextAccessor.HttpContext != null} - CacheProvider: {cache.GetType().Name}");
             if (contextAccessor.HttpContext != null) {
                 contextCookies = contextAccessor.HttpContext.Request.Cookies;
             }
@@ -82,12 +85,21 @@ namespace ULabs.VBulletinEntity.LightManager {
                 location = $"{request.PathBase}{request.Path}";
             }
 
-            logger.LogDebug($"GetCurrentLocation() return {location}");
             return location;
+        }
+        string CensoreHash(string sessionHash) {
+            string censoredHash = $"{sessionHash.Substring(0, sessionHash.Length - 10)}-{new String('X', 10)}";
+            return censoredHash;
         }
         #endregion
 
         public VBLightSession Get(string sessionHash) {
+            if(cache.TryGet(VBCacheKey.LightSession, sessionHash, out VBLightSession session)) {
+                logger.LogDebug($"Get: Return session for hash = {CensoreHash(sessionHash)} from CACHE");
+                return session;
+            }
+
+            logger.LogDebug($"No cache avaliable for session with hash = {CensoreHash(sessionHash)}, fetch from database");
             Func<VBLightSession, VBLightUser, VBLightUserGroup, VBLightSession> mappingFunc = (dbSession, user, group) => {
                 // No related user and so no group exists on guest sessions
                 if (group != null) {
@@ -115,9 +127,13 @@ namespace ULabs.VBulletinEntity.LightManager {
                 WHERE s.sessionhash = @sessionHash
                 LIMIT 1";
             var args = new { sessionHash = sessionHash };
-            var session = db.Query(sql, mappingFunc, args)
+            session = db.Query(sql, mappingFunc, args)
                 .SingleOrDefault();
 
+            if (session != null) {
+                // ToDo: Set TTL based on lifetime of sessions specified in VB
+                cache.Set(VBCacheKey.LightSession, session.SessionHash, session, TimeSpan.FromMinutes(30));
+            }
             return session;
         }
         public VBLightSession GetCurrent(IRequestCookieCollection cookies = null) {
@@ -188,8 +204,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         public void UpdateLastActivity(string sessionHash, string location) {
-            string censoredHash = $"{sessionHash.Substring(0, sessionHash.Length - 10)}-{new String('X', 10)}";
-            logger.LogInformation($"Update sessionhash = {censoredHash} with location = {location}");
+            logger.LogInformation($"Update sessionhash = {CensoreHash(sessionHash)} with location = {location}");
 
             var args = new { sessionHash, location };
             db.Execute(@"

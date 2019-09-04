@@ -8,6 +8,8 @@ namespace ULabs.VBulletinEntity.Caching {
         UserSession,
         Thread, // Purging done (+ ThreadReplys)
         ThreadReplys, // Subkey: {id}.{start}-{count}
-        Forums
+        Forums,
+
+        LightSession
     }
 }
