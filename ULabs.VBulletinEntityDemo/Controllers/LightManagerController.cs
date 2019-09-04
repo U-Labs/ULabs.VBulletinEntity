@@ -45,7 +45,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             int page = lightThreadManager.GetPageOfReply(threadId: 38043, replyId: 441387);
             var newestSmalltalkReplys = lightThreadManager.GetNewestReplys(threadId: 29780);
 
-            var adminTest = lightThreadManager.GetNewestThreads(8, onlyWithoutReplys: true, excludedForumIds: new List<int>(), orderByLastPostDate: false);
+            var adminTest = lightThreadManager.GetNewestThreads(8, minReplyCount: 1, excludedForumIds: new List<int>(), orderByLastPostDate: false);
             var pms = lightUserManager.GetPrivateMessages(userId: 18, VBPrivateMessageReadState.Unread, textPreviewWords: 1);
             var pms2 = lightUserManager.GetPrivateMessages(userId: 18, VBPrivateMessageReadState.Unread);
             var pms3 = lightUserManager.GetPrivateMessages(userId: 18);

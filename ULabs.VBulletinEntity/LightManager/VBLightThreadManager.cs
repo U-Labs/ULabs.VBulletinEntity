@@ -239,32 +239,23 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
         /// </summary>
         /// <param name="count">Limit the fetched rows</param>
-        /// <param name="onlyWithoutReplys">If true, only new threads without any reply will be fetched (good to display new threads without any reply)</param>
+        /// <param name="onlyWithReplys">If true, only new threads without any reply will be fetched (good to display new threads without any reply)</param>
         /// <param name="orderByLastPostDate">If true, the threads were ordered by the date of their last reply. Otherwise the creation time of the thread is used.</param>
         /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
         /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        public List<VBLightThread> GetNewestThreads(int count = 10, bool onlyWithoutReplys = false, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null) {
+        public List<VBLightThread> GetNewestThreads(int count = 10, int minReplyCount = 0, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null) {
             if (includedForumIds != null && excludedForumIds != null) {
                 throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
             }
 
-            var args = new { includedForumIds, excludedForumIds, count = count };
+            var args = new { includedForumIds, excludedForumIds, minReplyCount, count };
             bool hasExclude = excludedForumIds?.Count > 0 || includedForumIds?.Count > 0;
-            bool hasWhere = hasExclude || onlyWithoutReplys;
-            string sql = threadBaseQuery +
-                    (hasWhere ? "WHERE " : "") +
-                    (includedForumIds?.Count > 0 ? "t.forumid IN @includedForumIds " : "") +
-                    (excludedForumIds?.Count > 0 ? "t.forumid NOT IN @excludedForumIds " : "");
-
-            if (onlyWithoutReplys) {
-                if (hasExclude) {
-                    sql += "AND ";
-                }
-                sql += "t.replycount = 0 ";
-            }
-
-            sql += "ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
-                    LIMIT @count";
+            string sql = threadBaseQuery + "WHERE " +
+                (includedForumIds?.Count > 0 ? "t.forumid IN @includedForumIds " : "") +
+                (excludedForumIds?.Count > 0 ? "t.forumid NOT IN @excludedForumIds " : "") +
+                (hasExclude ? "AND" : "") + @" t.replycount >= @minReplyCount
+                ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
+                LIMIT @count";
             var threads = db.Query(sql, threadMappingFunc, args);
             return threads.ToList();
         }
