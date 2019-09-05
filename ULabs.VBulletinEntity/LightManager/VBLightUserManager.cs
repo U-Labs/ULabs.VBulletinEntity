@@ -8,6 +8,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Session;
 using ULabs.VBulletinEntity.LightModels.User;
@@ -16,12 +17,14 @@ using ULabs.VBulletinEntity.Tools;
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightUserManager {
         readonly DbConnection db;
+        readonly IVBCache cache;
         // No SELECT included for the flexibility to use this in complex queries
         internal string UserColumnSql = @"
-            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPmsCount,
+            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPmsCount, u.recent_thankcnt AS UnreadThanksCount,
             g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions ";
-        public VBLightUserManager(MySqlConnection db) {
+        public VBLightUserManager(MySqlConnection db, IVBCache cache) {
             this.db = db;
+            this.cache=cache;
         }
         ~VBLightUserManager() {
             db.Close();
@@ -72,6 +75,18 @@ namespace ULabs.VBulletinEntity.LightManager {
             var args = new { userId, readStateRaw, textPreviewWords, count };
             var pms = db.Query(sql, mappingFunc, args);
             return pms.ToList();
+        }
+
+        /// <summary>
+        /// Reset the unviewed recent thanks from the Post thank hack addon in the userinfo if the user has read the notification about them. 
+        /// Session hash is used to purge the session cache if enabled.
+        /// </summary>
+        public void ResetRecentThanks(int userId, string sessionHash) {
+            string sql = "UPDATE user SET recent_thankcnt = 0 WHERE userid = @userId";
+            db.Execute(sql, new { userId });
+
+            // The session references to the user entity where the old thanks state is still stored
+            cache.Remove(VBCacheKey.LightSession, sessionHash);
         }
     }
 }
