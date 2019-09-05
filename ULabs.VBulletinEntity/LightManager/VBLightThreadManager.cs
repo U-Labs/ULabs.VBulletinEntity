@@ -22,21 +22,23 @@ namespace ULabs.VBulletinEntity.LightManager {
         string threadBaseQuery = @"
             SELECT t.threadid as Id, t.title as Title, t.lastpost as LastPostTimeRaw, t.lastpostid as LastPostId, t.firstpostid as FirstPostId,
                         t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, t.postuserid as AuthorUserId, t.visible as IsVisible,
-                    u.userid as Id, u.avatarrevision as AvatarRevision, u.username as UserName, u.usertitle as UserTitle, u.lastactivity as LastActivityRaw,
+                    u.userid as Id, u.avatarrevision as AvatarRevision, u.username as UserName, u.usertitle as UserTitle, u.lastactivity as LastActivityRaw, c.filename IS NOT NULL AS HasAvatar,
                     f.forumid as Id, f.title as Title,
                     g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
                 FROM thread t
                 LEFT JOIN user u ON (u.userid = t.lastposterid)
                 LEFT JOIN forum f ON (f.forumid = t.forumid)
-                LEFT JOIN usergroup g ON (g.usergroupid = u.usergroupid) ";
+                LEFT JOIN usergroup g ON (g.usergroupid = u.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid)";
         string postBaseQuery = @"
                 SELECT p.postid AS Id, p.threadid AS ThreadId, p.parentid AS ParentPostId, p.dateline AS CreatedTimeRaw, p.pagetext AS TEXT, p.ipaddress AS IpAddress, p.visible AS VisibilityRaw, 
                         p.attach AS HasAttachments, p.post_thanks_amount AS ThanksCount,
-                    u.userid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision, u.lastactivity AS LastActivityRaw,
+                    u.userid AS Id, u.username AS UserName, u.usertitle AS UserTitle, u.avatarrevision AS AvatarRevision, u.lastactivity AS LastActivityRaw, c.filename IS NOT NULL AS HasAvatar,
                     g.usergroupid AS Id, g.opentag AS OpenTag, g.closetag AS CloseTag, g.usertitle AS UserTitle, g.adminpermissions AS AdminPermissions 
                 FROM post p
                 LEFT JOIN user u ON (u.userid = p.userid)
-                LEFT JOIN usergroup g ON (u.usergroupid = g.usergroupid) ";
+                LEFT JOIN usergroup g ON (u.usergroupid = g.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid) ";
         Func<VBLightThread, VBLightUser, VBLightForum, VBLightUserGroup, VBLightThread> threadMappingFunc = (thread, user, forum, group) => {
             thread.LastPoster = user;
             thread.Forum = forum;
@@ -278,11 +280,12 @@ namespace ULabs.VBulletinEntity.LightManager {
             string selectFields = @"
                     t.threadid AS ThreadId, t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
 				    f.forumid AS ForumId, f.title AS ForumTitle,
-				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision,
+				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision, c.filename IS NOT NULL AS LastPosterHasAvatar,
 				    r.readid";
             string additionalJoins = @"
 	            INNER JOIN forum f ON(f.forumid = t.forumid)
-	            INNER JOIN user u ON(u.userid = t.lastposterid)";
+	            INNER JOIN user u ON(u.userid = t.lastposterid)
+                INNER JOIN customavatar c ON(c.userid = u.userid) ";
             string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds, hasLimit: true);
             var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
             return unreadThreads.ToList();

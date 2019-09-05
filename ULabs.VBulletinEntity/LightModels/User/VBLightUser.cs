@@ -10,6 +10,7 @@ namespace ULabs.VBulletinEntity.LightModels.User {
         public string UserTitle { get; set; }
         public VBLightUserGroup PrimaryUserGroup { get; set; }
         public int AvatarRevision { get; set; }
+        public bool HasAvatar { get; set; }
         public int LastActivityRaw { get; set; }
         public int UnreadPmsCount { get; set; }
         public int UnreadThanksCount { get; set; }

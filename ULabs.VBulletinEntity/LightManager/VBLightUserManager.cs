@@ -18,10 +18,12 @@ namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightUserManager {
         readonly DbConnection db;
         readonly IVBCache cache;
-        // No SELECT included for the flexibility to use this in complex queries
+        // No SELECT included for the flexibility to use this in complex queries. HasAvatar is a join to the custom avatar table, the only method to make 100% sure that the avatar exist. 
+        // It covers the case where an user had an avatar (revision > 0) and deleted those avatar. We keep the column by the user without a join for dapper, since it's only a single field
         internal string UserColumnSql = @"
             u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPmsCount, u.recent_thankcnt AS UnreadThanksCount,
-            g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions ";
+            c.filename IS NOT NULL AS HasAvatar,
+            g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions";
         public VBLightUserManager(MySqlConnection db, IVBCache cache) {
             this.db = db;
             this.cache=cache;
@@ -39,6 +41,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 SELECT {UserColumnSql}
                 FROM user u
                 LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid)
                 WHERE u.userid = @userId";
             var user = db.Query(sql, mappingFunc, new { userId });
             return user.FirstOrDefault();
@@ -60,11 +63,12 @@ namespace ULabs.VBulletinEntity.LightManager {
             string sql = $@"
                 SELECT pm.pmid, pm.pmtextid, pm.parentpmid, pm.messageread AS MessageReadRaw, 
                 {textSelectColumn} AS text, txt.title, txt.dateline AS SendTimeRaw, txt.fromuserid AS Id,
-                u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, 
+                u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, c.filename IS NOT NULL AS HasAvatar,
                             g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions 
                 FROM pm, pmtext AS txt
                 LEFT JOIN user u ON(u.userid = txt.fromuserid)
                 LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid)
                 WHERE pm.pmtextid = txt.pmtextid
                 AND pm.userid = @userId " +
                 (readState != null ? "AND pm.messageread = @readStateRaw " : "") + @"

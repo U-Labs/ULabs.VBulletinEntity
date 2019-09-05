@@ -124,6 +124,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 FROM session s
                 LEFT JOIN user u ON (u.userid = s.userid)
                 LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid)
                 WHERE s.sessionhash = @sessionHash
                 LIMIT 1";
             var args = new { sessionHash = sessionHash };
@@ -250,8 +251,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             return args.sessionHash;
         }
 
-        public string GetAvatarUrl(int? userId, int? avatarRevision) {
-            if (!userId.HasValue || !avatarRevision.HasValue || avatarRevision == 0) {
+        public string GetAvatarUrl(int? userId, int? avatarRevision, bool hasCustomAvatar) {
+            if (!userId.HasValue || !hasCustomAvatar) {
                 // ToDo: VB has not setting for the default Avatar. We should specify this in custom settings somewhere
                 return "https://u-img.net/img/4037Ld.png";
             }
