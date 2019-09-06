@@ -10,6 +10,7 @@ namespace ULabs.VBulletinEntity.Caching {
         ThreadReplys, // Subkey: {id}.{start}-{count}
         Forums,
 
-        LightSession
+        LightSession,
+        LightCommonSettings
     }
 }
