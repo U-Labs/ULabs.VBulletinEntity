@@ -13,8 +13,8 @@ I recently started implementing caching in the light managers, so there is not m
 | Entity  | State | What is cached? |
 | ------------- | ------------- | -------------
 | VBLightSessionManager | ![Complete](https://u-img.net/img/8798Dw.png) | Sessions on the `Get` method with session hash as sub key for 30 minutes TTL
+| VBLightSettingsManager | ![Complete](https://u-img.net/img/8798Dw.png) | `VBLightCommonSettings` are cached for 7 days
 | VBLightForumManager | ![Not implemented yet](https://u-img.net/img/2301Ja.png) | 
-| VBLightSettingsManager | ![Not implemented yet](https://u-img.net/img/2301Ja.png) | 
 | VBLightThreadManager | ![Not implemented yet](https://u-img.net/img/2301Ja.png) | 
 | VBLightUserManager | ![Not implemented yet](https://u-img.net/img/2301Ja.png) | 
 
