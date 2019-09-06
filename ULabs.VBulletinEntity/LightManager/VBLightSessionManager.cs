@@ -95,11 +95,9 @@ namespace ULabs.VBulletinEntity.LightManager {
 
         public VBLightSession Get(string sessionHash) {
             if(cache.TryGet(VBCacheKey.LightSession, sessionHash, out VBLightSession session)) {
-                logger.LogDebug($"Get: Return session for hash = {CensoreHash(sessionHash)} from CACHE");
                 return session;
             }
 
-            logger.LogDebug($"No cache avaliable for session with hash = {CensoreHash(sessionHash)}, fetch from database");
             Func<VBLightSession, VBLightUser, VBLightUserGroup, VBLightSession> mappingFunc = (dbSession, user, group) => {
                 // No related user and so no group exists on guest sessions
                 if (group != null) {
