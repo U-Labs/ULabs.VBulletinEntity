@@ -52,8 +52,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
             return post;
         };
-        string BuildUnreadActiveThreadsQuery(string selectFields, string additionalJoins = "", List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null, bool groupByLastPostTs = true, 
-            bool hasLimit = false) {
+        string BuildUnreadActiveThreadsQuery(string selectFields, string additionalJoins = "", List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
             string sql = $@"
                 SELECT {selectFields}
 	            FROM post p
@@ -71,13 +70,8 @@ namespace ULabs.VBulletinEntity.LightManager {
 	            )
 	            AND t.lastpost >= UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL @lastPostAgeDays DAY)) " +
             (ignoredForumIds != null ? "AND t.forumid NOT IN @ignoredForumIds " : "") +
-            (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "") +
-            (groupByLastPostTs ? "GROUP BY p.threadid " : "") +
-	            "ORDER BY t.lastpost DESC ";
+            (ignoredThreadIds != null ? "AND t.threadid NOT IN @ignoredThreadIds " : "");
 
-            if (hasLimit) {
-                sql += "LIMIT @count";
-            }
             return sql;
         }
         #endregion
@@ -283,10 +277,13 @@ namespace ULabs.VBulletinEntity.LightManager {
 				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision, c.filename IS NOT NULL AS LastPosterHasAvatar,
 				    r.readid";
             string additionalJoins = @"
-	            INNER JOIN forum f ON(f.forumid = t.forumid)
-	            INNER JOIN user u ON(u.userid = t.lastposterid)
-                INNER JOIN customavatar c ON(c.userid = u.userid) ";
-            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds, hasLimit: true);
+	            LEFT JOIN forum f ON(f.forumid = t.forumid)
+	            LEFT JOIN user u ON(u.userid = t.lastposterid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid) ";
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds) + @"
+                GROUP BY p.threadid 
+                ORDER BY t.lastpost DESC
+                LIMIT @count";
             var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
             return unreadThreads.ToList();
         }
@@ -297,7 +294,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         public int CountUnreadActiveThreads(int userId, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
             var args = new { userId, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
             string selectFields = "COUNT(DISTINCT p.threadid) AS cnt";
-            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins: "", ignoredForumIds, ignoredThreadIds, groupByLastPostTs: false);
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins: "", ignoredForumIds, ignoredThreadIds);
 
             int count = db.QueryFirstOrDefault<int>(sql, args);
             return count;
