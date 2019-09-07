@@ -109,6 +109,16 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         /// <summary>
+        /// Like <see cref="GetForumsWhereUserCan(int, VBForumFlags, bool)"/> but this method returns only the forum ids without any meta information
+        /// </summary>
+        public List<int> GetForumIdsWhereUserCan(int userGroupId, VBForumFlags flags, bool onlyParentCategories = false) {
+            var forumIds = BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories, selectOnlyForumId: true)
+                .Select(f => f.Id)
+                .ToList();
+            return forumIds;
+        }
+
+        /// <summary>
         /// Neogation of GetForumswhereUserCan(): It returns all forums where the group doesn't have the provided flag
         /// </summary>
         /// <param name="onlyParentCategories">If false, all forums will be fetched (default). Set this to true if you only want to get categories (parent = -1).</param>
@@ -116,16 +126,19 @@ namespace ULabs.VBulletinEntity.LightManager {
             return BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories);
         }
 
-        List<VBLightForum> BuildForumPermissionQuery(int userGroupId, VBForumFlags? flags, bool negate, bool onlyParentCategories) {
+        List<VBLightForum> BuildForumPermissionQuery(int userGroupId, VBForumFlags? flags, bool negate, bool onlyParentCategories, bool selectOnlyForumId = false) {
             var args = new {
                 userGroupId,
                 flags = (int)flags
             };
             bool hasWhere = flags != null || onlyParentCategories;
 
-            var sql = new StringBuilder();
+            var sql = new StringBuilder("SELECT f.forumid AS Id");
+            if(!selectOnlyForumId) {
+                sql.Append(", f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw");
+            }
+
             sql.Append(@"
-                SELECT f.forumid AS Id, f.title AS Title, f.parentid AS ParentId, f.parentlist AS ParentIdsRaw
                 FROM forum f
                 INNER JOIN usergroup g ON(g.usergroupid = @userGroupId)
                 LEFT JOIN forumpermission fp ON(fp.usergroupid = g.usergroupid AND FIND_IN_SET(fp.forumid, f.parentlist))");
