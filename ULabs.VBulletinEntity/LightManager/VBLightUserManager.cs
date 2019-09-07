@@ -86,6 +86,23 @@ namespace ULabs.VBulletinEntity.LightManager {
         public List<VBLightPrivateMessage> GetReceivedPrivateMessages(int userId, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
             return GetPrivateMessages(userId, "AND pm.folderid != -1", readState, count, textPreviewWords);
         }
+
+        /// <summary>
+        /// Same as <see cref="GetReceivedPrivateMessages(int, VBPrivateMessageReadState?, int, int?)"/> but counts only the matching pms instead of fetching their data
+        /// </summary>
+        public int CountUnreadPrivateMessages(int userId, VBPrivateMessageReadState? readState = null) {
+            string sql = @"
+                SELECT COUNT(*)
+                FROM pm
+                WHERE pm.userid = @userId 
+                AND pm.folderid != -1 " +
+                (readState != null ? "AND pm.messageread = @readStateRaw " : "");
+
+            int readStateRaw = (readState.HasValue ? (int)readState.Value : 0);
+            int count = db.QueryFirstOrDefault<int>(sql, new { userId, readStateRaw });
+            return count;
+        }
+
         /// <summary>
         /// Fetches the unread thanks counter from the users table to avoid getting cached information from the session (better as purging the more complex query there)
         /// </summary>
