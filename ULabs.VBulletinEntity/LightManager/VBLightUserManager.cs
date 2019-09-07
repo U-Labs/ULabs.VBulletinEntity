@@ -87,6 +87,13 @@ namespace ULabs.VBulletinEntity.LightManager {
             return GetPrivateMessages(userId, "AND pm.folderid != -1", readState, count, textPreviewWords);
         }
         /// <summary>
+        /// Fetches the unread thanks counter from the users table to avoid getting cached information from the session (better as purging the more complex query there)
+        /// </summary>
+        public int UnreadThanksCount(int userId) {
+            int count = db.QueryFirstOrDefault<int>("SELECT recent_thankcnt FROM user WHERE userid = @userId", new { userId });
+            return count;
+        }
+        /// <summary>
         /// Reset the unviewed recent thanks from the Post thank hack addon in the userinfo if the user has read the notification about them. 
         /// Session hash is used to purge the session cache if enabled.
         /// </summary>
