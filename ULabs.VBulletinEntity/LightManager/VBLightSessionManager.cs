@@ -132,7 +132,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             if (session != null) {
                 // ToDo: Set TTL based on lifetime of sessions specified in VB
                 // TTL reduced from 30 to 5min because this also affects the users thanks/new pms in the cache column of VB. A low level cache also helps to avoid further requests form SignalR 
-                cache.Set(VBCacheKey.LightSession, session.SessionHash, session, TimeSpan.FromMinutes(5));
+                cache.Set(VBCacheKey.LightSession, session.SessionHash, session, TimeSpan.FromSeconds(30));
             }
             return session;
         }
