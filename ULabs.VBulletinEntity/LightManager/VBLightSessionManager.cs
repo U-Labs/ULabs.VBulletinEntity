@@ -94,10 +94,6 @@ namespace ULabs.VBulletinEntity.LightManager {
         #endregion
 
         public VBLightSession Get(string sessionHash) {
-            if(cache.TryGet(VBCacheKey.LightSession, sessionHash, out VBLightSession session)) {
-                return session;
-            }
-
             Func<VBLightSession, VBLightUser, VBLightUserGroup, VBLightSession> mappingFunc = (dbSession, user, group) => {
                 // No related user and so no group exists on guest sessions
                 if (group != null) {
@@ -125,19 +121,20 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN customavatar c ON(c.userid = u.userid)
                 WHERE s.sessionhash = @sessionHash
                 LIMIT 1";
+
             var args = new { sessionHash = sessionHash };
-            session = db.Query(sql, mappingFunc, args)
+            var session = db.Query(sql, mappingFunc, args)
                 .SingleOrDefault();
 
-            if (session != null) {
-                // ToDo: Set TTL based on lifetime of sessions specified in VB
-                // TTL reduced from 30 to 5min because this also affects the users thanks/new pms in the cache column of VB. A low level cache also helps to avoid further requests form SignalR 
-                cache.Set(VBCacheKey.LightSession, session.SessionHash, session, TimeSpan.FromSeconds(30));
-            }
             return session;
         }
-        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null) {
-            if (currentSession != null) {
+        /// <summary>
+        /// Fetches the current session from the injected context or cookie container. Got cached inside a singleton of this session manager instance
+        /// </summary>
+        /// <param name="skipInstanceCache">If true, the cached singleton instance is skipped. Usefull if you need real time data (e.g. pm/thanks count)</param>
+        /// <returns></returns>
+        public VBLightSession GetCurrent(IRequestCookieCollection cookies = null, bool skipInstanceCache = false) {
+            if (currentSession != null && !skipInstanceCache) {
                 logger.LogDebug($"Return session by current session singleton for user #{currentSession.User.Id}");
                 return currentSession;
             }
