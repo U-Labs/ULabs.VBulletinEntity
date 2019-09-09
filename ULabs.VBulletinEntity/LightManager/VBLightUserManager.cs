@@ -21,9 +21,14 @@ namespace ULabs.VBulletinEntity.LightManager {
         // No SELECT included for the flexibility to use this in complex queries. HasAvatar is a join to the custom avatar table, the only method to make 100% sure that the avatar exist. 
         // It covers the case where an user had an avatar (revision > 0) and deleted those avatar. We keep the column by the user without a join for dapper, since it's only a single field
         internal string UserColumnSql = @"
-            u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPmsCount, u.recent_thankcnt AS UnreadThanksCount,
+            u.userid as Id, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPmsCount, 
+                u.recent_thankcnt AS UnreadThanksCount,
             c.filename IS NOT NULL AS HasAvatar,
             g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions";
+        Func<VBLightUser, VBLightUserGroup, VBLightUser> mappingFunc = (dbUser, group) => {
+            dbUser.PrimaryUserGroup = group;
+            return dbUser;
+        };
         public VBLightUserManager(MySqlConnection db, IVBCache cache) {
             this.db = db;
             this.cache=cache;
@@ -62,18 +67,18 @@ namespace ULabs.VBulletinEntity.LightManager {
             return pms.ToList();
         }
 
-        public VBLightUser Get(int userId) {
-            Func<VBLightUser, VBLightUserGroup, VBLightUser> mappingFunc = (dbUser, group) => {
-                dbUser.PrimaryUserGroup = group;
-                return dbUser;
-            };
+        List<VBLightUser> UserQuery(string sqlConditions, object param = null) {
             string sql = $@"
                 SELECT {UserColumnSql}
                 FROM user u
                 LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
                 LEFT JOIN customavatar c ON(c.userid = u.userid)
-                WHERE u.userid = @userId";
-            var user = db.Query(sql, mappingFunc, new { userId });
+                {sqlConditions}";
+            var users = db.Query(sql, mappingFunc, param);
+            return users.ToList();
+        }
+        public VBLightUser Get(int userId) {
+            var user = UserQuery("WHERE u.userid = @userId", new { userId });
             return user.FirstOrDefault();
         }
 
@@ -120,6 +125,15 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             // The session references to the user entity where the old thanks state is still stored
             cache.Remove(VBCacheKey.LightSession, sessionHash);
+        }
+
+        public List<VBLightUser> GetUsersByLastActivity(DateTime lastActivityLimit) {
+            long lastActivityTs = lastActivityLimit.ForceUtc().ToUnixTimestamp();
+            string sqlCondition = @"
+                WHERE u.lastactivity >= @lastActivityTs
+                ORDER BY u.lastactivity DESC";
+            var users = UserQuery(sqlCondition, new { lastActivityTs });
+            return users;
         }
     }
 }
