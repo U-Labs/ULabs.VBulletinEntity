@@ -10,6 +10,9 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public string ThreadTitle { get; set; }
         public int ForumId { get; set; }
         public string ForumTitle { get; set; }
+        public string AuthorName { get; set; }
+        public string AuthorGroupOpenTag { get; set; }
+        public string AuthorGroupCloseTag { get; set; }
         public int TimeRaw { get; set; }
 
         public DateTime Time {
