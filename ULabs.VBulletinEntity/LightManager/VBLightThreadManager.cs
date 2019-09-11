@@ -22,7 +22,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         string threadBaseQuery = @"
             SELECT t.threadid as Id, t.title as Title, t.lastpost as LastPostTimeRaw, t.lastpostid as LastPostId, t.firstpostid as FirstPostId,
                         t.replycount as ReplysCount, t.deletedcount as DeletedReplysCount, t.open as IsOpen, t.lastposterid as LastPosterUserId, t.postuserid as AuthorUserId, t.visible as IsVisible,
-                    u.userid as Id, u.avatarrevision as AvatarRevision, u.username as UserName, u.usertitle as UserTitle, u.lastactivity as LastActivityRaw, c.filename IS NOT NULL AS HasAvatar,
+                    u.userid as Id, u.avatarrevision as AvatarRevision, u.username as UserName, u.posts AS TotalPosts, u.usertitle as UserTitle, u.lastactivity as LastActivityRaw, 
+                    c.filename IS NOT NULL AS HasAvatar,
                     f.forumid as Id, f.title as Title,
                     g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions
                 FROM thread t

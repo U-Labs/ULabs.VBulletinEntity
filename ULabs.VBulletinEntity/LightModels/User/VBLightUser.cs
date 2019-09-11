@@ -14,6 +14,7 @@ namespace ULabs.VBulletinEntity.LightModels.User {
         public int LastActivityRaw { get; set; }
         public int UnreadPmsCount { get; set; }
         public int UnreadThanksCount { get; set; }
+        public int PostsCount { get; set; }
         public DateTime LastActivity {
             get => DateTimeExtensions.ToDateTime(LastActivityRaw);
             set => LastActivityRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);

@@ -22,7 +22,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         // It covers the case where an user had an avatar (revision > 0) and deleted those avatar. We keep the column by the user without a join for dapper, since it's only a single field
         internal string UserColumnSql = @"
             u.userid as Id, u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, u.pmunread AS UnreadPmsCount, 
-                u.recent_thankcnt AS UnreadThanksCount,
+                u.recent_thankcnt AS UnreadThanksCount, u.posts AS PostsCount,
             c.filename IS NOT NULL AS HasAvatar,
             g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions";
         Func<VBLightUser, VBLightUserGroup, VBLightUser> mappingFunc = (dbUser, group) => {
