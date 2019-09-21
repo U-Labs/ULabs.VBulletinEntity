@@ -5,7 +5,8 @@
     <Version>0.7.8.21</Version>
     <Authors>DMW007</Authors>
     <Company>U-Labs</Company>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <!-- Renamed for NuGet: https://github.com/NuGet/Home/issues/7601 -->
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageProjectUrl>https://u-labs.de/forum</PackageProjectUrl>
     <RepositoryUrl>https://github.com/U-Labs/ULabs.VBulletinEntity</RepositoryUrl>
     <PackageTags>net-core,c-sharp,vbulletin,entity-framework,mysql,mariadb</PackageTags>
@@ -15,6 +16,11 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DocumentationFile>C:\Development\ULabs\ULabs.VBulletinEntity\ULabs.VBulletinEntity\ULabs.VBulletinEntity.xml</DocumentationFile>
+    <!-- Avoid warnings of missing xml comments: 
+      https://stackoverflow.com/a/54371962/3276634 
+      https://dev.to/coolgoose/how-to-disable-notifications-in-aspnet-core-20-for-missing-xml-comment-for-publicly-visible-type-or-member-29ab
+    -->
+    <noWarn>1591</noWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\LICENSE">
+    <None Include="LICENSE.txt">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
