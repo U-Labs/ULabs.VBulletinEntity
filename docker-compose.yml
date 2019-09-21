@@ -1,0 +1,15 @@
+version: '2'
+
+services:
+  ul-vbentity:
+    build: 
+      context: ULabs.VBulletinEntity
+      args: 
+        BAGET_API_KEY: ${BAGET_API_KEY}
+    mem_limit: 1G
+    networks:
+      - ul-docker
+
+networks:
+  ul-docker:
+    external: true
