@@ -1,7 +1,8 @@
 ﻿@model VBSession
 
 @{ 
-    string name = Model.User.UserName ?? "Anonymous";
+    // Model.User is null on guests
+    string name = Model.User?.UserName ?? "Anonymous";
 }
 <h1>Hello @name!</h1>
 
