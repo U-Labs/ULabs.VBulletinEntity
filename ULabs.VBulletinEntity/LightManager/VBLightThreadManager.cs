@@ -2,6 +2,7 @@
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using ULabs.VBulletinEntity.LightModels;
@@ -203,7 +204,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Fetches the newest visible posts, without any grouping to the threads. Usefull for polling, when you want to fetch new posts after a certain timestamp.
         /// </summary>
-        /// <param name="afterTimestamp">If this parameter is set to a unix timestamp, only posts with dateline > afterTimestamp were fetched from the database</param>
+        /// <param name="afterTimestamp">If this parameter is set to a unix timestamp, only posts with dateline > afterDateTime were fetched from the database</param>
         public List<VBLightPost> GetNewestPosts(int? afterTimestamp = null, int count = 10) {
             var args = new {
                 afterTimestamp = afterTimestamp.HasValue ? afterTimestamp.Value : 0,
@@ -253,25 +254,35 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
         /// </summary>
         /// <param name="count">Limit the fetched rows</param>
-        /// <param name="onlyWithReplys">If true, only new threads without any reply will be fetched (good to display new threads without any reply)</param>
+        /// <param name="minReplyCount">Filter for threads with a minimum amount of replys (larger or equal than this parameter)</param>
         /// <param name="orderByLastPostDate">If true, the threads were ordered by the date of their last reply. Otherwise the creation time of the thread is used.</param>
         /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
         /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        public List<VBLightThread> GetNewestThreads(int count = 10, int minReplyCount = 0, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null) {
+        /// <param name="afterTime">If set, only threads with a created dateline after this timestamp will be fetched</param>
+        public List<VBLightThread> GetNewestThreads(int count = 10, int minReplyCount = 0, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null, DateTime? afterTime = null) {
             if (includedForumIds != null && excludedForumIds != null) {
                 throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
             }
+            var builder = new SqlBuilder();
+            builder.Select(threadBaseQuery);
 
-            var args = new { includedForumIds, excludedForumIds, minReplyCount, count };
-            bool hasExclude = excludedForumIds?.Count > 0 || includedForumIds?.Count > 0;
-            string sql = threadBaseQuery + "WHERE " +
-                (includedForumIds?.Count > 0 ? "t.forumid IN @includedForumIds " : "") +
-                (excludedForumIds?.Count > 0 ? "t.forumid NOT IN @excludedForumIds " : "") +
-                (hasExclude ? "AND" : "") + @" t.replycount >= @minReplyCount
-                ORDER BY " + (orderByLastPostDate ? "t.lastpost " : "t.dateline ") + @"DESC
-                LIMIT @count";
-            var threads = db.Query(sql, threadMappingFunc, args);
-            return threads.ToList();
+            if (includedForumIds?.Count > 0) {
+                builder.Where("t.forumid IN @includedForumIds", new { includedForumIds });
+            }
+            if(excludedForumIds?.Count > 0) {
+                builder.Where("t.forumid NOT IN @excludedForumIds", new { excludedForumIds });
+            }
+            if (afterTime.HasValue) {
+                long afterTimestamp = afterTime.Value.ToUnixTimestamp();
+                builder.Where("t.dateline > @afterTimestamp", new { afterTimestamp });
+            }
+
+            builder.Where("t.replycount >= @minReplyCount", new { minReplyCount });
+            builder.OrderBy((orderByLastPostDate ? "t.lastpost" : "t.dateline") + " DESC");
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
+
+            var result = db.Query(builderTemplate.RawSql, threadMappingFunc, builderTemplate.Parameters);
+            return result.ToList();
         }
 
         /// <summary>
