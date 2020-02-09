@@ -204,16 +204,16 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Fetches the newest visible posts, without any grouping to the threads. Usefull for polling, when you want to fetch new posts after a certain timestamp.
         /// </summary>
-        /// <param name="afterTimestamp">If this parameter is set to a unix timestamp, only posts with dateline > afterDateTime were fetched from the database</param>
-        public List<VBLightPost> GetNewestPosts(int? afterTimestamp = null, int count = 10) {
+        /// <param name="afterTime">If this parameter is set, only posts with dateline > afterDateTime were fetched from the database</param>
+        public List<VBLightPost> GetNewestPosts(DateTime? afterTime = null, int count = 10) {
             var args = new {
-                afterTimestamp = afterTimestamp.HasValue ? afterTimestamp.Value : 0,
+                afterTimestamp = afterTime.HasValue ? afterTime.Value.ToUnixTimestamp() : 0,
                 count 
             };
             string sql = $@"
                 {postBaseQuery}
                 WHERE p.visible = 1 " +
-                (afterTimestamp.HasValue ? " AND p.dateline > @afterTimestamp " : "") + @"
+                (afterTime.HasValue ? " AND p.dateline > @afterTimestamp " : "") + @"
                 ORDER BY p.dateline DESC
                 LIMIT @count";
             var replys = db.Query(sql, postMappingFunc, args);
