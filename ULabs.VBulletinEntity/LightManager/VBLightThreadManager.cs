@@ -149,8 +149,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         /// <param name="includeDeleted">Include deleted posts for moderators or admin users</param>
         /// <param name="page">Number of the page to display, which is used for calculating which posts to skip</param>
-        /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 10.</param>
-        public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, int page = 1, int replysPerPage = 10) {
+        /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 9 (9 replys + firstpost = 19).</param>
+        public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, int page = 1, int replysPerPage = 9) {
             int offset = (page - 1) * replysPerPage;
             // The original replysPerPage is not touched for the pagination, since we don't count the posts rather than using VBs cache column for replys count
             int replysPerPageForPostIds = replysPerPage;
@@ -177,10 +177,10 @@ namespace ULabs.VBulletinEntity.LightManager {
                 .ToList();
 
             var totalPagesArgs = new { threadId, replysPerPage };
-            // +1 post is added to fix the skipped firstpost. Otherwise we missed the last page if it only contains a single post.
+            // We dont need to add +1 for the skipped first post. If its present, we miss the last page if it has only 1 reply
             // The if condition handles new threads without replys (avoids -1 / 10 calculation)
             string sqlTotalPages = @"
-                SELECT IF(replycount = 0, 0, CEIL((replycount - 1) / @replysPerPage)) AS pages
+                SELECT IF(replycount = 0, 0, CEIL((replycount) / @replysPerPage)) AS pages
                 FROM thread
                 WHERE threadId = @threadId";
             info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, totalPagesArgs);
