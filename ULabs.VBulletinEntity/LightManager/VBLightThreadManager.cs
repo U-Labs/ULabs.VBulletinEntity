@@ -568,5 +568,23 @@ namespace ULabs.VBulletinEntity.LightManager {
             db.Execute(updateThreadSql, updateThreadArgs);
             return threadId;
         }
+
+        #region Attachments
+        public List<VBLightAttachment> GetAttachments(List<int> postIds) {
+            var builder = new SqlBuilder()
+                .Select(@"SELECT attachmentid AS Id, a.userid AS UserId, a.dateline as TimeRaw, counter, filename, a.contentid,
+                	    fd.filesize, fd.refcount 
+                    FROM attachment a, filedata fd")
+                .Where(@"a.filedataid = fd.filedataid
+                        AND contentid IN @postIds", new { postIds });
+
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/");
+            return db.Query<VBLightAttachment>(builderTemplate.RawSql, builderTemplate.Parameters).ToList();
+        }
+
+        public List<VBLightAttachment> GetAttachments(int postId) {
+            return GetAttachments(new List<int> { postId });
+        }
+        #endregion
     }
 }
