@@ -571,7 +571,7 @@ namespace ULabs.VBulletinEntity.LightManager {
 
         #region Attachments
         string attachmentsBaseQuery = @"
-            SELECT attachmentid AS Id, a.userid AS UserId, a.dateline as TimeRaw, counter, filename, a.contentid,
+            SELECT attachmentid AS Id, a.userid AS UserId, a.dateline as TimeRaw, counter AS DownloadsCount, filename, a.contentid,
                     fd.filesize, fd.refcount 
             FROM attachment a, filedata fd";
         public List<VBLightAttachment> GetAttachments(List<int> postIds) {
