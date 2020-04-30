@@ -66,6 +66,24 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             }
             return Content("Failed: " + check.ToString());
         }
+        [VBLightAuthorize]
+        public IActionResult DeleteFirstReply(int threadId) {
+            var thread = lightThreadManager.Get(threadId);
+            if (thread == null) {
+                return Content($"Thread #{threadId} not found!");
+            }
+
+            var replyInfo = lightThreadManager.GetReplysInfo(thread.Id, thread.FirstPostId);
+            var replys = lightThreadManager.GetReplys(replyInfo);
+            var post = replys.FirstOrDefault();
+            if (post == null) {
+                return Content("No visible posts left in thread!");
+            }
+
+            var deletingUser = lightSessionManager.GetCurrent().User;
+            lightThreadManager.DeletePost(post, deletingUser, "127.0.0.1", comment: "Test deletion by ULabs.VBulletinEntity Library");
+            return Content($"Post #{post.Id} from {post.Author.UserName} deleted by mod {deletingUser.UserName}");
+        }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
             return Content("Youre authorized!");

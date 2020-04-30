@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -208,7 +209,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         public List<VBLightPost> GetNewestPosts(DateTime? afterTime = null, int count = 10) {
             var args = new {
                 afterTimestamp = afterTime.HasValue ? afterTime.Value.ToUnixTimestamp() : 0,
-                count 
+                count
             };
             string sql = $@"
                 {postBaseQuery}
@@ -269,7 +270,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             if (includedForumIds?.Count > 0) {
                 builder.Where("t.forumid IN @includedForumIds", new { includedForumIds });
             }
-            if(excludedForumIds?.Count > 0) {
+            if (excludedForumIds?.Count > 0) {
                 builder.Where("t.forumid NOT IN @excludedForumIds", new { excludedForumIds });
             }
             if (afterTime.HasValue) {
@@ -568,6 +569,72 @@ namespace ULabs.VBulletinEntity.LightManager {
             db.Execute(updateThreadSql, updateThreadArgs);
             return threadId;
         }
+
+        #region Moderation
+        /// <summary>
+        /// Deletes a post and log the action in all logs as VB would do it (moderator and deletion log)
+        /// </summary>
+        public void DeletePost(VBLightPost post, VBLightUser moderator, string clientIp, string comment = "", int forumId = 0, bool softDelete = true) {
+            if (!softDelete) {
+                throw new NotImplementedException("Currently, hard deleting is not supported.");
+            }
+            if (forumId == 0) {
+                forumId = db.QuerySingleOrDefault<int>("SELECT forumid FROM thread WHERE threadid = @ThreadId", new { post.ThreadId });
+            }
+
+            db.Query("UPDATE post SET visible = 2 WHERE postid = @Id", new { post.Id });
+            LogModeratorAction(clientIp, moderator.Id, forumId, post.ThreadId, post.Id, post.Author.UserName);
+            LogDeletion(post.Id, DeletionLogType.Post, moderator.Id, moderator.UserName, comment);
+        }
+        /// <summary>
+        /// Logs moderator actions viewable in the VB Admin CP (e.g. deleted posts). In contrast to <see cref="LogDeletion(int, DeletionLogType, int, string, string)"/> this covers EVERY moderator action, not just deletions.
+        /// </summary>
+        public void LogModeratorAction(string clientIp, int moderatorUserId, int forumId, int threadId = 0, int postId = 0, string postAuthorName = "") {
+            var action = new ArrayList() {
+                // The first element is the title of the post. We don't care about it because it belongs to the thread
+                "",
+                postAuthorName
+            };
+            // VB provides array data as action and then serialize them using PHPs serialize/deserialize functions. PhpSerialization could serialize objects as PHP would do it
+            var serializer = new PhpSerialization();
+            string actionSerialized = serializer.Serialize(action);
+            var actionSerializedSegments = actionSerialized.Replace(postAuthorName, "\n")
+                .Split('\n');
+
+            var modArgs = new {
+                deletingUserId = moderatorUserId,
+                postAuthorName,
+                forumId,
+                threadId,
+                postId,
+                clientIp
+            };
+            // Dapper cant resolve parameters in JSON strings like a:2:{i:0;s:19:"";i:1;s:6:"@postAuthorName";} correctly.
+            // As a workaround, we just insert the username and then add the pre/suffix JSON using MySQLs CONCAT function around the username directly after inserting the modlog entry. Not really clean but currently we have no alternative.
+            // ToDo: s:19 is not always constant, where s:6 at the end stay the same. Find out for what the first s:6 is used for
+            string actionPrefix = actionSerializedSegments[0];
+            string actionSuffix = actionSerializedSegments[1];
+            string modSql = $@"INSERT INTO moderatorlog(dateline, userid, forumid, threadid, postid, action, type, ipaddress)
+                VALUES(UNIX_TIMESTAMP(), @deletingUserId, @forumId, @threadId, @postId, '" + postAuthorName + "', 17, @clientIp);" +
+                $"UPDATE moderatorlog SET action = CONCAT('{actionPrefix}', action, '{actionSuffix}') WHERE moderatorlogid = LAST_INSERT_ID();";
+            db.Query(modSql, modArgs);
+        }
+        /// <summary>
+        /// Creates a deletion log entry. Used by vBulletin to display metadata in the thread (e.g. moderator name, comment). Kept private since we want to cover all VB actions where those log entries got created.
+        /// </summary>
+        void LogDeletion(int contentId, DeletionLogType type, int moderatorUserId, string moderatorUserName, string comment = "") {
+            var args = new {
+                contentId,
+                type = type.ToString().ToLower(),
+                moderatorUserId,
+                moderatorUserName,
+                comment
+            };
+            string sql = @"INSERT INTO deletionlog(primaryid, type, userid, username, reason, dateline)
+                        VALUES(@contentId, @type, @moderatorUserId, @moderatorUserName, @comment, UNIX_TIMESTAMP())";
+            db.Query(sql, args);
+        }
+        #endregion
 
         #region Attachments
         string attachmentsBaseQuery = @"
