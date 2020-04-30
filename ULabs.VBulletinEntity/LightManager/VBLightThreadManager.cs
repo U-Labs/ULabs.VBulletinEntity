@@ -656,6 +656,26 @@ namespace ULabs.VBulletinEntity.LightManager {
             db.Query(query, new { threadId });
         }
         /// <summary>
+        /// Fetch deleted posts for moderator view. Designed to fetch the posts for a thread page.
+        /// </summary>
+        /// <param name="threadId">Id of the Thread</param>
+        /// <param name="startPostTime">Timestamp of the first post on the page. Used as upper border (fetch posts AFTER this timestamp)</param>
+        /// <param name="endPostTime">Timestamp of the last post on the page. Used as lower border (fetch posts BEFORE this timestamp)</param>
+        /// <returns></returns>
+        public List<VBLightPost> GetDeletedPosts(int threadId, int startPostTime, int endPostTime, int limit = 20) {
+             string sql = $@"
+                {postBaseQuery}
+                WHERE p.threadid = @threadId
+                    AND p.visible = 2
+                    AND p.dateline >= @startPostTime
+                    AND p.dateline <= @endPostTime
+                ORDER BY p.dateline
+                LIMIT @limit";
+            var args = new { threadId, startPostTime, endPostTime, limit };
+            var replys = db.Query(sql, postMappingFunc, args);
+            return replys.ToList();
+        }
+        /// <summary>
         /// Fetches the last visible post from the DB and set those attribute (Id, Last poster name/id, ...) to the corresponding thread (cache columns)
         /// </summary>
         void UpdateLastPost(int threadId) {

@@ -84,6 +84,12 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             lightThreadManager.DeletePost(post, deletingUser, "127.0.0.1", comment: "Test deletion by ULabs.VBulletinEntity Library");
             return Content($"Post #{post.Id} from {post.Author.UserName} deleted by mod {deletingUser.UserName}");
         }
+
+        [VBLightAuthorize]
+        public IActionResult ShowDeletedPost(int threadId, int startPostTime, int endPostTime) {
+            var posts = lightThreadManager.GetDeletedPosts(threadId, startPostTime, endPostTime);
+            return Content($"{posts.Count} deleted Posts found: " + string.Join("<br>", posts.Select(p => p.Text)));
+        }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
             return Content("Youre authorized!");
