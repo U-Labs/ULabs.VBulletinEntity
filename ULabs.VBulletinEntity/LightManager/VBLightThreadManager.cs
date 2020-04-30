@@ -689,6 +689,11 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Creates a deletion log entry. Used by vBulletin to display metadata in the thread (e.g. moderator name, comment). Kept private since we want to cover all VB actions where those log entries got created.
         /// </summary>
         void LogDeletion(int contentId, DeletionLogType type, int moderatorUserId, string moderatorUserName, string comment = "") {
+            // Handy for optional ASP.NET Core attributes. If not set, they use null instead of an empty string, which cause trouble in our SQL queries.
+            if (comment == null) {
+                comment = "";
+            }
+
             var args = new {
                 contentId,
                 type = type.ToString().ToLower(),
