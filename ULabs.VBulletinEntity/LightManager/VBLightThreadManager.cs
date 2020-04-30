@@ -662,7 +662,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             string lastPostSql = @"
                 SELECT postid 
                 FROM post
-                WHERE threadid = @Id
+                WHERE threadid = @threadId
                 AND visible = 1
                 ORDER BY dateline DESC
                 LIMIT 1";
