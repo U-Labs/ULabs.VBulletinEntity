@@ -574,16 +574,20 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Deletes a post and log the action in all logs as VB would do it (moderator and deletion log)
         /// </summary>
-        public void DeletePost(VBLightPost post, VBLightUser moderator, string clientIp, string comment = "", int forumId = 0, bool softDelete = true) {
+        public void DeletePost(VBLightPost post, VBLightUser moderator, string clientIp, string comment = "", bool softDelete = true) {
             if (!softDelete) {
                 throw new NotImplementedException("Currently, hard deleting is not supported.");
             }
-            if (forumId == 0) {
-                forumId = db.QuerySingleOrDefault<int>("SELECT forumid FROM thread WHERE threadid = @ThreadId", new { post.ThreadId });
-            }
 
             db.Query("UPDATE post SET visible = 2 WHERE postid = @Id", new { post.Id });
-            LogModeratorAction(clientIp, moderator.Id, forumId, post.ThreadId, post.Id, post.Author.UserName);
+            ReCountThreadReplys(post.ThreadId);
+
+            var thread = Get(post.ThreadId);
+            if (thread.LastPostId == post.Id) {
+                UpdateLastPost(thread.Id);
+            }
+
+            LogModeratorAction(clientIp, moderator.Id, thread.Forum.Id, post.ThreadId, post.Id, post.Author.UserName);
             LogDeletion(post.Id, DeletionLogType.Post, moderator.Id, moderator.UserName, comment);
         }
         /// <summary>
@@ -618,6 +622,68 @@ namespace ULabs.VBulletinEntity.LightManager {
                 VALUES(UNIX_TIMESTAMP(), @deletingUserId, @forumId, @threadId, @postId, '" + postAuthorName + "', 17, @clientIp);" +
                 $"UPDATE moderatorlog SET action = CONCAT('{actionPrefix}', action, '{actionSuffix}') WHERE moderatorlogid = LAST_INSERT_ID();";
             db.Query(modSql, modArgs);
+        }
+        public void ReCountThreadReplys(int threadId) {
+            string query = @"
+                SELECT firstpostid
+                INTO @firstPostId
+                FROM thread
+                WHERE threadid = @threadId;
+
+                UPDATE thread
+                    SET deletedcount = (
+                        SELECT COUNT(*) 
+                        FROM post 
+                        WHERE threadid = @threadId 
+                        AND visible = 2
+                    ), replycount = (
+                        SELECT COUNT(*) 
+                        FROM post 
+                        WHERE threadid = @threadId 
+                        AND visible = 1
+                        AND postid != @firstPostId
+                    ), postercount = (
+                        SELECT count(*)
+                        FROM (
+	                        SELECT distinct userid
+	                        FROM post p
+	                        WHERE p.threadid = @threadId
+	                        AND p.visible = 1
+	                        GROUP BY userid 
+                        ) as x
+                    )
+                    WHERE threadid = @threadId;";
+            db.Query(query, new { threadId });
+        }
+        /// <summary>
+        /// Fetches the last visible post from the DB and set those attribute (Id, Last poster name/id, ...) to the corresponding thread (cache columns)
+        /// </summary>
+        void UpdateLastPost(int threadId) {
+            string lastPostSql = @"
+                SELECT postid 
+                FROM post
+                WHERE threadid = @Id
+                AND visible = 1
+                ORDER BY dateline DESC
+                LIMIT 1";
+            int newLastPostId = db.Query<int>(lastPostSql, new { threadId }).Single();
+            var newLastPost = GetPost(newLastPostId);
+
+            string lastPostIdSqlUpdate = @"
+                    UPDATE thread
+                    SET lastpostid = @newLastPostId,
+                        lastpost = @postTimeRaw,
+                        lastposter = @postAuthorName,
+                        lastposterid = @postAuthorId
+                    WHERE threadid = @threadId";
+            var lastPostUpdateArgs = new {
+                newLastPostId,
+                threadId = newLastPost.ThreadId,
+                postTimeRaw = newLastPost.CreatedTimeRaw,
+                postAuthorName = newLastPost.Author.UserName,
+                postAuthorId = newLastPost.Author.Id
+            };
+            db.Query(lastPostIdSqlUpdate, lastPostUpdateArgs);
         }
         /// <summary>
         /// Creates a deletion log entry. Used by vBulletin to display metadata in the thread (e.g. moderator name, comment). Kept private since we want to cover all VB actions where those log entries got created.
