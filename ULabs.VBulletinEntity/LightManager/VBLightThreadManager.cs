@@ -664,7 +664,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="endPostTime">Timestamp of the last post on the page. Used as lower border (fetch posts BEFORE this timestamp)</param>
         public List<VBLightDeletionLog> GetDeletionLog(int threadId, int startPostTime, int endPostTime) {
              string sql = @"
-                SELECT dl.primaryid AS ContentId, dl.type, dl.userid, dl.username, dl.reason, dl.dateline AS TimeRaw
+                SELECT p.dateline AS PostPublishTimeRaw, dl.primaryid AS ContentId, dl.type, dl.userid, dl.username, dl.reason, dl.dateline AS TimeRaw
                 FROM post p, deletionlog dl
                 WHERE p.postid = dl.primaryid
                 AND p.threadid = @threadId

@@ -16,5 +16,10 @@ namespace ULabs.VBulletinEntity.LightModels.Moderation {
             get => DateTimeExtensions.ToDateTime(TimeRaw);
             set => TimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
         }
+        public int PostPublishTimeRaw { get; set; }
+        public DateTime PostPublishTime {
+            get => DateTimeExtensions.ToDateTime(PostPublishTimeRaw);
+            set => PostPublishTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
     }
 }
