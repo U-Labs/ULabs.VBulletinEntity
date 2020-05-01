@@ -119,11 +119,17 @@ namespace ULabs.VBulletinEntity.LightManager {
                 return new List<VBLightPost>();
             }
 
+            return GetPosts(replysInfo.PostIds);
+        }
+        /// <summary>
+        /// Load posts by ids without any relation to a thread. If you want to fetch the replys for a specific thread page, use <see cref="GetReplys(ReplysInfo)"/>.
+        /// </summary>
+        public List<VBLightPost> GetPosts(List<int> postIds) {
             string sql = $@"
                 {postBaseQuery}
                 WHERE p.postid IN @postIds
                 ORDER BY p.dateline";
-            var replys = db.Query(sql, postMappingFunc, new { postIds = replysInfo.PostIds });
+            var replys = db.Query(sql, postMappingFunc, new { postIds });
             return replys.ToList();
         }
 
