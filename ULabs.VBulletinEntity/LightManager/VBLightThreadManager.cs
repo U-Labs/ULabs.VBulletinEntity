@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Forum;
+using ULabs.VBulletinEntity.LightModels.Moderation;
 using ULabs.VBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Models.Forum;
 using ULabs.VBulletinEntity.Models.Manager;
@@ -656,23 +657,22 @@ namespace ULabs.VBulletinEntity.LightManager {
             db.Query(query, new { threadId });
         }
         /// <summary>
-        /// Fetch deleted posts for moderator view. Designed to fetch the posts for a thread page.
+        /// Fetch deleted posts for the moderation deletion log. Designed to fetch the posts for a thread page. Doesn't include the posts itself.
         /// </summary>
         /// <param name="threadId">Id of the Thread</param>
         /// <param name="startPostTime">Timestamp of the first post on the page. Used as upper border (fetch posts AFTER this timestamp)</param>
         /// <param name="endPostTime">Timestamp of the last post on the page. Used as lower border (fetch posts BEFORE this timestamp)</param>
-        /// <returns></returns>
-        public List<VBLightPost> GetDeletedPosts(int threadId, int startPostTime, int endPostTime, int limit = 20) {
-             string sql = $@"
-                {postBaseQuery}
-                WHERE p.threadid = @threadId
-                    AND p.visible = 2
-                    AND p.dateline >= @startPostTime
-                    AND p.dateline <= @endPostTime
-                ORDER BY p.dateline
-                LIMIT @limit";
-            var args = new { threadId, startPostTime, endPostTime, limit };
-            var replys = db.Query(sql, postMappingFunc, args);
+        public List<VBLightDeletionLog> GetDeletionLog(int threadId, int startPostTime, int endPostTime) {
+             string sql = @"
+                SELECT dl.primaryid AS ContentId, dl.type, dl.userid, dl.username, dl.reason, dl.dateline AS TimeRaw
+                FROM post p, deletionlog dl
+                WHERE p.postid = dl.primaryid
+                AND p.threadid = @threadId
+                AND p.visible != 1
+                AND p.dateline >= @startPostTime
+                AND p.dateline <= @endPostTime";
+            var args = new { threadId, startPostTime, endPostTime };
+            var replys = db.Query<VBLightDeletionLog>(sql, args);
             return replys.ToList();
         }
         /// <summary>

@@ -87,8 +87,8 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
 
         [VBLightAuthorize]
         public IActionResult ShowDeletedPost(int threadId, int startPostTime, int endPostTime) {
-            var posts = lightThreadManager.GetDeletedPosts(threadId, startPostTime, endPostTime);
-            return Content($"{posts.Count} deleted Posts found: " + string.Join("<br>", posts.Select(p => p.Text)));
+            var posts = lightThreadManager.GetDeletionLog(threadId, startPostTime, endPostTime);
+            return Content($"{posts.Count} deleted Posts found: " + string.Join("<br>", posts.Select(p => p.UserName)));
         }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
