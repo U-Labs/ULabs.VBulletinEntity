@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using ULabs.VBulletinEntity.Tools;
+
+namespace ULabs.VBulletinEntity.LightModels.Forum {
+    public class VBLightForumThread {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public bool Open { get; set; }
+        public int ReplysCount { get; set; }
+        public string LastPosterUserName { get; set; }
+        public int LastPosterUserId { get; set; }
+        public int ViewsCount { get; set; }
+        public int CreatedTimeRaw { get; set; }
+        public DateTime CreatedTime {
+            get => CreatedTimeRaw.ToDateTime();
+            set => CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
+    }
+}

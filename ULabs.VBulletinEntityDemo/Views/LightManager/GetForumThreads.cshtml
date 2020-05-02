@@ -1,0 +1,12 @@
+﻿@model List<VBLightForumThread>
+@{
+    ViewData["Title"] = "GetForumThreads";
+}
+
+<h2>GetForumThreads</h2>
+
+<ul>
+    @foreach (var thread in Model) {
+        <li>@thread.Title</li>
+    }
+</ul>

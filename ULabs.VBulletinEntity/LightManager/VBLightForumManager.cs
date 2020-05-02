@@ -157,5 +157,41 @@ namespace ULabs.VBulletinEntity.LightManager {
             var forums = db.Query<VBLightForum>(sql.ToString(), args);
             return forums.ToList();
         }
+
+        public ForumThreadsInfo GetForumThreadsInfo(List<int> forumIds, int page = 1, int threadsPerPage = 20) {
+            int offset = (page - 1) * threadsPerPage;
+            var info = new ForumThreadsInfo(page, threadsPerPage);
+
+            string sqlThreadIds = $@"
+                SELECT t.threadid
+                FROM thread t
+                WHERE t.forumid IN @forumIds
+                AND t.visible = 1 
+                ORDER BY t.lastpost DESC
+                LIMIT @offset, @threadsPerPage";
+            var sqlThreadArgs = new { forumIds, offset, threadsPerPage };
+            info.ThreadIds = db.Query<int>(sqlThreadIds, sqlThreadArgs).ToList();
+
+            var totalPagesArgs = new { forumIds, threadsPerPage };
+            string sqlTotalPages = @"
+                SELECT CEIL(COUNT(*) / @threadsPerPage) AS pages
+                FROM thread
+                WHERE visible = 1
+                AND forumId IN @forumIds";
+            info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, totalPagesArgs);
+
+            return info;
+        }
+        public ForumThreadsInfo GetForumThreadsInfo(int forumId, int page = 1, int threadsPerPage = 20) {
+            return GetForumThreadsInfo(new List<int>() { forumId }, page, threadsPerPage);
+        }
+        public List<VBLightForumThread> GetForumThreads(ForumThreadsInfo info) {
+            string sql = @"
+                SELECT threadid AS Id, title, open, replycount AS ReplysCount, postusername AS lastPosterUserName, dateline as CreatedTimeRaw, postuserid AS lastPosterUserId, views AS ViewsCount
+                FROM thread 
+                WHERE threadid IN @threadIds
+                ORDER BY lastpost DESC;";
+            return db.Query<VBLightForumThread>(sql, new { info.ThreadIds }).ToList();
+        }
     }
 }

@@ -60,7 +60,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
         public IActionResult Reply(int id) {
             var replyModel = new LightCreateReplyModel(lightSessionManager.GetCurrent().User, forumId: 73, threadId: id, text: "Testreply new light manager", ipAddress: "127.0.0.1");
             var check = lightThreadManager.CreateReplyCheck(replyModel);
-            if(check == CanReplyResult.Ok) {
+            if (check == CanReplyResult.Ok) {
                 int postId = lightThreadManager.CreateReply(replyModel);
                 return Content("Check Ok");
             }
@@ -89,6 +89,11 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
         public IActionResult ShowDeletedPost(int threadId, int startPostTime, int endPostTime) {
             var posts = lightThreadManager.GetDeletionLog(threadId, startPostTime, endPostTime);
             return Content($"{posts.Count} deleted Posts found: " + string.Join("<br>", posts.Select(p => p.UserName)));
+        }
+        public IActionResult GetForumThreads(int forumId, int page = 1) {
+            var info = lightForumManager.GetForumThreadsInfo(forumId, page);
+            var threads = lightForumManager.GetForumThreads(info);
+            return View(threads);
         }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
