@@ -9,6 +9,8 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public string Title { get; set; }
         public bool Open { get; set; }
         public int ReplysCount { get; set; }
+        public string AuthorUserName { get; set; }
+        public int AuthorUserId { get; set; }
         public string LastPosterUserName { get; set; }
         public int LastPosterUserId { get; set; }
         public int ViewsCount { get; set; }

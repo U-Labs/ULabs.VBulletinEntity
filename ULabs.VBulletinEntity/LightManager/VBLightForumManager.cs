@@ -187,7 +187,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
         public List<VBLightForumThread> GetForumThreads(ForumThreadsInfo info) {
             string sql = @"
-                SELECT threadid AS Id, title, open, replycount AS ReplysCount, postusername AS lastPosterUserName, dateline as CreatedTimeRaw, postuserid AS lastPosterUserId, views AS ViewsCount
+                SELECT threadid AS Id, title, open, replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, lastposter AS lastPosterUserName, 
+                    lastposterid AS lastPosterUserId, views AS ViewsCount
                 FROM thread 
                 WHERE threadid IN @threadIds
                 ORDER BY lastpost DESC;";
