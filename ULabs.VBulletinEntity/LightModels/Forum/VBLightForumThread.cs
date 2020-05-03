@@ -13,11 +13,16 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public int AuthorUserId { get; set; }
         public string LastPosterUserName { get; set; }
         public int LastPosterUserId { get; set; }
+        public int LastPostTimeRaw { get; set; }
         public int ViewsCount { get; set; }
         public int CreatedTimeRaw { get; set; }
         public DateTime CreatedTime {
             get => CreatedTimeRaw.ToDateTime();
             set => CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
+        public DateTime LastPostTime {
+            get => LastPostTimeRaw.ToDateTime();
+            set => LastPostTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
         }
     }
 }
