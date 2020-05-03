@@ -158,9 +158,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             return forums.ToList();
         }
 
-        public ForumThreadsInfo GetForumThreadsInfo(List<int> forumIds, int page = 1, int threadsPerPage = 20) {
+        public PageContentInfo GetForumThreadsInfo(List<int> forumIds, int page = 1, int threadsPerPage = 20) {
             int offset = (page - 1) * threadsPerPage;
-            var info = new ForumThreadsInfo(page, threadsPerPage);
+            var info = new PageContentInfo(page, threadsPerPage);
 
             string sqlThreadIds = $@"
                 SELECT t.threadid
@@ -170,7 +170,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 ORDER BY t.lastpost DESC
                 LIMIT @offset, @threadsPerPage";
             var sqlThreadArgs = new { forumIds, offset, threadsPerPage };
-            info.ThreadIds = db.Query<int>(sqlThreadIds, sqlThreadArgs).ToList();
+            info.ContentIds = db.Query<int>(sqlThreadIds, sqlThreadArgs).ToList();
 
             var totalPagesArgs = new { forumIds, threadsPerPage };
             string sqlTotalPages = @"
@@ -182,17 +182,17 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             return info;
         }
-        public ForumThreadsInfo GetForumThreadsInfo(int forumId, int page = 1, int threadsPerPage = 20) {
+        public PageContentInfo GetForumThreadsInfo(int forumId, int page = 1, int threadsPerPage = 20) {
             return GetForumThreadsInfo(new List<int>() { forumId }, page, threadsPerPage);
         }
-        public List<VBLightForumThread> GetForumThreads(ForumThreadsInfo info) {
+        public List<VBLightForumThread> GetForumThreads(PageContentInfo info) {
             string sql = @"
                 SELECT threadid AS Id, title, open, replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, lastposter AS lastPosterUserName, 
                     lastposterid AS lastPosterUserId, views AS ViewsCount
                 FROM thread 
-                WHERE threadid IN @threadIds
+                WHERE threadid IN @ContentIds
                 ORDER BY lastpost DESC;";
-            return db.Query<VBLightForumThread>(sql, new { info.ThreadIds }).ToList();
+            return db.Query<VBLightForumThread>(sql, new { info.ContentIds }).ToList();
         }
     }
 }

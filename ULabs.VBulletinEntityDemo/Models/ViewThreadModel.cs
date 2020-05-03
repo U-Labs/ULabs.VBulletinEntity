@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ULabs.VBulletinEntity.LightManager;
+using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Forum;
 
 namespace ULabs.VBulletinEntityDemo.Models {
     public class ViewThreadModel {
         public VBLightThread Thread { get; set; }
-        public ReplysInfo ReplysInfo { get; set; }
+        public PageContentInfo ReplysInfo { get; set; }
         public List<VBLightPost> Replys { get; set; }
         public List<int> ThankedReplys { get; set; }
 

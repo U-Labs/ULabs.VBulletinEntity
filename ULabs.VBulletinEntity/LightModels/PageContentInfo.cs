@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ULabs.VBulletinEntity.LightModels.Forum {
-    public class ReplysInfo {
+namespace ULabs.VBulletinEntity.LightModels {
+    public class PageContentInfo {
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public int ReplysPerPage { get; set; }
-        public List<int> PostIds { get; set; }
-        public ReplysInfo(int currentPage, int replysPerPage) {
+        public List<int> ContentIds { get; set; }
+        public PageContentInfo(int currentPage, int replysPerPage) {
             CurrentPage = currentPage;
             ReplysPerPage = replysPerPage;
         }

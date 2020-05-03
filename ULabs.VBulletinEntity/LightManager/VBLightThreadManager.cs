@@ -114,15 +114,15 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         /// <param name="replysInfo"></param>
         /// <returns></returns>
-        public List<VBLightPost> GetReplys(ReplysInfo replysInfo) {
-            if (!replysInfo.PostIds.Any()) {
+        public List<VBLightPost> GetReplys(PageContentInfo replysInfo) {
+            if (!replysInfo.ContentIds.Any()) {
                 return new List<VBLightPost>();
             }
 
-            return GetPosts(replysInfo.PostIds);
+            return GetPosts(replysInfo.ContentIds);
         }
         /// <summary>
-        /// Load posts by ids without any relation to a thread. If you want to fetch the replys for a specific thread page, use <see cref="GetReplys(ReplysInfo)"/>.
+        /// Load posts by ids without any relation to a thread. If you want to fetch the replys for a specific thread page, use <see cref="GetReplys(PageContentInfo)"/>.
         /// </summary>
         public List<VBLightPost> GetPosts(List<int> postIds) {
             string sql = $@"
@@ -136,11 +136,11 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Fetches the invisible posts between the first and last post of the page for moderator/administrator usage
         /// </summary>
-        public List<VBLightPost> GetInvisibleReplys(int threadId, ReplysInfo replysInfo) {
+        public List<VBLightPost> GetInvisibleReplys(int threadId, PageContentInfo replysInfo) {
             var args = new {
                 threadId,
-                firstPagePostId = replysInfo.PostIds.FirstOrDefault(),
-                lastPagePostId = replysInfo.PostIds.LastOrDefault()
+                firstPagePostId = replysInfo.ContentIds.FirstOrDefault(),
+                lastPagePostId = replysInfo.ContentIds.LastOrDefault()
             };
             string sql = $@"
                 {postBaseQuery}
@@ -158,7 +158,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="includeDeleted">Include deleted posts for moderators or admin users</param>
         /// <param name="page">Number of the page to display, which is used for calculating which posts to skip</param>
         /// <param name="replysPerPage">How much replys should be present on a single page. VBulletins default is 9 (9 replys + firstpost = 19).</param>
-        public ReplysInfo GetReplysInfo(int threadId, int threadFirstPostId, int page = 1, int replysPerPage = 10) {
+        public PageContentInfo GetReplysInfo(int threadId, int threadFirstPostId, int page = 1, int replysPerPage = 10) {
             int offset = (page - 1) * replysPerPage;
             // The original replysPerPage is not touched for the pagination, since we don't count the posts rather than using VBs cache column for replys count
             int replysPerPageForPostIds = replysPerPage;
@@ -171,7 +171,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
 
             var postIdsArgs = new { threadId, offset, replysPerPageForPostIds, threadFirstPostId };
-            var info = new ReplysInfo(page, replysPerPage);
+            var info = new PageContentInfo(page, replysPerPage);
 
             string sqlPostIds = $@"
                 SELECT p.postid 
@@ -181,7 +181,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 AND p.visible = 1 
                 ORDER BY p.dateline
                 LIMIT @offset, @replysPerPageForPostIds";
-            info.PostIds = db.Query<int>(sqlPostIds, postIdsArgs)
+            info.ContentIds = db.Query<int>(sqlPostIds, postIdsArgs)
                 .ToList();
 
             var totalPagesArgs = new { threadId, replysPerPage };
