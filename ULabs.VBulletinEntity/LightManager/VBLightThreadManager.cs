@@ -210,18 +210,25 @@ namespace ULabs.VBulletinEntity.LightManager {
             return replys.ToList();
         }
         /// <summary>
-        /// Fetches the newest visible posts, without any grouping to the threads. Usefull for polling, when you want to fetch new posts after a certain timestamp.
+        /// Fetches the newest visible posts, without any grouping to the threads (if not threadId is specified). Usefull for polling, when you want to fetch new posts after a certain timestamp.
         /// </summary>
         /// <param name="afterTime">If this parameter is set, only posts with dateline > afterDateTime were fetched from the database</param>
-        public List<VBLightPost> GetNewestPosts(DateTime? afterTime = null, int count = 10) {
+        /// <param name="beforeTime">If this parameter is set, only posts with dateline less than beforeTime were fetched from the database</param>
+        /// <param name="threadId">You could specify a thread id to only fetch replys from those thread (optional)</param>
+        /// <param name="count">Limit the amout of data which is returned (default 10)</param>
+        public List<VBLightPost> GetNewestPosts(DateTime? afterTime = null, DateTime? beforeTime = null, int? threadId = null,int count = 10) {
             var args = new {
                 afterTimestamp = afterTime.HasValue ? afterTime.Value.ToUnixTimestamp() : 0,
+                beforeTimestamp = beforeTime.HasValue ? beforeTime.Value.ToUnixTimestamp() : 0,
+                threadId = threadId.HasValue ? threadId.Value : 0,
                 count
             };
             string sql = $@"
                 {postBaseQuery}
                 WHERE p.visible = 1 " +
-                (afterTime.HasValue ? " AND p.dateline > @afterTimestamp " : "") + @"
+                (afterTime.HasValue ? " AND p.dateline > @afterTimestamp " : "") +
+                (beforeTime.HasValue ? " AND p.dateline < @beforeTimestamp " : "") +
+                (threadId.HasValue ? " AND p.threadid = @threadId " : "") + @"
                 ORDER BY p.dateline DESC
                 LIMIT @count";
             var replys = db.Query(sql, postMappingFunc, args);
