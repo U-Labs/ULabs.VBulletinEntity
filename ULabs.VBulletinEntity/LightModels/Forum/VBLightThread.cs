@@ -9,6 +9,12 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
     public class VBLightThread {
         public int Id { get; set; }
         public string Title { get; set; }
+        public int CreatedTimeRaw { get; set; }
+        public DateTime CreatedTime {
+            get => CreatedTimeRaw.ToDateTime();
+            set => CreatedTimeRaw = DateTimeExtensions.ToUnixTimestampAsInt(value);
+        }
+
         public int LastPostTimeRaw { get; set; }
         public VBLightUser LastPoster { get; set; }
         // This entity has FirstPost and FirstPostProperty since we fetch the first post in an extra query instead of one single large join (would be too large and complex)
