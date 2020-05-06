@@ -668,16 +668,18 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="threadId">Id of the Thread</param>
         /// <param name="startPostTime">Timestamp of the first post on the page. Used as upper border (fetch posts AFTER this timestamp)</param>
         /// <param name="endPostTime">Timestamp of the last post on the page. Used as lower border (fetch posts BEFORE this timestamp). No border if set to 0 (for the last page)</param>
-        public List<VBLightDeletionLog> GetDeletionLog(int threadId, int startPostTime, int endPostTime = 0) {
+        public List<VBLightDeletionLog> GetDeletionLog(int threadId, int startPostTime, int endPostTime = 0, DeletionLogType type = DeletionLogType.Post) {
             string sql = @"
                 SELECT p.dateline AS PostPublishTimeRaw, dl.primaryid AS ContentId, dl.type, dl.userid, dl.username, dl.reason, dl.dateline AS TimeRaw
                 FROM post p, deletionlog dl
                 WHERE p.postid = dl.primaryid
                 AND p.threadid = @threadId
                 AND p.visible != 1
+                AND dl.type = @typeRaw
                 AND p.dateline >= @startPostTime " +
                (endPostTime > 0 ? "AND p.dateline <= @endPostTime" : "");
-            var args = new { threadId, startPostTime, endPostTime };
+            string typeRaw = type.ToString().ToLower();
+            var args = new { threadId, startPostTime, endPostTime, typeRaw };
             var replys = db.Query<VBLightDeletionLog>(sql, args);
             return replys.ToList();
         }
