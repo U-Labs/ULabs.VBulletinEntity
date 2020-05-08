@@ -2,7 +2,8 @@ version: '2'
 
 services:
   ul-vbentity:
-    build:
+    build: 
+      context: .
       args: 
         BAGET_API_KEY: ${BAGET_API_KEY}
         BAGET_URL: ${BAGET_URL}
