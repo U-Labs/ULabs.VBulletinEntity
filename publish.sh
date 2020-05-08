@@ -18,5 +18,6 @@ function publish() {
         fi
 }
 
+publish "/app/ULabs.VBulletinEntity.Shared" "ULabs.VBulletinEntity.Shared"
 publish "/app/ULabs.LightVBulletinEntity" "ULabs.LightVBulletinEntity"
 publish "/app/ULabs.VBulletinEntity" "ULabs.VBulletinEntity"
