@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using ULabs.LightVBulletinEntity.LightManager;
 
-namespace ULabs.VBulletinEntity.Attributes {
+namespace ULabs.LightVBulletinEntity.Attributes {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public class VBLightAuthorizeAttribute : Attribute, IResourceFilter {
         string loginRedirectUrl;

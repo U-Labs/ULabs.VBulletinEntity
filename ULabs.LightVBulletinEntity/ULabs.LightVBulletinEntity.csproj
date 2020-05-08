@@ -11,7 +11,7 @@
     <PackageTags>net-core,c-sharp,vbulletin,dapper,mysql,mariadb</PackageTags>
     <Description>A lightweight vBulletin 4 database abstraction layer for Dapper</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
