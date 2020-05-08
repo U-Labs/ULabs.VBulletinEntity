@@ -13,6 +13,13 @@ function publish() {
         then
                 echo "Not published yet: Start publishing!"
                 dotnet nuget push ${PROJECT_PATH}/bin/Debug/${packageFile} -s $URL -k ${BAGET_API_KEY}
+                publishRc=$?
+                echo "Publish rc = ${publishRc}"
+
+                if [ $publishRc -ne 0 ]; then
+                        echo "Nuget publish error: exit with $publishRc"
+                        exit $publishRc
+                fi
         else
                 echo "WARNING: Version ${version} was already published"
         fi
