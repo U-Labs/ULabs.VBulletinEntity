@@ -8,6 +8,7 @@ WORKDIR /app/ULabs.VBulletinEntity.Shared
 COPY ULabs.VBulletinEntity.Shared/ULabs.VBulletinEntity.Shared.csproj .
 RUN dotnet restore
 COPY ULabs.VBulletinEntity.Shared .
+RUN dotnet build
 
 WORKDIR /app/ULabs.VBulletinEntity
 COPY ULabs.VBulletinEntity/ULabs.VBulletinEntity.csproj .
