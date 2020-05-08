@@ -24,4 +24,4 @@ RUN dotnet build
 # Publishing happens in the entrypoint since we need network connection to BaGet
 COPY publish.sh /app
 RUN chmod +x /app/publish.sh
-ENTRYPOINT /app/publish.sh ${BAGET_API_KEY} 
+ENTRYPOINT /app/publish.sh ${BAGET_API_KEY} ${BAGET_URL}
