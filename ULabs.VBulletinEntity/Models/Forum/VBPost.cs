@@ -6,6 +6,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using System.Text.RegularExpressions;
 using ULabs.VBulletinEntity.Models.User;
+using ULabs.VBulletinEntity.Shared.Forum;
+using ULabs.VBulletinEntity.Shared.Tools;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.Models.Forum {
@@ -127,11 +129,6 @@ namespace ULabs.VBulletinEntity.Models.Forum {
             string cleanText = Regex.Replace(source, @"\p{Cs}", "");
             return cleanText;
         }
-    }
-
-    public enum VBPostVisibleState {
-        Visible = 1,
-        Deleted = 2
     }
 
     public enum VBPostHtmlState {

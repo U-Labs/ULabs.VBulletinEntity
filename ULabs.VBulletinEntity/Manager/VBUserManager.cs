@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntity.Models.User;
+using ULabs.VBulletinEntity.Shared.Permission;
 
 namespace ULabs.VBulletinEntity.Manager {
     public class VBUserManager {

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ULabs.VBulletinEntity.LightManager;
-using ULabs.VBulletinEntity.LightModels;
-using ULabs.VBulletinEntity.LightModels.Forum;
-using ULabs.VBulletinEntity.Models.Permission;
+using ULabs.LightVBulletinEntity.LightManager;
+using ULabs.LightVBulletinEntity.LightModels;
+using ULabs.LightVBulletinEntity.LightModels.Forum;
+using ULabs.VBulletinEntity.Shared.Permission;
 
 namespace ULabs.VBulletinEntityDemo.Models {
     public class LightDashboardModel {

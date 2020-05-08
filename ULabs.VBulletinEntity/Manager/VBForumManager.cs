@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Models.Forum;
-using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntity.Models.User;
+using ULabs.VBulletinEntity.Shared.Caching;
+using ULabs.VBulletinEntity.Shared.Permission;
 
 namespace ULabs.VBulletinEntity.Manager {
     public class VBForumManager {

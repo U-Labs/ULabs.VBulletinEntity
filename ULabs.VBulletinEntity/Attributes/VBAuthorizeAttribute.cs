@@ -4,7 +4,7 @@ using System;
 using System.Net;
 using ULabs.VBulletinEntity.Manager;
 
-namespace ULabs.VBulletinEntity.Attributes {
+namespace ULabs.LightVBulletinEntity.Attributes {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public class VBAuthorizeAttribute : Attribute, IResourceFilter {
         string loginRedirectUrl;

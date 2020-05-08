@@ -1,8 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
-using ULabs.VBulletinEntity.Models.Forum;
 using ULabs.VBulletinEntity.Models.User;
-using ULabs.VBulletinEntity.Tools;
+using ULabs.VBulletinEntity.Shared.Tools;
 
 namespace ULabs.VBulletinEntity.Models.AddOns {
     [Table("post_thanks")]

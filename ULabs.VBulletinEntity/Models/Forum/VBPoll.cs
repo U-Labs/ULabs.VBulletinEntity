@@ -4,6 +4,7 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using ULabs.VBulletinEntity.Tools;
+using ULabs.VBulletinEntity.Shared.Tools;
 
 namespace ULabs.VBulletinEntity.Models.Forum {
     [Table("poll")]

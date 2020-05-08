@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using ULabs.VBulletinEntity.Models.Forum;
+using ULabs.VBulletinEntity.Shared.Tools;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.Models.User {

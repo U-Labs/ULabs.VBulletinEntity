@@ -9,10 +9,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using ULabs.LightVBulletinEntity.Config;
 using ULabs.VBulletinEntity;
-using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Tools;
+using ULabs.LightVBulletinEntity;
+using ULabs.VBulletinEntity.Shared.Caching;
 
 namespace ULabs.VBulletinEntityDemo {
     public class Startup {
@@ -26,6 +28,10 @@ namespace ULabs.VBulletinEntityDemo {
             var vbConfig = new VBConfig(Configuration.GetValue<string>("VBCookieSalt"));
             services.AddVBDbContext<VBCache>(vbConfig, Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
             services.AddVBManagers(vbConfig.CookieSalt);
+
+            services.AddLightVBDbContext<VBCache>(vbConfig, Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+            services.AddLightVBManagers(vbConfig.CookieSalt, vbConfig.CookiePrefix);
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
