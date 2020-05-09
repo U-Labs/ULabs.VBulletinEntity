@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29123.88
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ULabs.VBulletinEntity", "ULabs.VBulletinEntity\ULabs.VBulletinEntity.csproj", "{680D09B3-559C-4DDF-B42C-9B3995979F62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ULabs.VBulletinEntity", "ULabs.VBulletinEntity\ULabs.VBulletinEntity.csproj", "{680D09B3-559C-4DDF-B42C-9B3995979F62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ULabs.VBulletinEntityDemo", "ULabs.VBulletinEntityDemo\ULabs.VBulletinEntityDemo.csproj", "{A1472B1B-2B00-47E1-A817-BDCF30CDA81E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ULabs.VBulletinEntityDemo", "ULabs.VBulletinEntityDemo\ULabs.VBulletinEntityDemo.csproj", "{A1472B1B-2B00-47E1-A817-BDCF30CDA81E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ULabs.VBulletinEntity.Shared", "ULabs.VBulletinEntity.Shared\ULabs.VBulletinEntity.Shared.csproj", "{3AA0D601-898C-4C4D-9273-38617DCD5ECE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{A1472B1B-2B00-47E1-A817-BDCF30CDA81E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1472B1B-2B00-47E1-A817-BDCF30CDA81E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1472B1B-2B00-47E1-A817-BDCF30CDA81E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AA0D601-898C-4C4D-9273-38617DCD5ECE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AA0D601-898C-4C4D-9273-38617DCD5ECE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AA0D601-898C-4C4D-9273-38617DCD5ECE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AA0D601-898C-4C4D-9273-38617DCD5ECE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -46,4 +46,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ULabs.VBulletinEntity.Shared\ULabs.VBulletinEntity.Shared.csproj" />
+  </ItemGroup>
+
 </Project>
