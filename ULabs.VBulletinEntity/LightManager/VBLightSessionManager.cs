@@ -9,7 +9,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ULabs.VBulletinEntity.Caching;
+using ULabs.VBulletinEntity.Shared.Caching;
 using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Session;
 using ULabs.VBulletinEntity.LightModels.User;

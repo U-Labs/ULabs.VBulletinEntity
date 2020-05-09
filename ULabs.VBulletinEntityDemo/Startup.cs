@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using ULabs.VBulletinEntity;
-using ULabs.VBulletinEntity.Caching;
+using ULabs.VBulletinEntity.Shared.Caching;
 using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Tools;
 

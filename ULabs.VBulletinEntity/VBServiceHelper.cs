@@ -7,7 +7,7 @@ using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ULabs.VBulletinEntity.Caching;
+using ULabs.VBulletinEntity.Shared.Caching;
 using ULabs.VBulletinEntity.LightManager;
 using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.Manager;

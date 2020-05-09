@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ULabs.VBulletinEntity.Caching;
+using ULabs.VBulletinEntity.Shared.Caching;
 using ULabs.VBulletinEntity.Models.AddOns;
 using ULabs.VBulletinEntity.Models.Forum;
 using ULabs.VBulletinEntity.Models.Manager;
