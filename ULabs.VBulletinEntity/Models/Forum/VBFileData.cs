@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ULabs.VBulletinEntity.Shared.Tools;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.Models.Forum {

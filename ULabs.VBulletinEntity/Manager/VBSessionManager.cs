@@ -6,11 +6,9 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using ULabs.LightVBulletinEntity.Config;
+using ULabs.VBulletinEntity.Caching;
 using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Models.User;
-using ULabs.VBulletinEntity.Shared.Caching;
-using ULabs.VBulletinEntity.Shared.Tools;
 using ULabs.VBulletinEntity.Tools;
 
 namespace ULabs.VBulletinEntity.Manager {

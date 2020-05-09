@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ULabs.LightVBulletinEntity.LightManager;
-using ULabs.LightVBulletinEntity.LightModels;
-using ULabs.LightVBulletinEntity.LightModels.Forum;
+using ULabs.VBulletinEntity.LightManager;
+using ULabs.VBulletinEntity.LightModels;
+using ULabs.VBulletinEntity.LightModels.Forum;
 
 namespace ULabs.VBulletinEntityDemo.Models {
     public class ViewThreadModel {

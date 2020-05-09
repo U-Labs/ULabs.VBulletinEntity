@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using ULabs.LightVBulletinEntity.LightManager;
-using ULabs.LightVBulletinEntity.LightModels.Forum;
-using ULabs.LightVBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Attributes;
+using ULabs.VBulletinEntity.LightManager;
+using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.Manager;
 using ULabs.VBulletinEntity.Models.Manager;
+using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntityDemo.Models;
-using ULabs.VBulletinEntity.Shared.Tools;
-using ULabs.VBulletinEntity.Shared.Forum;
+using ULabs.VBulletinEntity.Tools;
+using ULabs.VBulletinEntity.LightModels.User;
 
 namespace ULabs.VBulletinEntityDemo.Controllers {
     public class LightManagerController : Controller {

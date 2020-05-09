@@ -9,7 +9,6 @@ using ULabs.VBulletinEntity.Models.User;
 using ULabs.VBulletinEntity.Tools;
 using System.Web;
 using System.Linq;
-using ULabs.VBulletinEntity.Shared.Tools;
 
 namespace ULabs.VBulletinEntity.Models.Forum {
     [Table("thread")]

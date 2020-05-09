@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
-using ULabs.VBulletinEntity.Shared.Permission;
+using ULabs.VBulletinEntity.Models.Permission;
 
 namespace ULabs.VBulletinEntity.Models.Forum {
     [Table("forumpermission")]

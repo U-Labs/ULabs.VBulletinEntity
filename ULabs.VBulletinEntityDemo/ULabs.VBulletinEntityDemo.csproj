@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ULabs.LightVBulletinEntity\ULabs.LightVBulletinEntity.csproj" />
     <ProjectReference Include="..\ULabs.VBulletinEntity\ULabs.VBulletinEntity.csproj" />
   </ItemGroup>
 
