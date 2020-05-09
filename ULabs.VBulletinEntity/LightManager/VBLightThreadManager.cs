@@ -458,7 +458,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </code>
         /// </example>
         /// <param name="thread"><see cref="VBLightThread"></see> of <paramref name="replyModel"/> ThreadId. Optional to save one query in combination with 
-        /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"</param>
+        /// <see cref="VBLightThreadManager.CreateReplyCheck(LightCreateReplyModel, VBLightThread)"/></param>
         public CanReplyResult CreateReplyCheck(LightCreateReplyModel replyModel, VBLightThread thread = null) {
             if (thread == null) {
                 thread = Get(replyModel.ThreadId);
