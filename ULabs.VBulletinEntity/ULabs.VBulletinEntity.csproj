@@ -49,13 +49,4 @@
   <ItemGroup>
     <ProjectReference Include="..\ULabs.VBulletinEntity.Shared\ULabs.VBulletinEntity.Shared.csproj" PrivateAssets="all" />
   </ItemGroup>
-  
-  <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
-  </PropertyGroup>
-  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
-    <ItemGroup>
-      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
-    </ItemGroup>
-  </Target>
 </Project>
