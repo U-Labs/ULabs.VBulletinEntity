@@ -1,5 +1,5 @@
 FROM ul-vbentity-base AS sdk-image
-WORKDIR /app
+WORKDIR /app/ULabs.VBulletinEntity
 ARG BAGET_API_KEY
 ENV BAGET_API_KEY=${BAGET_API_KEY}
 

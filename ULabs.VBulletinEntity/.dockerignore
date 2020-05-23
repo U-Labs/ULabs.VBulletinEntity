@@ -1,3 +1,4 @@
 Dockerfile
 docker-compose.yml
-LICENSE.txt
+# Do NOT ignore the licence, its required during the build
+# LICENSE.txt
