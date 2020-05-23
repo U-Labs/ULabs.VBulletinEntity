@@ -4,7 +4,8 @@ ENV BAGET_API_KEY=${BAGET_API_KEY}
 ARG BAGET_URL
 ENV BAGET_URL=${BAGET_URL}
 
-COPY publish.sh /app
+WORKDIR /app
+COPY publish.sh .
 RUN chmod +x publish.sh
 
 WORKDIR /app/ULabs.VBulletinEntity.Shared
