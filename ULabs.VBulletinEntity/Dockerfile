@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.1 AS sdk-image
+FROM ul-vbentity-base AS sdk-image
 WORKDIR /app
 ARG BAGET_API_KEY
 ENV BAGET_API_KEY=${BAGET_API_KEY}
