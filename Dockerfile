@@ -14,4 +14,4 @@ RUN dotnet restore
 COPY ULabs.VBulletinEntity.Shared .
 RUN dotnet build
 
-RUN ["sh", "-c", "/app/docker-entrypoint.sh ${BAGET_API_KEY} ${BAGET_URL} /app/ULabs.VBulletinEntity.Shared ULabs.VBulletinEntity.Shared"]
+RUN ["sh", "-c", "/app/publish.sh ${BAGET_API_KEY} ${BAGET_URL} /app/ULabs.VBulletinEntity.Shared ULabs.VBulletinEntity.Shared"]
