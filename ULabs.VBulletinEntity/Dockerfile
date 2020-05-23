@@ -12,4 +12,4 @@ COPY . .
 RUN dotnet build
 
 # Publish script is copied from the base image
-RUN ["sh", "-c", "/app/publish.sh ${BAGET_API_KEY} ${BAGET_URL} /app/ULabs.VBulletinEntity ULabs.VBulletinEntity"]
+RUN ["sh", "-x", "-c", "/app/publish.sh ${BAGET_API_KEY} ${BAGET_URL} /app/ULabs.VBulletinEntity ULabs.VBulletinEntity"]
