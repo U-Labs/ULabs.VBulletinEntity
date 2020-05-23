@@ -14,4 +14,5 @@ RUN dotnet restore
 COPY ULabs.VBulletinEntity.Shared .
 RUN dotnet build
 
-RUN ["sh", "-c", "/app/publish.sh ${BAGET_API_KEY} ${BAGET_URL} /app/ULabs.VBulletinEntity.Shared ULabs.VBulletinEntity.Shared"]
+# We dont need publishing here because it's integrated into ULabs.VBulletinEntity. If ULabs.VBulletinEntity is imported, we automatically have ULabs.VBulletinEntity.Shared included, too.
+#RUN ["sh", "-c", "/app/publish.sh ${BAGET_API_KEY} ${BAGET_URL} /app/ULabs.VBulletinEntity.Shared ULabs.VBulletinEntity.Shared"]
