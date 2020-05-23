@@ -1,0 +1,26 @@
+﻿@using ULabs.VBulletinEntity.LightModels.User
+@model List<LightTopPoster>
+@{
+    ViewData["Title"] = "ShowTopPosters";
+}
+
+<h2>ShowTopPosters</h2>
+
+<style>
+    table th, table td {
+        padding: 5px;
+    }
+</style>
+
+<table border="1">
+    <tr>
+        <th>User</th>
+        <th>Posts</th>
+    </tr>
+    @foreach(var poster in Model) {
+        <tr>
+            <td>@Html.Raw(poster.UserNameFormatted)</td>
+            <td>@poster.IntervalPosts</td>
+        </tr>
+    }
+</table>

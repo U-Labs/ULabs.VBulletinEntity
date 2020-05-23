@@ -31,7 +31,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         };
         public VBLightUserManager(MySqlConnection db, IVBCache cache) {
             this.db = db;
-            this.cache=cache;
+            this.cache = cache;
         }
         ~VBLightUserManager() {
             db.Close();
@@ -134,6 +134,29 @@ namespace ULabs.VBulletinEntity.LightManager {
                 ORDER BY u.lastactivity DESC";
             var users = UserQuery(sqlCondition, new { lastActivityTs });
             return users;
+        }
+
+        /// <summary>
+        /// Fetches the top <paramref name="limit"/> Users with most non-deleted posts from the 1st day of the current month to today
+        /// </summary>
+        public List<LightTopPoster> GetTopPostersFromCurrentMonth(List<int> excludedThreadIds = null, int limit = 10) {
+            // WHERE p.dateline >= unix_timestamp(CURDATE() - INTERVAL 14 DAY)
+            string sql = @"
+                SELECT count(*) as intervalPosts, u.posts AS totalPosts, u.userid, u.username, u.avatarrevision AS avatarRevision,
+	                g.opentag, g.closetag,
+	                c.filename IS NOT NULL AS HasAvatar
+                FROM post p
+                LEFT JOIN `user` u ON (u.userid = p.userid)
+                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid)
+                WHERE p.dateline >= unix_timestamp(CAST(DATE_FORMAT(NOW() ,'%Y-%m-01') as DATE))
+                AND p.visible = 1
+                " + (excludedThreadIds != null ? " AND p.threadid NOT IN @excludedThreadIds " : "")  + @"
+                GROUP BY p.userid
+                ORDER BY count(*) DESC, u.joindate
+                LIMIT @limit";
+            var param = new { excludedThreadIds, limit };
+            return db.Query<LightTopPoster>(sql, param).ToList();
         }
     }
 }

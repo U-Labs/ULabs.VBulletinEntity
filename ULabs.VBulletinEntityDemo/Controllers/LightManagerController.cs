@@ -95,6 +95,10 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var threads = lightForumManager.GetForumThreads(info);
             return View(threads);
         }
+        public IActionResult ShowTopPosters() {
+            var posters = lightUserManager.GetTopPostersFromCurrentMonth(new List<int>() { 29780 });
+            return View(posters);
+        }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
             return Content("Youre authorized!");
