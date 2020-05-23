@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ULabs.VBulletinEntity\ULabs.VBulletinEntity.csproj" />
+    <ProjectReference Include="..\ULabs.VBulletinEntity\ULabs.VBulletinEntity.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
