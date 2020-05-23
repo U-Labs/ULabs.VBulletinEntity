@@ -6,6 +6,7 @@ services:
       context: ULabs.VBulletinEntity
       args: 
         BAGET_API_KEY: ${BAGET_API_KEY}
+        BAGET_URL: ${BAGET_URL}
     mem_limit: 1G
     networks:
       - ul-docker
