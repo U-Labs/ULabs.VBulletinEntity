@@ -19,6 +19,7 @@ pipeline {
     stages {
 		stage('Build and push NuGet package') {
 			steps {
+				sh 'docker build -t ul-vbentity-base .'
 				sh 'docker-compose up --build'
 			}
 		}
