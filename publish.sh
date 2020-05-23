@@ -1,7 +1,7 @@
 #!/bin/bash
 BAGET_API_KEY=$1
 BAGET_BASE_URL=$2
-PROJECT_PATH=$3
+FULL_PROJECT_PATH=$3
 PROJECT_NAME=$4
 
 function publish() {
@@ -27,7 +27,7 @@ function publish() {
     fi
 }
 
-publish $PROJECT_PATH $PROJECT_NAME
+publish $FULL_PROJECT_PATH $PROJECT_NAME
 #publish "/app/ULabs.VBulletinEntity.Shared" "ULabs.VBulletinEntity.Shared"
 #publish "/app/ULabs.LightVBulletinEntity" "ULabs.LightVBulletinEntity"
 #publish "/app/ULabs.VBulletinEntity" "ULabs.VBulletinEntity"
