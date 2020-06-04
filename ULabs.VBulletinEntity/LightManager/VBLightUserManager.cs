@@ -85,6 +85,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Loads private messages that were send to <paramref name="userId"/>
         /// </summary>
+        /// <param name="userId">Id of the user, where received messages should be fetched</param>
         /// <param name="readState">Filter the messages to read/unread or answered messages</param>
         /// <param name="count">Maximum amount of messages that would be returned</param>
         /// <param name="textPreviewWords">If set, the messages Text property will be an excerpt to this amound of workds. Setting to null gives the full content</param>

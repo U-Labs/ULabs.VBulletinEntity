@@ -99,6 +99,14 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var posters = lightUserManager.GetTopPostersFromCurrentMonth();
             return View(posters);
         }
+        public IActionResult NewestContent() {
+            const int count = 20;
+            var threads = lightThreadManager.GetNewestThreads(count);
+            var replys = lightThreadManager.GetNewestThreads(count: count, minReplyCount: 1, orderByLastPostDate: true)
+                .OrderBy(thread => thread.LastPostTime);
+            var kvp = new KeyValuePair<IEnumerable<VBLightThread>, IEnumerable<VBLightThread>>(threads, replys);
+            return View(kvp);
+        }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
             return Content("Youre authorized!");
