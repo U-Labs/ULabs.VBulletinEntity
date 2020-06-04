@@ -1,8 +1,5 @@
+# Build ARGS are provided by the base image
 FROM ul-vbentity-base AS sdk-image
-ARG BAGET_API_KEY
-ENV BAGET_API_KEY=${BAGET_API_KEY}
-ARG BAGET_URL
-ENV BAGET_URL=${BAGET_URL}
 
 WORKDIR /app/ULabs.VBulletinEntity
 COPY ULabs.VBulletinEntity.csproj .

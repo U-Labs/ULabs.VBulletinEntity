@@ -19,7 +19,7 @@ pipeline {
     stages {
 		stage('Build base image with shared project') {
 			steps {
-				sh 'docker build -t ul-vbentity-base .'
+				sh 'docker build -t ul-vbentity-base --build-arg BAGET_API_KEY=$BAGET_API_KEY --build-arg BAGET_URL=$BAGET_URL .'
 			}
 		}
 		stage('Build and push NuGet package') {
