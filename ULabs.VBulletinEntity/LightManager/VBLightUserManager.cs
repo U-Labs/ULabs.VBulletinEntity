@@ -81,6 +81,19 @@ namespace ULabs.VBulletinEntity.LightManager {
             var user = UserQuery("WHERE u.userid = @userId", new { userId });
             return user.FirstOrDefault();
         }
+        public LoginResult CheckPassword(string userName, string password) {
+            string sql = @"SELECT password, salt, username
+                FROM user
+                WHERE LOWER(username) = @userName";
+            var user = db.QueryFirstOrDefault(sql, new { userName });
+            if(user == null) {
+                return LoginResult.UserNotExisting;
+            }
+
+            //  includes/functions_login.php line 173: iif($password AND !$md5password, md5(md5($password) . $vbulletin->userinfo['salt']), '')
+            string hash = Hash.Md5($"{Hash.Md5(password)}{user.salt}");
+            return hash == user.password ? LoginResult.Success : LoginResult.BadPassword;
+        }
 
         /// <summary>
         /// Loads private messages that were send to <paramref name="userId"/>
