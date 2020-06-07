@@ -22,9 +22,7 @@ namespace ULabs.VBulletinEntity.Tools {
                 var watch = Stopwatch.StartNew();
                 WarmUpServices(services);
                 watch.Stop();
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"Database warmup took {watch.ElapsedMilliseconds} ms");
-                Console.ForegroundColor = ConsoleColor.Gray;
+                WriteColorized($"Database warmup took {watch.ElapsedMilliseconds} ms");
             }
             return webHost;
         }
@@ -76,22 +74,19 @@ namespace ULabs.VBulletinEntity.Tools {
         }
 
         public static void WarmUpRequest(string warmUpPath) {
+            var watch = Stopwatch.StartNew();
             string url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
             if (url.Contains("0.0.0.0")) {
                 url = url.Replace("0.0.0.0", "127.0.0.1");
             }
 
             Uri uri = new Uri(NormalizeUrl(url));
-
             var wc = (HttpWebRequest)WebRequest.Create(uri);
-            Console.WriteLine($"Warmup 1/2 to {uri}");
-            var resp = wc.GetResponse();
-
-            warmUpPath = $"{uri.ToString()}{warmUpPath}";
-            Console.WriteLine($"Warmup 2/2 to {warmUpPath}");
-            wc = (HttpWebRequest)WebRequest.Create(warmUpPath);
             wc.AllowAutoRedirect = true;
-            resp = wc.GetResponse();
+            wc.GetResponse();
+
+            watch.Stop();
+            WriteColorized($"Warmup request to to {uri} took {watch.ElapsedMilliseconds} ms");
         }
 
         static string NormalizeUrl(string url) {
@@ -99,6 +94,15 @@ namespace ULabs.VBulletinEntity.Tools {
                 url = url.Substring(0, url.Length - 1);
             }
             return url;
+        }
+
+        static void WriteColorized(string txt, ConsoleColor color = ConsoleColor.Cyan) {
+            lock (Console.Out) {
+                var oldColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(txt);
+                Console.ForegroundColor = oldColor;
+            }
         }
     }
 }
