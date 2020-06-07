@@ -81,7 +81,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             var user = UserQuery("WHERE u.userid = @userId", new { userId });
             return user.FirstOrDefault();
         }
-        public LoginResult CheckPassword(string userName, string password) {
+
+        #region Login
+        public LoginResult CheckPassword(string userName, string password, string ipAddress, TimeSpan strikeBorder, int strikesLimit = 5) {
             string sql = @"SELECT password, salt, username
                 FROM user
                 WHERE LOWER(username) = @userName";
@@ -90,10 +92,38 @@ namespace ULabs.VBulletinEntity.LightManager {
                 return LoginResult.UserNotExisting;
             }
 
+            // COUNT would be enough here. But making GetStrikes generic to list and count would be cause more overhead than the few rows here (which is not called very often)
+            var strikes = GetStrikes(ipAddress, DateTime.Now.Subtract(strikeBorder));
+            if(strikes.Count() >= strikesLimit) {
+                return LoginResult.StrikesLimitReached;
+            }
+
             //  includes/functions_login.php line 173: iif($password AND !$md5password, md5(md5($password) . $vbulletin->userinfo['salt']), '')
             string hash = Hash.Md5($"{Hash.Md5(password)}{user.salt}");
-            return hash == user.password ? LoginResult.Success : LoginResult.BadPassword;
+            if(hash != user.password) {
+                LogStrike(ipAddress, userName);
+                return LoginResult.BadPassword;
+            }
+            return LoginResult.Success;
         }
+        public List<VBLightLoginStrike> GetStrikes(string ipAddress, DateTime border) {
+            string sql = @"SELECT striketime AS TimeRaw, strikeip AS IpAddress, username
+                FROM strikes
+                WHERE strikeip = @ipAddress
+                AND striketime >= @border";
+            var args = new {
+                ipAddress,
+                border = border.ToUnixTimestamp()
+            };
+            return db.Query<VBLightLoginStrike>(sql, args).ToList();
+        }
+        public void LogStrike(string ipAddress, string userName) {
+            string sql = @"INSERT INTO strikes(striketime, strikeip, username)
+                VALUES(UNIX_TIMESTAMP(), @ipAddress, @userName)";
+            var args = new { ipAddress, userName };
+            db.Query(sql, args);
+        }
+        #endregion
 
         /// <summary>
         /// Loads private messages that were send to <paramref name="userId"/>

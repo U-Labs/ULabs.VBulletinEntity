@@ -6,6 +6,7 @@ namespace ULabs.VBulletinEntity.LightModels.User {
     public enum LoginResult {
         Success,
         UserNotExisting,
-        BadPassword
+        BadPassword,
+        StrikesLimitReached
     }
 }
