@@ -83,28 +83,30 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         #region Login
-        public LoginResult CheckPassword(string userName, string password, string ipAddress, TimeSpan strikeBorder, int strikesLimit = 5) {
+        public CheckPasswordResult CheckPassword(string userName, string password, string cookieSalt, string ipAddress, TimeSpan strikeBorder, int strikesLimit = 5) {
             string sql = @"SELECT password, salt, username
                 FROM user
                 WHERE LOWER(username) = @userName";
             var user = db.QueryFirstOrDefault(sql, new { userName });
             if(user == null) {
-                return LoginResult.UserNotExisting;
+                return new CheckPasswordResult(LoginResult.UserNotExisting);
             }
 
             // COUNT would be enough here. But making GetStrikes generic to list and count would be cause more overhead than the few rows here (which is not called very often)
             var strikes = GetStrikes(ipAddress, DateTime.Now.Subtract(strikeBorder));
             if(strikes.Count() >= strikesLimit) {
-                return LoginResult.StrikesLimitReached;
+                return new CheckPasswordResult(LoginResult.StrikesLimitReached);
             }
 
             //  includes/functions_login.php line 173: iif($password AND !$md5password, md5(md5($password) . $vbulletin->userinfo['salt']), '')
             string hash = Hash.Md5($"{Hash.Md5(password)}{user.salt}");
             if(hash != user.password) {
                 LogStrike(ipAddress, userName);
-                return LoginResult.BadPassword;
+                return new CheckPasswordResult(LoginResult.BadPassword);
             }
-            return LoginResult.Success;
+            var result = new CheckPasswordResult(LoginResult.Success);
+            result.CookiePassword = Hash.Md5($"{user.password}{cookieSalt}");
+            return result;
         }
         public List<VBLightLoginStrike> GetStrikes(string ipAddress, DateTime border) {
             string sql = @"SELECT striketime AS TimeRaw, strikeip AS IpAddress, username
