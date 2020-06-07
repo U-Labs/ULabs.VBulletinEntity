@@ -84,7 +84,7 @@ namespace ULabs.VBulletinEntity.LightManager {
 
         #region Login
         public CheckPasswordResult CheckPassword(string userName, string password, string cookieSalt, string ipAddress, TimeSpan strikeBorder, int strikesLimit = 5) {
-            string sql = @"SELECT password, salt, username
+            string sql = @"SELECT password, salt, username, userId
                 FROM user
                 WHERE LOWER(username) = @userName";
             var user = db.QueryFirstOrDefault(sql, new { userName });
@@ -106,6 +106,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
             var result = new CheckPasswordResult(LoginResult.Success);
             result.CookiePassword = Hash.Md5($"{user.password}{cookieSalt}");
+            result.UserId = (int)user.userId;
             return result;
         }
         public List<VBLightLoginStrike> GetStrikes(string ipAddress, DateTime border) {
