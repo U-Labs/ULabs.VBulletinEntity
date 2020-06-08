@@ -34,7 +34,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                     string sql = @"
                         SELECT varname, value
                         FROM setting
-                        WHERE varname IN('bburl', 'recycle_forum', 'maxposts', 'cookiedomain')";
+                        WHERE varname IN('bburl', 'recycle_forum', 'maxposts', 'cookiedomain', 'redirect_whitelist')";
                     var rawSettings = db.Query(sql).ToDictionary(
                         row => (string)row.varname,
                         row => (string)row.value
