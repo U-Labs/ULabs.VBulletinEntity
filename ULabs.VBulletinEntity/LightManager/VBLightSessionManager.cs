@@ -246,7 +246,11 @@ namespace ULabs.VBulletinEntity.LightManager {
             db.Execute(sql, args);
             return args.sessionHash;
         }
-
+        public void Delete(string sessionHash) {
+            string sql = @"DELETE FROM session
+                WHERE sessionhash = @sessionHash";
+            db.Query(sql, new { sessionHash });
+        }
         public string GetAvatarUrl(int? userId, int? avatarRevision, bool hasCustomAvatar) {
             if (!userId.HasValue || !hasCustomAvatar) {
                 // ToDo: VB has not setting for the default Avatar. We should specify this in custom settings somewhere
