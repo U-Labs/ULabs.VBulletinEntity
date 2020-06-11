@@ -100,6 +100,12 @@ namespace ULabs.VBulletinEntity.LightManager {
 
         #region PrivateMessages
         List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
+            string additionalWhere = @"AND pm.userid = @userId " +
+                (readState != null ? $"AND pm.messageread = {(int)readState.Value}" : "");
+            return GetPrivateMessagesBuilder(userId, additionalWhere, count, textPreviewWords);
+        }
+
+        List<VBLightPrivateMessage> GetPrivateMessagesBuilder(int userId, string additionalConditions, int count = 10, int? textPreviewWords = null) {
             Func<VBLightPrivateMessage, VBLightUser, VBLightUserGroup, VBLightPrivateMessage> mappingFunc = (pm, user, group) => {
                 pm.FromUser = user;
                 pm.FromUser.PrimaryUserGroup = group;
@@ -117,14 +123,12 @@ namespace ULabs.VBulletinEntity.LightManager {
                 LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
                 LEFT JOIN customavatar c ON(c.userid = u.userid)
                 WHERE pm.pmtextid = txt.pmtextid 
+                AND pm.userid = @userId
                 {additionalConditions}
-                AND pm.userid = @userId " +
-                (readState != null ? "AND pm.messageread = @readStateRaw " : "") + @"
                 ORDER BY txt.dateline DESC
                 LIMIT @count";
 
-            int readStateRaw = (readState.HasValue ? (int)readState.Value : 0);
-            var args = new { userId, readStateRaw, textPreviewWords, count };
+            var args = new { userId, textPreviewWords, count };
             var pms = db.Query(sql, mappingFunc, args);
             return pms.ToList();
         }
@@ -136,21 +140,44 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="readState">Filter the messages to read/unread or answered messages</param>
         /// <param name="count">Maximum amount of messages that would be returned</param>
         /// <param name="textPreviewWords">If set, the messages Text property will be an excerpt to this amound of workds. Setting to null gives the full content</param>
-        public List<VBLightPrivateMessage> GetReceivedPrivateMessages(int userId, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
+        public List<VBLightPrivateMessage> GetPrivateMessages(int userId, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
             return GetPrivateMessages(userId, "AND pm.folderid != -1", readState, count, textPreviewWords);
         }
         /// <summary>
         /// Fetches PM conversations (without the replys) for display in the inbox
         /// </summary>
-        /// <param name="userId">Id of the target user, which is the recipient of the PMs</param>
-        /// <param name="count">Maximum amount of messages to return</param>
-        /// <param name="textPreviewWords">If not null, it will return a preview of the first conversation message</param>
-        public List<VBLightPrivateMessage> GetReceivedPrivateMessagesConversations(int userId, int count = 10, int? textPreviewWords = null) {
-            return GetPrivateMessages(userId, "AND pm.parentpmid = 0", readState: null, count, textPreviewWords);
+        public List<VBLightPrivateMessage> GetPrivateMessagesConversations(int userId, PageContentInfo pageInfo, int? textPreviewWords = null) {
+            string contentIdsRaw = string.Join(",", pageInfo.ContentIds);
+            return GetPrivateMessages(userId, $"AND pm.parentpmid = 0 AND pm.pmid IN({contentIdsRaw})", textPreviewWords: textPreviewWords);
+        }
+
+        public PageContentInfo GetPrivateMessagesConversationsInfo(int userId, int page = 1, int conversationsPerPage = 10) {
+            int offset = (page - 1) * conversationsPerPage;
+            var info = new PageContentInfo(page, conversationsPerPage);
+            string fromWhereSql = @"FROM pm, pmtext AS txt
+                WHERE pm.pmtextid = txt.pmtextid 
+                AND pm.userid = @userId
+                AND pm.parentpmid = 0
+                AND pm.folderid != -1";
+
+            var args = new { userId, offset, conversationsPerPage };
+            string pmIds = $@"
+                SELECT pm.pmid
+                {fromWhereSql}
+                ORDER BY txt.dateline DESC
+                LIMIT @offset, @conversationsPerPage";
+            info.ContentIds = db.Query<int>(pmIds, args)
+                .ToList();
+
+            string sqlTotalPages = $@"
+                SELECT CEIL(COUNT(*)/ @conversationsPerPage) AS pages
+                {fromWhereSql}";
+            info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, args);
+            return info;
         }
 
         /// <summary>
-        /// Same as <see cref="GetReceivedPrivateMessages(int, VBPrivateMessageReadState?, int, int?)"/> but counts only the matching pms instead of fetching their data
+        /// Same as <see cref="GetPrivateMessages(int, VBPrivateMessageReadState?, int, int?)"/> but counts only the matching pms instead of fetching their data
         /// </summary>
         public int CountUnreadPrivateMessages(int userId, VBPrivateMessageReadState? readState = null) {
             string sql = @"
