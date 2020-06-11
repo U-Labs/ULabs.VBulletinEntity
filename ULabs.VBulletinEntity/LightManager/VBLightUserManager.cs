@@ -148,7 +148,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         public List<VBLightPrivateMessage> GetPrivateMessagesConversations(int userId, PageContentInfo pageInfo, int? textPreviewWords = null) {
             string contentIdsRaw = string.Join(",", pageInfo.ContentIds);
-            return GetPrivateMessages(userId, $"AND pm.parentpmid = 0 AND pm.pmid IN({contentIdsRaw})", textPreviewWords: textPreviewWords);
+            // Logically we dont need any count because we have not more than RowsPerPage ids. Its just passed to keep GetPrivateMessages flexible without being over complicated.
+            return GetPrivateMessages(userId, $"AND pm.pmid IN({contentIdsRaw})", count: pageInfo.RowsPerPage, textPreviewWords: textPreviewWords);
         }
 
         public PageContentInfo GetPrivateMessagesConversationsInfo(int userId, int page = 1, int conversationsPerPage = 10) {
