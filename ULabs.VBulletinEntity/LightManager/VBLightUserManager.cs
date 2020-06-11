@@ -134,7 +134,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             var pms = db.Query(sql, pmMappingFunc, args);
             return pms.ToList();
         }
-        List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState = null, int count = 10, int textPreviewWords = 0) {
+        List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState, int count, int textPreviewWords) {
             string additionalWhere = $@"{additionalConditions}
                 AND pm.userid = {userId} " +
                 (readState != null ? $"AND pm.messageread = {(int)readState.Value}" : "");
@@ -145,11 +145,18 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Loads private messages that were send to <paramref name="userId"/>
         /// </summary>
         /// <param name="userId">Id of the user, where received messages should be fetched</param>
+        /// <param name="folderId">Filter only received messages inside a specific folder. If null, all received (not send) messages would be shown</param>
         /// <param name="readState">Filter the messages to read/unread or answered messages</param>
         /// <param name="count">Maximum amount of messages that would be returned</param>
         /// <param name="textPreviewWords">If set, the messages Text property will be an excerpt to this amound of workds. Setting to null gives the full content</param>
-        public List<VBLightPrivateMessage> GetPrivateMessages(int userId, VBPrivateMessageReadState? readState = null, int count = 10, int textPreviewWords = 0) {
-            return GetPrivateMessages(userId, "AND pm.folderid != -1", readState, count, textPreviewWords);
+        public List<VBLightPrivateMessage> GetPrivateMessages(int userId, int? folderId = null, VBPrivateMessageReadState? readState = null, int count = 10, int textPreviewWords = 0) {
+            string additionalSqlWhere = "AND ";
+            if(folderId == null) {
+                additionalSqlWhere += "pm.folderid != -1";
+            }else {
+                additionalSqlWhere += $"pm.folderid = {folderId.Value}";
+            }
+            return GetPrivateMessages(userId, additionalSqlWhere, readState, count, textPreviewWords);
         }
 
         public PageContentInfo GetPrivateMessagesConversationsInfo(int userId, int page = 1, int conversationsPerPage = 10) {
@@ -182,7 +189,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         public List<VBLightPrivateMessage> GetPrivateMessagesConversations(int userId, PageContentInfo pageInfo, int textPreviewWords = 0) {
             string contentIdsRaw = string.Join(",", pageInfo.ContentIds);
             // Logically we dont need any count because we have not more than RowsPerPage ids. Its just passed to keep GetPrivateMessages flexible without being over complicated.
-            return GetPrivateMessages(userId, $"AND pm.pmid IN({contentIdsRaw})", count: pageInfo.RowsPerPage, textPreviewWords: textPreviewWords);
+            return GetPrivateMessages(userId, $"AND pm.pmid IN({contentIdsRaw})", readState: null, count: pageInfo.RowsPerPage, textPreviewWords: textPreviewWords);
         }
         /// <summary>
         /// Fetches the entire conversation of PMs, which could be used to display it like a chat (newest messages at the top)
