@@ -100,7 +100,8 @@ namespace ULabs.VBulletinEntity.LightManager {
 
         #region PrivateMessages
         List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
-            string additionalWhere = @"AND pm.userid = @userId " +
+            string additionalWhere = $@"{additionalConditions}
+                AND pm.userid = @userId " +
                 (readState != null ? $"AND pm.messageread = {(int)readState.Value}" : "");
             return GetPrivateMessagesBuilder(userId, additionalWhere, count, textPreviewWords);
         }
