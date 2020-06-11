@@ -13,6 +13,7 @@ using ULabs.VBulletinEntity.LightModels;
 using ULabs.VBulletinEntity.LightModels.Session;
 using ULabs.VBulletinEntity.LightModels.User;
 using ULabs.VBulletinEntity.Tools;
+using System.Dynamic;
 
 namespace ULabs.VBulletinEntity.LightManager {
     public class VBLightUserManager {
@@ -99,39 +100,45 @@ namespace ULabs.VBulletinEntity.LightManager {
         #endregion
 
         #region PrivateMessages
-        List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
-            string additionalWhere = $@"{additionalConditions}
-                AND pm.userid = @userId " +
-                (readState != null ? $"AND pm.messageread = {(int)readState.Value}" : "");
-            return GetPrivateMessagesBuilder(userId, additionalWhere, count, textPreviewWords);
-        }
-
-        List<VBLightPrivateMessage> GetPrivateMessagesBuilder(int userId, string additionalConditions, int count = 10, int? textPreviewWords = null) {
-            Func<VBLightPrivateMessage, VBLightUser, VBLightUserGroup, VBLightPrivateMessage> mappingFunc = (pm, user, group) => {
-                pm.FromUser = user;
-                pm.FromUser.PrimaryUserGroup = group;
-                return pm;
-            };
-            string textSelectColumn = (textPreviewWords.HasValue ? "SUBSTRING_INDEX(txt.message, ' ', @textPreviewWords)" : "txt.message");
-            // folder -1 is the outgoing mail folder. The filter avoids that we get messages send by the current user
+        Func<VBLightPrivateMessage, VBLightUser, VBLightUserGroup, VBLightPrivateMessage> pmMappingFunc = (pm, user, group) => {
+            pm.FromUser = user;
+            pm.FromUser.PrimaryUserGroup = group;
+            return pm;
+        };
+        string pmJoinsSql = @"LEFT JOIN user u ON(u.userid = txt.fromuserid)
+                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid)";
+        string GetPrivateMessagesSelectQuery(bool fullTextWithoutPreview = false, int textPreviewWords = 0) {
+            string textColumn = (fullTextWithoutPreview ? "txt.message" : "SUBSTRING_INDEX(txt.message, ' ', @textPreviewWords)");
             string sql = $@"
                 SELECT pm.pmid, pm.pmtextid, pm.parentpmid, pm.messageread AS MessageReadRaw, 
-                {textSelectColumn} AS text, txt.title, txt.dateline AS SendTimeRaw, txt.fromuserid AS Id,
+                {textColumn} AS text, txt.title, txt.dateline AS SendTimeRaw, txt.fromuserid AS Id,
                 u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, c.filename IS NOT NULL AS HasAvatar,
-                            g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions 
+                g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions";
+            return sql;
+        }
+        List<VBLightPrivateMessage> GetPrivateMessagesBuilder(string additionalConditions, string additionalJoins = "", int count = 10, bool fullTextWithoutPreview = false, int textPreviewWords = 0) {
+            // folder -1 is the outgoing mail folder. The filter avoids that we get messages send by the current user
+            string selectSql = GetPrivateMessagesSelectQuery(fullTextWithoutPreview, textPreviewWords);
+            string sql = $@"
+                {selectSql}
                 FROM pm, pmtext AS txt
-                LEFT JOIN user u ON(u.userid = txt.fromuserid)
-                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
-                LEFT JOIN customavatar c ON(c.userid = u.userid)
+                {pmJoinsSql}
+                {additionalJoins}
                 WHERE pm.pmtextid = txt.pmtextid 
-                AND pm.userid = @userId
                 {additionalConditions}
                 ORDER BY txt.dateline DESC
                 LIMIT @count";
 
-            var args = new { userId, textPreviewWords, count };
-            var pms = db.Query(sql, mappingFunc, args);
+            var args = new { textPreviewWords, count };
+            var pms = db.Query(sql, pmMappingFunc, args);
             return pms.ToList();
+        }
+        List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState = null, int count = 10, int textPreviewWords = 0) {
+            string additionalWhere = $@"{additionalConditions}
+                AND pm.userid = {userId} " +
+                (readState != null ? $"AND pm.messageread = {(int)readState.Value}" : "");
+            return GetPrivateMessagesBuilder(additionalWhere, count: count, textPreviewWords: textPreviewWords);
         }
 
         /// <summary>
@@ -141,16 +148,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="readState">Filter the messages to read/unread or answered messages</param>
         /// <param name="count">Maximum amount of messages that would be returned</param>
         /// <param name="textPreviewWords">If set, the messages Text property will be an excerpt to this amound of workds. Setting to null gives the full content</param>
-        public List<VBLightPrivateMessage> GetPrivateMessages(int userId, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
+        public List<VBLightPrivateMessage> GetPrivateMessages(int userId, VBPrivateMessageReadState? readState = null, int count = 10, int textPreviewWords = 0) {
             return GetPrivateMessages(userId, "AND pm.folderid != -1", readState, count, textPreviewWords);
-        }
-        /// <summary>
-        /// Fetches PM conversations (without the replys) for display in the inbox
-        /// </summary>
-        public List<VBLightPrivateMessage> GetPrivateMessagesConversations(int userId, PageContentInfo pageInfo, int? textPreviewWords = null) {
-            string contentIdsRaw = string.Join(",", pageInfo.ContentIds);
-            // Logically we dont need any count because we have not more than RowsPerPage ids. Its just passed to keep GetPrivateMessages flexible without being over complicated.
-            return GetPrivateMessages(userId, $"AND pm.pmid IN({contentIdsRaw})", count: pageInfo.RowsPerPage, textPreviewWords: textPreviewWords);
         }
 
         public PageContentInfo GetPrivateMessagesConversationsInfo(int userId, int page = 1, int conversationsPerPage = 10) {
@@ -176,6 +175,33 @@ namespace ULabs.VBulletinEntity.LightManager {
                 {fromWhereSql}";
             info.TotalPages = db.QueryFirstOrDefault<int>(sqlTotalPages, args);
             return info;
+        }
+        /// <summary>
+        /// Fetches PM conversations (without the replys) for display in the inbox
+        /// </summary>
+        public List<VBLightPrivateMessage> GetPrivateMessagesConversations(int userId, PageContentInfo pageInfo, int textPreviewWords = 0) {
+            string contentIdsRaw = string.Join(",", pageInfo.ContentIds);
+            // Logically we dont need any count because we have not more than RowsPerPage ids. Its just passed to keep GetPrivateMessages flexible without being over complicated.
+            return GetPrivateMessages(userId, $"AND pm.pmid IN({contentIdsRaw})", count: pageInfo.RowsPerPage, textPreviewWords: textPreviewWords);
+        }
+        /// <summary>
+        /// Fetches the entire conversation of PMs, which could be used to display it like a chat (newest messages at the top)
+        /// </summary>
+        /// <param name="firstPmId">Id of the first PM in this conversation (has no parent), which is used to fetch the child messages</param>
+        /// <param name="count">Maximum amount of messages fetched to limit long conversations</param>
+        public List<VBLightPrivateMessage> GetConversation(int firstPmId, int count = 500) {
+            string sql = $@"{GetPrivateMessagesSelectQuery(fullTextWithoutPreview: true)}
+                FROM pm AS mainPm
+                LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid OR pm.pmid = mainPm.pmid)
+                LEFT JOIN pmtext txt ON(pm.pmtextid = txt.pmtextid)
+                {pmJoinsSql}
+                WHERE mainPm.pmid = @firstPmId
+                AND pm.folderid = 0
+                ORDER BY txt.dateline DESC
+                LIMIT @count";
+            var args = new { firstPmId, count };
+            var conversationPms = db.Query(sql, pmMappingFunc, args);
+            return conversationPms.ToList();
         }
 
         /// <summary>
