@@ -139,6 +139,15 @@ namespace ULabs.VBulletinEntity.LightManager {
         public List<VBLightPrivateMessage> GetReceivedPrivateMessages(int userId, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
             return GetPrivateMessages(userId, "AND pm.folderid != -1", readState, count, textPreviewWords);
         }
+        /// <summary>
+        /// Fetches PM conversations (without the replys) for display in the inbox
+        /// </summary>
+        /// <param name="userId">Id of the target user, which is the recipient of the PMs</param>
+        /// <param name="count">Maximum amount of messages to return</param>
+        /// <param name="textPreviewWords">If not null, it will return a preview of the first conversation message</param>
+        public List<VBLightPrivateMessage> GetReceivedPrivateMessagesConversations(int userId, int count = 10, int? textPreviewWords = null) {
+            return GetPrivateMessages(userId, "AND pm.parentpmid = 0", readState: null, count, textPreviewWords);
+        }
 
         /// <summary>
         /// Same as <see cref="GetReceivedPrivateMessages(int, VBPrivateMessageReadState?, int, int?)"/> but counts only the matching pms instead of fetching their data
