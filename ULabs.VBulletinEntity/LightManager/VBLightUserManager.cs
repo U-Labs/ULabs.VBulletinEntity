@@ -37,36 +37,6 @@ namespace ULabs.VBulletinEntity.LightManager {
             db.Close();
         }
 
-        List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
-            Func<VBLightPrivateMessage, VBLightUser, VBLightUserGroup, VBLightPrivateMessage> mappingFunc = (pm, user, group) => {
-                pm.FromUser = user;
-                pm.FromUser.PrimaryUserGroup = group;
-                return pm;
-            };
-            string textSelectColumn = (textPreviewWords.HasValue ? "SUBSTRING_INDEX(txt.message, ' ', @textPreviewWords)" : "txt.message");
-            // folder -1 is the outgoing mail folder. The filter avoids that we get messages send by the current user
-            string sql = $@"
-                SELECT pm.pmid, pm.pmtextid, pm.parentpmid, pm.messageread AS MessageReadRaw, 
-                {textSelectColumn} AS text, txt.title, txt.dateline AS SendTimeRaw, txt.fromuserid AS Id,
-                u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, c.filename IS NOT NULL AS HasAvatar,
-                            g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions 
-                FROM pm, pmtext AS txt
-                LEFT JOIN user u ON(u.userid = txt.fromuserid)
-                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
-                LEFT JOIN customavatar c ON(c.userid = u.userid)
-                WHERE pm.pmtextid = txt.pmtextid 
-                {additionalConditions}
-                AND pm.userid = @userId " +
-                (readState != null ? "AND pm.messageread = @readStateRaw " : "") + @"
-                ORDER BY txt.dateline DESC
-                LIMIT @count";
-
-            int readStateRaw = (readState.HasValue ? (int)readState.Value : 0);
-            var args = new { userId, readStateRaw, textPreviewWords, count };
-            var pms = db.Query(sql, mappingFunc, args);
-            return pms.ToList();
-        }
-
         List<VBLightUser> UserQuery(string sqlConditions, object param = null) {
             string sql = $@"
                 SELECT {UserColumnSql}
@@ -128,6 +98,37 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
         #endregion
 
+        #region PrivateMessages
+        List<VBLightPrivateMessage> GetPrivateMessages(int userId, string additionalConditions, VBPrivateMessageReadState? readState = null, int count = 10, int? textPreviewWords = null) {
+            Func<VBLightPrivateMessage, VBLightUser, VBLightUserGroup, VBLightPrivateMessage> mappingFunc = (pm, user, group) => {
+                pm.FromUser = user;
+                pm.FromUser.PrimaryUserGroup = group;
+                return pm;
+            };
+            string textSelectColumn = (textPreviewWords.HasValue ? "SUBSTRING_INDEX(txt.message, ' ', @textPreviewWords)" : "txt.message");
+            // folder -1 is the outgoing mail folder. The filter avoids that we get messages send by the current user
+            string sql = $@"
+                SELECT pm.pmid, pm.pmtextid, pm.parentpmid, pm.messageread AS MessageReadRaw, 
+                {textSelectColumn} AS text, txt.title, txt.dateline AS SendTimeRaw, txt.fromuserid AS Id,
+                u.username AS UserName, u.usertitle AS UserTitle, u.lastactivity AS LastActivityRaw, u.avatarrevision AS AvatarRevision, c.filename IS NOT NULL AS HasAvatar,
+                            g.usergroupid as Id, g.opentag as OpenTag, g.closetag as CloseTag, g.usertitle as UserTitle, g.adminpermissions as AdminPermissions 
+                FROM pm, pmtext AS txt
+                LEFT JOIN user u ON(u.userid = txt.fromuserid)
+                LEFT JOIN usergroup g ON(g.usergroupid = u.usergroupid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid)
+                WHERE pm.pmtextid = txt.pmtextid 
+                {additionalConditions}
+                AND pm.userid = @userId " +
+                (readState != null ? "AND pm.messageread = @readStateRaw " : "") + @"
+                ORDER BY txt.dateline DESC
+                LIMIT @count";
+
+            int readStateRaw = (readState.HasValue ? (int)readState.Value : 0);
+            var args = new { userId, readStateRaw, textPreviewWords, count };
+            var pms = db.Query(sql, mappingFunc, args);
+            return pms.ToList();
+        }
+
         /// <summary>
         /// Loads private messages that were send to <paramref name="userId"/>
         /// </summary>
@@ -154,6 +155,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             int count = db.QueryFirstOrDefault<int>(sql, new { userId, readStateRaw });
             return count;
         }
+        #endregion
 
         /// <summary>
         /// Fetches the unread thanks counter from the users table to avoid getting cached information from the session (better as purging the more complex query there)
