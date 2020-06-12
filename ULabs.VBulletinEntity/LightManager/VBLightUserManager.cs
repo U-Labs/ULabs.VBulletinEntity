@@ -195,18 +195,20 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Fetches the entire conversation of PMs, which could be used to display it like a chat (newest messages at the top)
         /// </summary>
         /// <param name="firstPmId">Id of the first PM in this conversation (has no parent), which is used to fetch the child messages</param>
+        /// <param name="readingUserId">Id of the user that reads the conversation. Used to filter messages which were send to multiple users</param>
         /// <param name="count">Maximum amount of messages fetched to limit long conversations</param>
-        public List<VBLightPrivateMessage> GetConversation(int firstPmId, int count = 500) {
+        public List<VBLightPrivateMessage> GetConversation(int firstPmId, int readingUserId, int count = 500) {
             string sql = $@"{GetPrivateMessagesSelectQuery(fullTextWithoutPreview: true)}
                 FROM pm AS mainPm
-                LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid OR pm.pmid = mainPm.pmid)
+                LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid)
                 LEFT JOIN pmtext txt ON(pm.pmtextid = txt.pmtextid)
                 {pmJoinsSql}
                 WHERE mainPm.pmid = @firstPmId
                 AND pm.folderid = 0
+                AND pm.userid = @readingUserId
                 ORDER BY txt.dateline DESC
                 LIMIT @count";
-            var args = new { firstPmId, count };
+            var args = new { firstPmId, readingUserId, count };
             var conversationPms = db.Query(sql, pmMappingFunc, args);
             return conversationPms.ToList();
         }
