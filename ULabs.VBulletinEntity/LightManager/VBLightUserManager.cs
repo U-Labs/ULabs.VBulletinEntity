@@ -162,10 +162,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         public PageContentInfo GetPrivateMessagesConversationsInfo(int userId, int page = 1, int conversationsPerPage = 10) {
             int offset = (page - 1) * conversationsPerPage;
             var info = new PageContentInfo(page, conversationsPerPage);
+            // pm.parentpmid = 0 not added since it filters PMs send to multiple users. Filtering the recipient is enough to avoid fetching single pms instead of conversations
             string fromWhereSql = @"FROM pm, pmtext AS txt
                 WHERE pm.pmtextid = txt.pmtextid 
                 AND pm.userid = @userId
-                AND pm.parentpmid = 0
                 AND pm.folderid != -1";
 
             var args = new { userId, offset, conversationsPerPage };
