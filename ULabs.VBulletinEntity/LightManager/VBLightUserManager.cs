@@ -210,7 +210,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 {pmJoinsSql}
                 WHERE mainPm.pmid = @firstPmId
                 AND pm.folderid = 0
-                AND pm.userid = @readingUserId
+                AND (pm.userid = @readingUserId OR txt.fromuserid = @readingUserId)
                 ORDER BY txt.dateline DESC
                 LIMIT @count";
             var args = new { firstPmId, readingUserId, count };
