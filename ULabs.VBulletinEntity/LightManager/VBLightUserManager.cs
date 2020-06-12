@@ -169,9 +169,13 @@ namespace ULabs.VBulletinEntity.LightManager {
                 AND pm.folderid != -1";
 
             var args = new { userId, offset, conversationsPerPage };
+            // Filtering by paremtpmid = 0 would exclude PNs that were written by the other user without reply. 
+            // So we need to group by the parentpmid. But we only can do this if its not the first PM (parentpmid = 0) to avoid grouping with other first messages.
+            // MIN(pm.pmid) make sure that we get the id from the FIRST message with the original subject (no "AW: " prefix) while still sorting the messages by their write time 
             string pmIds = $@"
-                SELECT pm.pmid
+                SELECT MIN(pm.pmid)
                 {fromWhereSql}
+                GROUP BY IF(pm.parentpmid != 0, pm.parentpmid, pm.pmid)
                 ORDER BY txt.dateline DESC
                 LIMIT @offset, @conversationsPerPage";
             info.ContentIds = db.Query<int>(pmIds, args)
