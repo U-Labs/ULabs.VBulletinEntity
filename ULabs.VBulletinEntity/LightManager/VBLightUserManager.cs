@@ -203,13 +203,13 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="count">Maximum amount of messages fetched to limit long conversations</param>
         public List<VBLightPrivateMessage> GetConversation(int firstPmId, int readingUserId, int count = 500) {
             // OR pm.pmid = mainpm.pmid is required to fetch also the first main PM without duplicating its columns in the SELECT statement
+            // Not filtering for pm.folderid to show the first answer of the user
             string sql = $@"{GetPrivateMessagesSelectQuery(fullTextWithoutPreview: true)}
                 FROM pm AS mainPm
                 LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid OR pm.pmid = mainPm.pmid)
                 LEFT JOIN pmtext txt ON(pm.pmtextid = txt.pmtextid)
                 {pmJoinsSql}
                 WHERE mainPm.pmid = @firstPmId
-                AND pm.folderid = 0
                 AND (pm.userid = @readingUserId OR txt.fromuserid = @readingUserId)
                 ORDER BY txt.dateline DESC
                 LIMIT @count";
