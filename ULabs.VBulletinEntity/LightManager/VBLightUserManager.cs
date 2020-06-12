@@ -205,7 +205,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             // OR pm.pmid = mainpm.pmid is required to fetch also the first main PM without duplicating its columns in the SELECT statement
             string sql = $@"{GetPrivateMessagesSelectQuery(fullTextWithoutPreview: true)}
                 FROM pm AS mainPm
-                LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid OR pm.pmid = mainpm.pmid)
+                LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid OR pm.pmid = mainPm.pmid)
                 LEFT JOIN pmtext txt ON(pm.pmtextid = txt.pmtextid)
                 {pmJoinsSql}
                 WHERE mainPm.pmid = @firstPmId
