@@ -202,9 +202,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="readingUserId">Id of the user that reads the conversation. Used to filter messages which were send to multiple users</param>
         /// <param name="count">Maximum amount of messages fetched to limit long conversations</param>
         public List<VBLightPrivateMessage> GetConversation(int firstPmId, int readingUserId, int count = 500) {
+            // OR pm.pmid = mainpm.pmid is required to fetch also the first main PM without duplicating its columns in the SELECT statement
             string sql = $@"{GetPrivateMessagesSelectQuery(fullTextWithoutPreview: true)}
                 FROM pm AS mainPm
-                LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid)
+                LEFT JOIN pm ON(pm.parentpmid = mainPm.pmid OR pm.pmid = mainpm.pmid)
                 LEFT JOIN pmtext txt ON(pm.pmtextid = txt.pmtextid)
                 {pmJoinsSql}
                 WHERE mainPm.pmid = @firstPmId
