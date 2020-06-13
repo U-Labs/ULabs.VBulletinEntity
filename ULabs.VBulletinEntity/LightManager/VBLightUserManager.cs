@@ -163,17 +163,20 @@ namespace ULabs.VBulletinEntity.LightManager {
             int offset = (page - 1) * conversationsPerPage;
             var info = new PageContentInfo(page, conversationsPerPage);
             // pm.parentpmid = 0 not added since it filters PMs send to multiple users. Filtering the recipient is enough to avoid fetching single pms instead of conversations
+            // We filter for userid AND fromuserid to fetch both send and received messages => send messages are displayed in the ordering and timestamp
+            // ToDo: By filtering to folderid != -1, we dont get send messages without reply (yet). Consider including them (requires checking the folder on displaying)
             string fromWhereSql = @"FROM pm, pmtext AS txt
                 WHERE pm.pmtextid = txt.pmtextid 
-                AND pm.userid = @userId
+                AND (pm.userid = @userId OR txt.fromuserid = @userId)
                 AND pm.folderid != -1";
 
             var args = new { userId, offset, conversationsPerPage };
             // Filtering by paremtpmid = 0 would exclude PNs that were written by the other user without reply. 
             // So we need to group by the parentpmid. But we only can do this if its not the first PM (parentpmid = 0) to avoid grouping with other first messages.
-            // MIN(pm.pmid) make sure that we get the id from the FIRST message with the original subject (no "AW: " prefix) while still sorting the messages by their write time 
+            // MIN(pm.pmid) make sure that we get the id from the FIRST message with the original subject (no "AW: " prefix) while still sorting the messages by their write time.
+            // But since it shows the last message, it seems okay to fetch the reply message instead of the first pm
             string pmIds = $@"
-                SELECT MIN(pm.pmid)
+                SELECT pm.pmid
                 {fromWhereSql}
                 GROUP BY IF(pm.parentpmid != 0, pm.parentpmid, pm.pmid)
                 ORDER BY txt.dateline DESC
