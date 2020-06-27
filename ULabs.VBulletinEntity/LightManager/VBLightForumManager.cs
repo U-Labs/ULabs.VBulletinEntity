@@ -112,7 +112,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Like <see cref="GetForumsWhereUserCan(int, VBForumFlags, bool)"/> but this method returns only the forum ids without any meta information
         /// </summary>
         public List<int> GetForumIdsWhereUserCan(int userGroupId, VBForumFlags flags, bool onlyParentCategories = false) {
-            var forumIds = BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories, selectOnlyForumId: true)
+            var forumIds = BuildForumPermissionQuery(userGroupId, flags, negate: false, onlyParentCategories, selectOnlyForumId: true)
                 .Select(f => f.Id)
                 .ToList();
             return forumIds;
