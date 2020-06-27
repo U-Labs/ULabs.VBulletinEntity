@@ -126,6 +126,13 @@ namespace ULabs.VBulletinEntity.LightManager {
             return BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories);
         }
 
+        public List<int> GetForumIdsWhereUserCanNot(int userGroupId, VBForumFlags flags, bool onlyParentCategories = false) {
+            var forumIds = BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories, selectOnlyForumId: true)
+                .Select(f => f.Id)
+                .ToList();
+            return forumIds;
+        }
+
         List<VBLightForum> BuildForumPermissionQuery(int userGroupId, VBForumFlags? flags, bool negate, bool onlyParentCategories, bool selectOnlyForumId = false) {
             var args = new {
                 userGroupId,
