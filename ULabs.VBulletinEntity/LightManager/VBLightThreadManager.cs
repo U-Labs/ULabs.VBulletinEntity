@@ -211,21 +211,24 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
         /// <summary>
         /// Fetches the newest visible posts, without any grouping to the threads (if not threadId is specified). Usefull for polling, when you want to fetch new posts after a certain timestamp.
+        /// This method doesn't fetch the first post of a new thread (only replys to a thread).
         /// </summary>
         /// <param name="afterTime">If this parameter is set, only posts with dateline > afterDateTime were fetched from the database</param>
         /// <param name="beforeTime">If this parameter is set, only posts with dateline less than beforeTime were fetched from the database</param>
         /// <param name="threadId">You could specify a thread id to only fetch replys from those thread (optional)</param>
         /// <param name="count">Limit the amout of data which is returned (default 10)</param>
-        public List<VBLightPost> GetNewestPosts(DateTime? afterTime = null, DateTime? beforeTime = null, int? threadId = null,int count = 10) {
+        public List<VBLightPost> GetNewestReplys(DateTime? afterTime = null, DateTime? beforeTime = null, int? threadId = null,int count = 10) {
             var args = new {
                 afterTimestamp = afterTime.HasValue ? afterTime.Value.ToUnixTimestamp() : 0,
                 beforeTimestamp = beforeTime.HasValue ? beforeTime.Value.ToUnixTimestamp() : 0,
                 threadId = threadId.HasValue ? threadId.Value : 0,
                 count
             };
+            // parentid = 0 is the first post of a new thread, so no reply
             string sql = $@"
                 {postBaseQuery}
-                WHERE p.visible = 1 " +
+                WHERE p.visible = 1 
+                AND p.parentid != 0 " +
                 (afterTime.HasValue ? " AND p.dateline > @afterTimestamp " : "") +
                 (beforeTime.HasValue ? " AND p.dateline < @beforeTimestamp " : "") +
                 (threadId.HasValue ? " AND p.threadid = @threadId " : "") + @"
