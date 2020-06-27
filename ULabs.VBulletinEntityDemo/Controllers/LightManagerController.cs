@@ -46,9 +46,6 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var newestSmalltalkReplys = lightThreadManager.GetNewestReplys(threadId: 29780);
 
             var adminTest = lightThreadManager.GetNewestThreads(8, minReplyCount: 1, excludedForumIds: new List<int>(), orderByLastPostDate: false);
-            var pms = lightUserManager.GetReceivedPrivateMessages(userId: 18, VBPrivateMessageReadState.Unread, textPreviewWords: 1);
-            var pms2 = lightUserManager.GetReceivedPrivateMessages(userId: 18, VBPrivateMessageReadState.Unread);
-            var pms3 = lightUserManager.GetReceivedPrivateMessages(userId: 18);
             return View(model);
         }
         public IActionResult ViewThread(int id, int page = 1) {
