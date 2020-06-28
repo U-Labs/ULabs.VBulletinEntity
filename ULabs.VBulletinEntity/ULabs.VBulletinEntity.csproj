@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.8.3.0</Version>
+    <Version>0.8.3.1</Version>
     <Authors>DMW007</Authors>
     <Company>U-Labs</Company>
     <!-- Renamed for NuGet: https://github.com/NuGet/Home/issues/7601 -->
@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.35" />
-    <PackageReference Include="Dapper.SqlBuilder" Version="1.60.1" />
+    <PackageReference Include="Dapper.SqlBuilder" Version="2.0.35" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.1" />

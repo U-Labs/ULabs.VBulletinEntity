@@ -46,6 +46,9 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var newestSmalltalkReplys = lightThreadManager.GetNewestReplys(threadId: 29780);
 
             var adminTest = lightThreadManager.GetNewestThreads(8, minReplyCount: 1, excludedForumIds: new List<int>(), orderByLastPostDate: false);
+
+            var allowedIds = lightForumManager.GetForumIdsWhereUserCan(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewForum);
+            var forbidenIds = lightForumManager.GetForumIdsWhereUserCanNot(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewForum);
             return View(model);
         }
         public IActionResult ViewThread(int id, int page = 1) {
@@ -91,6 +94,10 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var info = lightForumManager.GetForumThreadsInfo(forumId, page);
             var threads = lightForumManager.GetForumThreads(info);
             return View(threads);
+        }
+        public IActionResult GetNewestThreads() {
+            var threads = lightForumManager.GetNewestThreads(orderByLastPostDate: true);
+            return View(nameof(GetForumThreads), threads);
         }
         public IActionResult ShowTopPosters() {
             var posters = lightUserManager.GetTopPostersFromCurrentMonth();

@@ -199,11 +199,23 @@ namespace ULabs.VBulletinEntity.LightManager {
             var param = new { info.ContentIds };
             return BuildForumThreadsQuery("threadid IN @ContentIds", "lastpost DESC", param);
         }
-        public List<VBLightForumThread> GetNewestThreads() {
-            var param = new {  };
-            return BuildForumThreadsQuery("threadid IN @ContentIds", "lastpost DESC", param);
+        /// <summary>
+        /// Fetches the newest threads/posts as <see cref="VBLightForumThread"/> to display related information like author, views, ...
+        /// </summary>
+        /// <param name="orderByLastPostDate">If true, you'll fetch the latest posts. Otherwise, the latest threads.</param>
+        /// <param name="afterTime">Fetches only threads that were posted after the provide timestamp for pagination (only affects the thread timestamp, not the post)</param>
+        /// <param name="count">Maximum amount of elements to fetch</param>
+        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, int count = 20) {
+            string orderBySql = (orderByLastPostDate ? "lastpost" : "dateline") + " DESC";
+
+            string whereSql = "";
+            if (afterTime.HasValue) {
+                long afterTimestamp = afterTime.Value.ToUnixTimestamp();
+                whereSql = $"dateline > {afterTimestamp}";
+            }
+            return BuildForumThreadsQuery(whereSql, orderBySql, count: count);
         }
-        List<VBLightForumThread> BuildForumThreadsQuery(string sqlWhere, string sqlOrderBy, object param, int? count = null) {
+        List<VBLightForumThread> BuildForumThreadsQuery(string sqlWhere, string sqlOrderBy, object param = null, int? count = null) {
             var builder = new SqlBuilder();
             builder.Select($@"
                 SELECT threadid AS Id, forumid, title, open, replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, 
