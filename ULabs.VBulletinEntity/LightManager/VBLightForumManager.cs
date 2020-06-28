@@ -199,7 +199,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             var param = new { info.ContentIds };
             var builder = GetForumThreadsQueryBuilder();
             builder.Where("threadid IN @ContentIds")
-                .OrderBy("lastpost DESC");
+                .OrderBy("thread.lastpost DESC");
             return BuildForumThreadsQuery(builder, param);
         }
         /// <summary>
@@ -211,7 +211,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="count">Maximum amount of elements to fetch</param>
         public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, List<int> excludedForumIds = null, int count = 20) {
             object param = new { excludedForumIds };
-            string orderBySql = (orderByLastPostDate ? "lastpost" : "dateline") + " DESC";
+            string orderBySql = "thread." + (orderByLastPostDate ? "lastpost" : "dateline") + " DESC";
             var builder = GetForumThreadsQueryBuilder()
                 .OrderBy(orderBySql);
 
@@ -229,14 +229,16 @@ namespace ULabs.VBulletinEntity.LightManager {
         SqlBuilder GetForumThreadsQueryBuilder() {
             var builder = new SqlBuilder();
             builder.Select($@"
-                SELECT threadid AS Id, forumid, title, open, replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, 
-                    lastposter AS lastPosterUserName, lastposterid AS lastPosterUserId, lastpost AS LastPostTimeRaw, views AS ViewsCount
+                SELECT threadid AS Id, thread.forumid, thread.title, open, thread.replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, 
+                    thread.lastposter AS lastPosterUserName, thread.lastposterid AS lastPosterUserId, thread.lastpost AS LastPostTimeRaw, views AS ViewsCount,
+                    forum.title as ForumTitle
                 FROM thread");
+            builder.Join("forum ON(forum.forumid = thread.forumid)");
             return builder;
         }
         List<VBLightForumThread> BuildForumThreadsQuery(SqlBuilder builder, object param = null, int? count = null) {
             string countSql = (count.HasValue ? $" LIMIT {count.Value}" : "");
-            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ " + countSql, param);
+            var builderTemplate = builder.AddTemplate("/**select**/ /**join**/ /**where**/ /**orderby**/ " + countSql, param);
             return db.Query<VBLightForumThread>(builderTemplate.RawSql, param).ToList();
         }
         #endregion
