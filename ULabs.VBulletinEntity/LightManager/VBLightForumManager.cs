@@ -57,7 +57,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             var uniqueChilds = all.Distinct().ToList();
             return uniqueChilds;
         }
-
+        
+        #region Permissions
         /// <summary>
         /// Get the VB bitfield permission for a given forum/usergroup. Checks the specific forum permission first and use group permission if forum permission doesnt exist.
         /// </summary>
@@ -164,7 +165,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             var forums = db.Query<VBLightForum>(sql.ToString(), args);
             return forums.ToList();
         }
+        #endregion
 
+        #region ForumThreads
         public PageContentInfo GetForumThreadsInfo(List<int> forumIds, int page = 1, int threadsPerPage = 20) {
             int offset = (page - 1) * threadsPerPage;
             var info = new PageContentInfo(page, threadsPerPage);
@@ -193,13 +196,30 @@ namespace ULabs.VBulletinEntity.LightManager {
             return GetForumThreadsInfo(new List<int>() { forumId }, page, threadsPerPage);
         }
         public List<VBLightForumThread> GetForumThreads(PageContentInfo info) {
-            string sql = @"
+            var param = new { info.ContentIds };
+            return BuildForumThreadsQuery("threadid IN @ContentIds", "lastpost DESC", param);
+        }
+        public List<VBLightForumThread> GetNewestThreads() {
+            var param = new {  };
+            return BuildForumThreadsQuery("threadid IN @ContentIds", "lastpost DESC", param);
+        }
+        List<VBLightForumThread> BuildForumThreadsQuery(string sqlWhere, string sqlOrderBy, object param, int? count = null) {
+            var builder = new SqlBuilder();
+            builder.Select($@"
                 SELECT threadid AS Id, forumid, title, open, replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, 
                     lastposter AS lastPosterUserName, lastposterid AS lastPosterUserId, lastpost AS LastPostTimeRaw, views AS ViewsCount
-                FROM thread 
-                WHERE threadid IN @ContentIds
-                ORDER BY lastpost DESC;";
-            return db.Query<VBLightForumThread>(sql, new { info.ContentIds }).ToList();
+                FROM thread");
+            if (!string.IsNullOrEmpty(sqlWhere)) {
+                builder.Where(sqlWhere);
+            }
+            if (!string.IsNullOrEmpty(sqlOrderBy)) {
+                builder.OrderBy(sqlOrderBy);
+            }
+
+            string countSql = (count.HasValue ? $" LIMIT {count.Value}" : "");
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ " + countSql, param);
+            return db.Query<VBLightForumThread>(builderTemplate.RawSql, param).ToList();
         }
+        #endregion
     }
 }
