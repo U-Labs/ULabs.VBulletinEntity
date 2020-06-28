@@ -224,7 +224,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 builder.Where($"dateline > {afterTimestamp}");
             }
             
-            return BuildForumThreadsQuery(builder, count: count);
+            return BuildForumThreadsQuery(builder, param, count);
         }
         SqlBuilder GetForumThreadsQueryBuilder() {
             var builder = new SqlBuilder();
