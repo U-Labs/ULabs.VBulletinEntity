@@ -197,37 +197,44 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
         public List<VBLightForumThread> GetForumThreads(PageContentInfo info) {
             var param = new { info.ContentIds };
-            return BuildForumThreadsQuery("threadid IN @ContentIds", "lastpost DESC", param);
+            var builder = GetForumThreadsQueryBuilder();
+            builder.Where("threadid IN @ContentIds")
+                .OrderBy("lastpost DESC");
+            return BuildForumThreadsQuery(builder, param);
         }
         /// <summary>
         /// Fetches the newest threads/posts as <see cref="VBLightForumThread"/> to display related information like author, views, ...
         /// </summary>
         /// <param name="orderByLastPostDate">If true, you'll fetch the latest posts. Otherwise, the latest threads.</param>
         /// <param name="afterTime">Fetches only threads that were posted after the provide timestamp for pagination (only affects the thread timestamp, not the post)</param>
+        /// <param name="excludedForumIds">When set, dont get threads posted in the specified forum ids</param>
         /// <param name="count">Maximum amount of elements to fetch</param>
-        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, int count = 20) {
+        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, List<int> excludedForumIds = null, int count = 20) {
+            object param = new { excludedForumIds };
             string orderBySql = (orderByLastPostDate ? "lastpost" : "dateline") + " DESC";
+            var builder = GetForumThreadsQueryBuilder()
+                .OrderBy(orderBySql);
 
-            string whereSql = "";
+            if(excludedForumIds != null) {
+                builder.Where("forumid NOT IN @excludedForumIds");
+            }
+
             if (afterTime.HasValue) {
                 long afterTimestamp = afterTime.Value.ToUnixTimestamp();
-                whereSql = $"dateline > {afterTimestamp}";
+                builder.Where($"dateline > {afterTimestamp}");
             }
-            return BuildForumThreadsQuery(whereSql, orderBySql, count: count);
+            
+            return BuildForumThreadsQuery(builder, count: count);
         }
-        List<VBLightForumThread> BuildForumThreadsQuery(string sqlWhere, string sqlOrderBy, object param = null, int? count = null) {
+        SqlBuilder GetForumThreadsQueryBuilder() {
             var builder = new SqlBuilder();
             builder.Select($@"
                 SELECT threadid AS Id, forumid, title, open, replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, 
                     lastposter AS lastPosterUserName, lastposterid AS lastPosterUserId, lastpost AS LastPostTimeRaw, views AS ViewsCount
                 FROM thread");
-            if (!string.IsNullOrEmpty(sqlWhere)) {
-                builder.Where(sqlWhere);
-            }
-            if (!string.IsNullOrEmpty(sqlOrderBy)) {
-                builder.OrderBy(sqlOrderBy);
-            }
-
+            return builder;
+        }
+        List<VBLightForumThread> BuildForumThreadsQuery(SqlBuilder builder, object param = null, int? count = null) {
             string countSql = (count.HasValue ? $" LIMIT {count.Value}" : "");
             var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ " + countSql, param);
             return db.Query<VBLightForumThread>(builderTemplate.RawSql, param).ToList();
