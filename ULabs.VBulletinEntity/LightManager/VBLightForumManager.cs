@@ -207,9 +207,10 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// </summary>
         /// <param name="orderByLastPostDate">If true, you'll fetch the latest posts. Otherwise, the latest threads.</param>
         /// <param name="afterTime">Fetches only threads that were posted after the provide timestamp for pagination (only affects the thread timestamp, not the post)</param>
+        /// <param name="beforeTime">Fetches only threads posted before the provided timestamp for pagination (only affects thread timestamp, not post)</param>
         /// <param name="excludedForumIds">When set, dont get threads posted in the specified forum ids</param>
         /// <param name="count">Maximum amount of elements to fetch</param>
-        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, List<int> excludedForumIds = null, int count = 20) {
+        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, DateTime? beforeTime = null, List<int> excludedForumIds = null, int count = 20) {
             object param = new { excludedForumIds };
             string orderBySql = "thread." + (orderByLastPostDate ? "lastpost" : "dateline") + " DESC";
             var builder = GetForumThreadsQueryBuilder()
@@ -222,6 +223,11 @@ namespace ULabs.VBulletinEntity.LightManager {
             if (afterTime.HasValue) {
                 long afterTimestamp = afterTime.Value.ToUnixTimestamp();
                 builder.Where($"thread.dateline > {afterTimestamp}");
+            }
+
+            if (beforeTime.HasValue) {
+                long beforeTimestamp = beforeTime.Value.ToUnixTimestamp();
+                builder.Where($"thread.dateline < {beforeTimestamp}");
             }
             
             return BuildForumThreadsQuery(builder, param, count);
