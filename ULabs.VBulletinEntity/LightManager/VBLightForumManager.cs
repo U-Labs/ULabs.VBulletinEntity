@@ -216,12 +216,12 @@ namespace ULabs.VBulletinEntity.LightManager {
                 .OrderBy(orderBySql);
 
             if(excludedForumIds != null) {
-                builder.Where("forumid NOT IN @excludedForumIds");
+                builder.Where("thread.forumid NOT IN @excludedForumIds");
             }
 
             if (afterTime.HasValue) {
                 long afterTimestamp = afterTime.Value.ToUnixTimestamp();
-                builder.Where($"dateline > {afterTimestamp}");
+                builder.Where($"thread.dateline > {afterTimestamp}");
             }
             
             return BuildForumThreadsQuery(builder, param, count);
