@@ -217,7 +217,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             var builder = GetForumThreadsQueryBuilder()
                 .OrderBy(orderBySql);
 
-            if(excludedForumIds != null) {
+            if(excludedForumIds?.Count > 0) {
                 builder.Where("thread.forumid NOT IN @excludedForumIds");
             }
 
