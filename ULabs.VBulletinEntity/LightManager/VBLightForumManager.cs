@@ -212,7 +212,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="count">Maximum amount of elements to fetch</param>
         public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, DateTime? beforeTime = null, List<int> excludedForumIds = null, int count = 20) {
             object param = new { excludedForumIds };
-            string orderBySql = "thread." + (orderByLastPostDate ? "lastpost" : "dateline") + " DESC";
+            string timeStampCol = (orderByLastPostDate ? "lastpost" : "dateline");
+            string orderBySql = $"thread.{timeStampCol} DESC";
             var builder = GetForumThreadsQueryBuilder()
                 .OrderBy(orderBySql);
 
@@ -222,12 +223,12 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             if (afterTime.HasValue) {
                 long afterTimestamp = afterTime.Value.ToUnixTimestamp();
-                builder.Where($"thread.dateline > {afterTimestamp}");
+                builder.Where($"thread.{timeStampCol} > {afterTimestamp}");
             }
 
             if (beforeTime.HasValue) {
                 long beforeTimestamp = beforeTime.Value.ToUnixTimestamp();
-                builder.Where($"thread.dateline < {beforeTimestamp}");
+                builder.Where($"thread.{timeStampCol} < {beforeTimestamp}");
             }
             
             return BuildForumThreadsQuery(builder, param, count);
