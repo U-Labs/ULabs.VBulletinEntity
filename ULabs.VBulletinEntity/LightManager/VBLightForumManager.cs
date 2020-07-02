@@ -209,11 +209,13 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="afterTime">Fetches only threads that were posted after the provide timestamp for pagination (only affects the thread timestamp, not the post)</param>
         /// <param name="beforeTime">Fetches only threads posted before the provided timestamp for pagination (only affects thread timestamp, not post)</param>
         /// <param name="excludedForumIds">When set, dont get threads posted in the specified forum ids</param>
+        /// <param name="ordering">Specify the SQL ordering. Usefull for pagination, when you go one page back, just use ASC instead of DESC to fetch the previous page instead of the first one.</param>
         /// <param name="count">Maximum amount of elements to fetch</param>
-        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, DateTime? beforeTime = null, List<int> excludedForumIds = null, int count = 20) {
+        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, DateTime? beforeTime = null, List<int> excludedForumIds = null,
+            Ordering ordering = Ordering.Desc, int count = 20) {
             object param = new { excludedForumIds };
             string timeStampCol = (orderByLastPostDate ? "lastpost" : "dateline");
-            string orderBySql = $"thread.{timeStampCol} DESC";
+            string orderBySql = $"thread.{timeStampCol} {ordering}";
             var builder = GetForumThreadsQueryBuilder()
                 .OrderBy(orderBySql);
 
