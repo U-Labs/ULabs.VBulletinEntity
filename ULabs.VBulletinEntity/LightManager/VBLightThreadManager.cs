@@ -592,6 +592,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         #region Drafts
+        string draftsSelectSql = @"SELECT contenttypeid AS ContentTypeRaw, parentcontentid, contentid, userid, pagetext AS Text, title, dateline AS CreatedTimeRaw
+            FROM autosave";
         public void SafeDraft(VBLightAutosave autosave) {
             string sql = @"REPLACE INTO autosave (contenttypeid, contentid, parentcontentid, userid, pagetext, title, dateline)
                 VALUES(@ContentTypeRaw, @ContentId, @ParentContentId, @UserId, @Text, @Title, @CreatedTimeRaw)";
@@ -610,8 +612,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
 
             var builder = new SqlBuilder();
-            builder.Select(@"SELECT contenttypeid AS ContentTypeRaw, parentcontentid, contentid, userid, pagetext AS Text, title, dateline AS CreatedTimeRaw
-                FROM autosave");
+            builder.Select(draftsSelectSql);
 
             var param = new {
                 userId,
@@ -627,6 +628,43 @@ namespace ULabs.VBulletinEntity.LightManager {
 
             var builderTemplate = builder.AddTemplate("/**select**/ /**where**/");
             return db.Query<VBLightAutosave>(builderTemplate.RawSql, builderTemplate.Parameters).FirstOrDefault();
+        }
+
+        public List<VBLightAutosave> GetNewestDraftsFromUser(VBLightAutosaveContentType contentType, int userId, int count = 20) {
+            var builder = new SqlBuilder();
+            builder.Select(draftsSelectSql);
+
+            var param = new {
+                userId,
+                contentTypeRaw = VBLightAutosave.ContentTypeToByteArray(contentType)
+            };
+            builder.Where("userid = @userId AND contenttypeid = @contentTypeRaw", param);
+            builder.OrderBy("dateline DESC");
+
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ LIMIT @count", new { count });
+            return db.Query<VBLightAutosave>(builderTemplate.RawSql, builderTemplate.Parameters).ToList();
+        }
+
+        public void DeleteDraft(VBLightAutosaveContentType contentType, int userId, int? parentContentId = null, int? contentId = null) {
+            if (contentId == null && parentContentId == null) {
+                throw new Exception("You must specify either contentId or parentContentId.");
+            }
+
+            string sql = @"DELETE FROM autosave WHERE contenttypeid = @contentTypeRaw AND userId = @userId";
+            if (parentContentId.HasValue) {
+                sql += " AND parentcontentid = @parentContentId";
+            }
+            if (contentId.HasValue) {
+                sql += " AND contentid = @contentId";
+            }
+
+            var param = new {
+                contentTypeRaw = VBLightAutosave.ContentTypeToByteArray(contentType),
+                userId,
+                parentContentId = (parentContentId.HasValue ? parentContentId.Value : -1),
+                contentId = (contentId.HasValue ? contentId.Value : -1)
+            };
+            db.Query(sql, param);
         }
 
         #endregion
