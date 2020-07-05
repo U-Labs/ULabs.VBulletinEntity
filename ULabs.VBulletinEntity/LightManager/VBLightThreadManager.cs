@@ -605,8 +605,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="contentId">Id of the content, if it's a new content entry (e.g. new thread)</param>
         /// <param name="parentContentId">Id of the parent content, where this draft is related to. E.g. the thread id, if we have a post</param>
         public VBLightAutosave GetDraft(VBLightAutosaveContentType contentType, int userId, int? contentId = null, int? parentContentId = null) {
-            if (contentId == null && parentContentId == null || contentId != null && parentContentId != null) {
-                throw new Exception("You must specify either contentId or parentContentId. Being both null or set is not possible.");
+            if (contentId != null && parentContentId != null) {
+                throw new Exception("You must specify either contentId or parentContentId.");
             }
 
             var builder = new SqlBuilder();
