@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.EntityFrameworkCore.Internal;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections;
@@ -589,6 +591,45 @@ namespace ULabs.VBulletinEntity.LightManager {
             return threadId;
         }
 
+        #region Drafts
+        public void SafeDraft(VBLightAutosave autosave) {
+            string sql = @"REPLACE INTO autosave (contenttypeid, contentid, parentcontentid, userid, pagetext, title, dateline)
+                VALUES(@ContentTypeRaw, @ContentId, @ParentContentId, @UserId, @Text, @Title, @CreatedTimeRaw)";
+            db.Query(sql, autosave);
+        }
+        /// <summary>
+        /// Fetches a saved draft from the database, that was not published by the user
+        /// </summary>
+        /// <param name="contentType">Content type of the draft. Depending on the type, you need to set <paramref name="contentId"></paramref> or <paramref name="parentContentId"/></paramref>
+        /// <param name="userId">Id of the author, that published the draft</param>
+        /// <param name="contentId">Id of the content, if it's a new content entry (e.g. new thread)</param>
+        /// <param name="parentContentId">Id of the parent content, where this draft is related to. E.g. the thread id, if we have a post</param>
+        public VBLightAutosave GetDraft(VBLightAutosaveContentType contentType, int userId, int? contentId = null, int? parentContentId = null) {
+            if (contentId == null && parentContentId == null || contentId != null && parentContentId != null) {
+                throw new Exception("You must specify either contentId or parentContentId. Being both null or set is not possible.");
+            }
+
+            var builder = new SqlBuilder();
+            builder.Select(@"SELECT contenttypeid AS ContentTypeRaw, parentcontentid, contentid, userid, pagetext AS Text, title, dateline AS CreatedTimeRaw
+                FROM autosave");
+
+            var param = new {
+                userId,
+                contentTypeRaw = VBLightAutosave.ContentTypeToByteArray(contentType)
+            };
+            builder.Where("userid = @userId AND contenttypeid = @contentTypeRaw", param);
+
+            if (contentId.HasValue) {
+                builder.Where("contentid = @Value", new { contentId.Value });
+            }else if (parentContentId.HasValue) {
+                builder.Where("parentcontentid = @Value", new { parentContentId.Value });
+            }
+
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/");
+            return db.Query<VBLightAutosave>(builderTemplate.RawSql, builderTemplate.Parameters).FirstOrDefault();
+        }
+
+        #endregion
         #region Moderation
         /// <summary>
         /// Deletes a post and log the action in all logs as VB would do it (moderator and deletion log)
