@@ -648,7 +648,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             builder.Where("userid = @userId AND contenttypeid = @contentTypeRaw", param);
             builder.OrderBy("dateline DESC");
 
-            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ LIMIT @count", new { count });
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
             return db.Query<VBLightAutosave>(builderTemplate.RawSql, builderTemplate.Parameters).ToList();
         }
 
