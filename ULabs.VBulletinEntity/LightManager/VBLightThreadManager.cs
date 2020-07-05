@@ -87,29 +87,36 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         #region Threads
-        public VBLightThread Get(int threadId, bool updateViews = true) {
-            var args = new { threadId };
-            string sql = threadBaseQuery + @"WHERE t.threadid = @threadId";
+        public List<VBLightThread> Get(List<int> threadIds, bool updateViews = true) {
+            var args = new { threadIds };
+            string sql = threadBaseQuery + @"WHERE t.threadid IN @threadIds";
             // Generic overload not possible with QueryFirstOrDefault()
-            var threads = db.Query(sql, threadMappingFunc, args);
-            var thread = threads.SingleOrDefault();
-            if (thread == null) {
+            var dbThreads = db.Query(sql, threadMappingFunc, args);
+            var threads = dbThreads.ToList();
+            if (threads == null) {
                 return null;
             }
 
             // FirstPost is fetched seperately because the query would be complex (especially for dapper) if we include the multiple joins from the post to its author/group here
-            string firstPostSql = $@"{postBaseQuery} WHERE p.postid = @postId";
-            thread.FirstPost = db.Query(firstPostSql, postMappingFunc, new { postId = thread.FirstPostId })
-                .FirstOrDefault();
+            string firstPostSql = $@"{postBaseQuery} WHERE p.postid IN @postIds";
+            var firstPosts = db.Query(firstPostSql, postMappingFunc, new { postIds = threads.Select(t => t.FirstPostId) });
+            threads.ForEach(thread => {
+                thread.FirstPost = firstPosts.FirstOrDefault(fp => fp.Id == thread.FirstPostId);
+            });
 
             if (updateViews) {
                 string viewSql = @"
                     UPDATE thread
                     SET views = views + 1
-                    WHERE threadid = @threadId";
-                db.Execute(viewSql, new { threadId });
+                    WHERE threadid IN @threadIds";
+                db.Execute(viewSql, new { threadIds });
             }
-            return thread;
+            return threads;
+        }
+
+        public VBLightThread Get(int threadId, bool updateViews = true) {
+            var threads = Get(new List<int>() { threadId }, updateViews);
+            return threads.FirstOrDefault();
         }
 
         /// <summary>
