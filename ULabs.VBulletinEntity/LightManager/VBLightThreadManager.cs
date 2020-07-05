@@ -84,6 +84,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             this.lightForumManager = lightForumManager;
         }
 
+        #region Threads
         public VBLightThread Get(int threadId, bool updateViews = true) {
             var args = new { threadId };
             string sql = threadBaseQuery + @"WHERE t.threadid = @threadId";
@@ -108,6 +109,86 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
             return thread;
         }
+
+        /// <summary>
+        /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
+        /// </summary>
+        /// <param name="count">Limit the fetched rows</param>
+        /// <param name="minReplyCount">Filter for threads with a minimum amount of replys (larger or equal than this parameter)</param>
+        /// <param name="orderByLastPostDate">If true, the threads were ordered by the date of their last reply. Otherwise the creation time of the thread is used.</param>
+        /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
+        /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
+        /// <param name="afterTime">If set, only threads with a created dateline after this timestamp will be fetched</param>
+        public List<VBLightThread> GetNewestThreads(int count = 10, int minReplyCount = 0, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null, DateTime? afterTime = null) {
+            if (includedForumIds != null && excludedForumIds != null) {
+                throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
+            }
+            var builder = new SqlBuilder();
+            builder.Select(threadBaseQuery);
+
+            if (includedForumIds?.Count > 0) {
+                builder.Where("t.forumid IN @includedForumIds", new { includedForumIds });
+            }
+            if (excludedForumIds?.Count > 0) {
+                builder.Where("t.forumid NOT IN @excludedForumIds", new { excludedForumIds });
+            }
+            if (afterTime.HasValue) {
+                long afterTimestamp = afterTime.Value.ToUnixTimestamp();
+                builder.Where("t.dateline > @afterTimestamp", new { afterTimestamp });
+            }
+
+            builder.Where("t.replycount >= @minReplyCount", new { minReplyCount });
+            builder.OrderBy((orderByLastPostDate ? "t.lastpost" : "t.dateline") + " DESC");
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
+
+            var result = db.Query(builderTemplate.RawSql, threadMappingFunc, builderTemplate.Parameters);
+            return result.ToList();
+        }
+
+        /// <summary>
+        /// Lists Threads with new replys from others in which the user was active (wrote at lest one post) ordered by last post time of the thread.
+        /// Note that you should disable auto deletion of the contentread in VB to use this! Otherwise users will get already seen new replys to older threads because of the contentread table purge!
+        /// </summary>
+        /// <param name="userId">Id of the user to check for new replys in his active threads</param>
+        /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
+        /// <param name="lastPostAgeDays">Max age in days of the threads last post to filter out older threads without any activity. Default is 180 days (= last 6 months)</param>
+        /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
+        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, count, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
+
+            // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread.
+            // This query fetches threads where the user wrote at least one post and new replys from other users were written since last read.
+            // Since VB per default deletes the thread read by cron, we also check for threads created by the user containing new replys after the authors last post
+            // ContentId 2 = Threads
+            string selectFields = @"
+                    t.threadid AS ThreadId, t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
+				    f.forumid AS ForumId, f.title AS ForumTitle,
+				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision, c.filename IS NOT NULL AS LastPosterHasAvatar,
+				    r.readid";
+            string additionalJoins = @"
+	            LEFT JOIN forum f ON(f.forumid = t.forumid)
+	            LEFT JOIN user u ON(u.userid = t.lastposterid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid) ";
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds) + @"
+                GROUP BY p.threadid 
+                ORDER BY t.lastpost DESC
+                LIMIT @count";
+            var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
+            return unreadThreads.ToList();
+        }
+
+        /// <summary>
+        /// Same as <see cref="GetUnreadActiveThreads(int, int, List{int}, List{int})"/> but this methods only count unread active threads without fetching any data for better performance
+        /// </summary>
+        public int CountUnreadActiveThreads(int userId, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
+            string selectFields = "COUNT(DISTINCT p.threadid) AS cnt";
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins: "", ignoredForumIds, ignoredThreadIds);
+
+            int count = db.QueryFirstOrDefault<int>(sql, args);
+            return count;
+        }
+        #endregion
 
         /// <summary>
         /// Loads the replys of a thread for the page, which meta data were fetched by <see cref="VBLightThreadManager.GetReplysInfo(int, int, bool, int, int)"/>. 
@@ -266,85 +347,6 @@ namespace ULabs.VBulletinEntity.LightManager {
                 WHERE p.postid = @postId";
             var reply = db.Query(sql, postMappingFunc, new { postId });
             return reply.FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
-        /// </summary>
-        /// <param name="count">Limit the fetched rows</param>
-        /// <param name="minReplyCount">Filter for threads with a minimum amount of replys (larger or equal than this parameter)</param>
-        /// <param name="orderByLastPostDate">If true, the threads were ordered by the date of their last reply. Otherwise the creation time of the thread is used.</param>
-        /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        /// <param name="afterTime">If set, only threads with a created dateline after this timestamp will be fetched</param>
-        public List<VBLightThread> GetNewestThreads(int count = 10, int minReplyCount = 0, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null, DateTime? afterTime = null) {
-            if (includedForumIds != null && excludedForumIds != null) {
-                throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
-            }
-            var builder = new SqlBuilder();
-            builder.Select(threadBaseQuery);
-
-            if (includedForumIds?.Count > 0) {
-                builder.Where("t.forumid IN @includedForumIds", new { includedForumIds });
-            }
-            if (excludedForumIds?.Count > 0) {
-                builder.Where("t.forumid NOT IN @excludedForumIds", new { excludedForumIds });
-            }
-            if (afterTime.HasValue) {
-                long afterTimestamp = afterTime.Value.ToUnixTimestamp();
-                builder.Where("t.dateline > @afterTimestamp", new { afterTimestamp });
-            }
-
-            builder.Where("t.replycount >= @minReplyCount", new { minReplyCount });
-            builder.OrderBy((orderByLastPostDate ? "t.lastpost" : "t.dateline") + " DESC");
-            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
-
-            var result = db.Query(builderTemplate.RawSql, threadMappingFunc, builderTemplate.Parameters);
-            return result.ToList();
-        }
-
-        /// <summary>
-        /// Lists Threads with new replys from others in which the user was active (wrote at lest one post) ordered by last post time of the thread.
-        /// Note that you should disable auto deletion of the contentread in VB to use this! Otherwise users will get already seen new replys to older threads because of the contentread table purge!
-        /// </summary>
-        /// <param name="userId">Id of the user to check for new replys in his active threads</param>
-        /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
-        /// <param name="lastPostAgeDays">Max age in days of the threads last post to filter out older threads without any activity. Default is 180 days (= last 6 months)</param>
-        /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
-        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
-            var args = new { userId, count, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
-
-            // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread.
-            // This query fetches threads where the user wrote at least one post and new replys from other users were written since last read.
-            // Since VB per default deletes the thread read by cron, we also check for threads created by the user containing new replys after the authors last post
-            // ContentId 2 = Threads
-            string selectFields = @"
-                    t.threadid AS ThreadId, t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
-				    f.forumid AS ForumId, f.title AS ForumTitle,
-				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision, c.filename IS NOT NULL AS LastPosterHasAvatar,
-				    r.readid";
-            string additionalJoins = @"
-	            LEFT JOIN forum f ON(f.forumid = t.forumid)
-	            LEFT JOIN user u ON(u.userid = t.lastposterid)
-                LEFT JOIN customavatar c ON(c.userid = u.userid) ";
-            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds) + @"
-                GROUP BY p.threadid 
-                ORDER BY t.lastpost DESC
-                LIMIT @count";
-            var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
-            return unreadThreads.ToList();
-        }
-
-        /// <summary>
-        /// Same as <see cref="GetUnreadActiveThreads(int, int, List{int}, List{int})"/> but this methods only count unread active threads without fetching any data for better performance
-        /// </summary>
-        public int CountUnreadActiveThreads(int userId, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
-            var args = new { userId, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
-            string selectFields = "COUNT(DISTINCT p.threadid) AS cnt";
-            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins: "", ignoredForumIds, ignoredThreadIds);
-
-            int count = db.QueryFirstOrDefault<int>(sql, args);
-            return count;
         }
 
         /// <summary>
