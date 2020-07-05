@@ -48,6 +48,7 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public int ParentContentId { get; set; }
         public int ContentId { get; set; }
         public int UserId { get; set; }
+        public string Title { get; set; }
         public string Text { get; set; }
         public int CreatedTimeRaw { get; set; }
         public DateTime CreatedTime {
