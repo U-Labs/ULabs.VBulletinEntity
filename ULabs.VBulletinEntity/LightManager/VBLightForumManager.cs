@@ -235,7 +235,7 @@ namespace ULabs.VBulletinEntity.LightManager {
             }
 
             if (authorUserId.HasValue) {
-                builder.Where("thread.postuserid = @Value", new { authorUserId.Value });
+                builder.Where($"thread.postuserid = {authorUserId.Value}");
             }
             
             return BuildForumThreadsQuery(builder, param, count);
