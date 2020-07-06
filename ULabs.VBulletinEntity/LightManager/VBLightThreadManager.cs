@@ -645,7 +645,8 @@ namespace ULabs.VBulletinEntity.LightManager {
                 userId,
                 contentTypeRaw = VBLightAutosave.ContentTypeToByteArray(contentType)
             };
-            builder.Where("userid = @userId AND contenttypeid = @contentTypeRaw", param);
+            // There are some drafts with parentcontentid = 0 and contentid != 0. Seems related to deleted posts
+            builder.Where("userid = @userId AND contenttypeid = @contentTypeRaw AND parentcontentid > 0", param);
             builder.OrderBy("dateline DESC");
 
             var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
