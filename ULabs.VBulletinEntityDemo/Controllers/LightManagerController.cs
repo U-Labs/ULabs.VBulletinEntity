@@ -105,11 +105,14 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
         }
         public IActionResult NewestContent() {
             const int count = 20;
-            var threads = lightThreadManager.GetNewestThreads(count);
-            var replys = lightThreadManager.GetNewestThreads(count: count, minReplyCount: 1, orderByLastPostDate: true)
-                .OrderBy(thread => thread.LastPostTime);
-            var kvp = new KeyValuePair<IEnumerable<VBLightThread>, IEnumerable<VBLightThread>>(threads, replys);
-            return View(kvp);
+            var threads = lightThreadManager.GetNewestThreads(count: count, excludedForumIds: new List<int>(), orderByLastPostDate: false);
+            // Newest replys
+            // var threads = lightThreadManager.GetNewestThreads(count: count, minReplyCount: 1, orderByLastPostDate: true);
+
+            string resp = "";
+            threads.ForEach(thread => resp += $"{thread.Title}<br>");
+            return Content(resp, "text/html", Encoding.UTF8);
+        }
         }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
