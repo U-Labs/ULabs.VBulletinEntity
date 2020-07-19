@@ -48,7 +48,12 @@ namespace ULabs.VBulletinEntity.LightManager {
         Func<VBLightThread, VBLightUser, VBLightForum, VBLightUserGroup, VBLightThread> threadMappingFunc = (thread, user, forum, group) => {
             thread.LastPoster = user;
             thread.Forum = forum;
-            thread.LastPoster.PrimaryUserGroup = group;
+
+            // In case the last poster got deleted, it could be null in some casese
+            if(thread.LastPoster != null) {
+                thread.LastPoster.PrimaryUserGroup = group;
+            }
+            
             return thread;
         };
         Func<VBLightPost, VBLightUser, VBLightUserGroup, VBLightPost> postMappingFunc = (post, author, group) => {
