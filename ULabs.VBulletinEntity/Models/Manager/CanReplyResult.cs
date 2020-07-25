@@ -7,6 +7,7 @@ namespace ULabs.VBulletinEntity.Models.Manager {
         Ok,
         ThreadNotExisting,
         ThreadClosed,
-        NoReplyPermission
+        NoReplyPermission,
+        TextEmpty
     }
 }

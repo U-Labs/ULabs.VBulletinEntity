@@ -357,6 +357,10 @@ namespace ULabs.VBulletinEntity.Manager {
         }
 
         public async Task<CanReplyResult> CreateReplyCheckAsync(CreateReplyModel replyModel) {
+            if (string.IsNullOrEmpty(replyModel.Text)) {
+                return CanReplyResult.TextEmpty;
+            }
+
             var thread = await GetThreadAsync(replyModel.ThreadId);
             if (thread == null || !thread.IsVisible) {
                 return CanReplyResult.ThreadNotExisting;
