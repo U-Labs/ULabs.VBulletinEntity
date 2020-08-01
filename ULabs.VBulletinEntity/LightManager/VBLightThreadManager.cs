@@ -659,7 +659,8 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
 
         public void DeleteDraft(VBLightAutosaveContentType contentType, int userId, int? parentContentId = null, int? contentId = null) {
-            if (contentId == null && parentContentId == null) {
+            // Having parentContentId and contentId null is only valid on thread draft. They dont have any id, so there could be only once
+            if (contentType != VBLightAutosaveContentType.Thread && contentId == null && parentContentId == null) {
                 throw new Exception("You must specify either contentId or parentContentId.");
             }
 
