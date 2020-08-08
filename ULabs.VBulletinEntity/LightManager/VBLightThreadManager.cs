@@ -94,6 +94,9 @@ namespace ULabs.VBulletinEntity.LightManager {
 
         #region Threads
         public List<VBLightThread> Get(List<int> threadIds, bool updateViews = true) {
+            if (!threadIds.Any()) {
+                return new List<VBLightThread>();
+            }
             var args = new { threadIds };
             string sql = threadBaseQuery + @"WHERE t.threadid IN @threadIds";
             // Generic overload not possible with QueryFirstOrDefault()
