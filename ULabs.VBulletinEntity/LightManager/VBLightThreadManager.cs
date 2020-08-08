@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections;
@@ -559,10 +560,13 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Creates a thread without performing any validation checks. Use UserGroupPermissions to check if the user can create threads in the specified forum
         /// </summary>
+        /// <param name="threadModel">A LightCreateThreadModel with all required information for the thread.</param>
         /// <param name="updateCounters">Determinates if the forums lastpost etc and authors post counter will be updated. Could be set to false if you want to do this with a cron insted.</param>
+        /// <param name="textEncoding">Encoding of the thread Text. Default value (null) means UTF-8.</param>
         /// <returns></returns>
-        public int CreateThread(LightCreateThreadModel threadModel, bool updateCounters = true) {
+        public int CreateThread(LightCreateThreadModel threadModel, bool updateCounters = true, Encoding textEncoding = null) {
             long ts = DateTime.UtcNow.ToUnixTimestamp();
+            threadModel.Text = ConvertPostTextToLatin1(threadModel.Text, textEncoding);
 
             var args = new {
                 ts,
@@ -601,6 +605,18 @@ namespace ULabs.VBulletinEntity.LightManager {
             // Dont update any forum/user counters here. This is already done centralized in AddReply!
             db.Execute(updateThreadSql, updateThreadArgs);
             return threadId;
+        }
+        // MySql.Data.MySqlClient.MySqlException (0x80004005): Incorrect string value: '\xE2\x80\x85/\xE2\x80...' for column `post`.`pagetext`
+        // Happened on Fritz during CreateThread call. This is a testfix to make sure that we have Latin1 (used by VB pagetext column)
+        string ConvertPostTextToLatin1(string text, Encoding srcEncoding = null) {
+            if (srcEncoding == null) {
+                srcEncoding = Encoding.UTF8;
+            }
+
+            var targetEncoding = Encoding.GetEncoding("ISO-8859-1");
+            var latin1 = Encoding.Convert(srcEncoding, targetEncoding, srcEncoding.GetBytes(text));
+            string latin1Text = targetEncoding.GetString(latin1);
+            return latin1Text;
         }
 
         #region Drafts
