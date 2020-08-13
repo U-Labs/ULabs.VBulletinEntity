@@ -23,6 +23,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         #region Private attributes and methods
         readonly MySqlConnection db;
         readonly VBLightForumManager lightForumManager;
+        readonly PhpSerialization phpSerializer = new PhpSerialization();
 
         // Order (also with Id and splitOn set): All attributes from the first relation entity should be placed BEFORE the (SplitOn) key
         string threadBaseQuery = @"
@@ -718,40 +719,36 @@ namespace ULabs.VBulletinEntity.LightManager {
                 UpdateLastPost(thread.Id);
             }
 
-            LogModeratorAction(clientIp, moderator.Id, thread.Forum.Id, post.ThreadId, post.Id, post.Author.UserName);
+            var action = new ArrayList() {
+                // The first element is the title of the post. We don't care about it because it belongs to the thread
+                "",
+                post.Author.UserName
+            };
+            var serializedAction = phpSerializer.Serialize(action);
+            LogModeratorAction(clientIp, moderator.Id, thread.Forum.Id, post.ThreadId, post.Id, post.Author.UserName, action: serializedAction, ModeratorActionType.DeletePost);
+
             LogDeletion(post.Id, DeletionLogType.Post, moderator.Id, moderator.UserName, comment);
+        }
+
+        public void RenameThread(int threadId, string newTitle) {
+
         }
         /// <summary>
         /// Logs moderator actions viewable in the VB Admin CP (e.g. deleted posts). In contrast to <see cref="LogDeletion(int, DeletionLogType, int, string, string)"/> this covers EVERY moderator action, not just deletions.
         /// </summary>
-        public void LogModeratorAction(string clientIp, int moderatorUserId, int forumId, int threadId = 0, int postId = 0, string postAuthorName = "") {
-            var action = new ArrayList() {
-                // The first element is the title of the post. We don't care about it because it belongs to the thread
-                "",
-                postAuthorName
-            };
-            // VB provides array data as action and then serialize them using PHPs serialize/deserialize functions. PhpSerialization could serialize objects as PHP would do it
-            var serializer = new PhpSerialization();
-            string actionSerialized = serializer.Serialize(action);
-            var actionSerializedSegments = actionSerialized.Replace(postAuthorName, "\n")
-                .Split('\n');
-
+        void LogModeratorAction(string clientIp, int moderatorUserId, int forumId, int threadId = 0, int postId = 0, string postAuthorName = "", string action = "", ModeratorActionType type) {
             var modArgs = new {
                 deletingUserId = moderatorUserId,
                 postAuthorName,
                 forumId,
                 threadId,
                 postId,
+                action,
+                type,
                 clientIp
             };
-            // Dapper cant resolve parameters in JSON strings like a:2:{i:0;s:19:"";i:1;s:6:"@postAuthorName";} correctly.
-            // As a workaround, we just insert the username and then add the pre/suffix JSON using MySQLs CONCAT function around the username directly after inserting the modlog entry. Not really clean but currently we have no alternative.
-            // ToDo: s:19 is not always constant, where s:6 at the end stay the same. Find out for what the first s:6 is used for
-            string actionPrefix = actionSerializedSegments[0];
-            string actionSuffix = actionSerializedSegments[1];
             string modSql = $@"INSERT INTO moderatorlog(dateline, userid, forumid, threadid, postid, action, type, ipaddress)
-                VALUES(UNIX_TIMESTAMP(), @deletingUserId, @forumId, @threadId, @postId, '" + postAuthorName + "', 17, @clientIp);" +
-                $"UPDATE moderatorlog SET action = CONCAT('{actionPrefix}', action, '{actionSuffix}') WHERE moderatorlogid = LAST_INSERT_ID();";
+                VALUES(UNIX_TIMESTAMP(), @deletingUserId, @forumId, @threadId, @postId, @action, @type, @clientIp);";
             db.Query(modSql, modArgs);
         }
         public void ReCountThreadReplys(int threadId) {
