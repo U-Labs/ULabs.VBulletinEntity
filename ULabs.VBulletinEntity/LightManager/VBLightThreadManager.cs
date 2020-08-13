@@ -730,8 +730,10 @@ namespace ULabs.VBulletinEntity.LightManager {
             LogDeletion(post.Id, DeletionLogType.Post, moderator.Id, moderator.UserName, comment);
         }
 
-        public void RenameThread(int threadId, string newTitle) {
-
+        public void RenameThread(VBLightThread thread, string newTitle, string clientIp, int moderatorUserId) {
+            string sql = "UPDATE thread SET title = @newTitle WHERE threadid = @Id;";
+            db.Query(sql, new { thread.Id, newTitle });
+            LogModeratorAction(ModeratorActionType.RenameThread, clientIp, moderatorUserId, thread.Forum.Id, thread.Id, action: thread.Title);
         }
         /// <summary>
         /// Logs moderator actions viewable in the VB Admin CP (e.g. deleted posts). In contrast to <see cref="LogDeletion(int, DeletionLogType, int, string, string)"/> this covers EVERY moderator action, not just deletions.
@@ -746,7 +748,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 type,
                 clientIp
             };
-            string modSql = $@"INSERT INTO moderatorlog(dateline, userid, forumid, threadid, postid, action, type, ipaddress)
+            string modSql = @"INSERT INTO moderatorlog(dateline, userid, forumid, threadid, postid, action, type, ipaddress)
                 VALUES(UNIX_TIMESTAMP(), @deletingUserId, @forumId, @threadId, @postId, @action, @type, @clientIp);";
             db.Query(modSql, modArgs);
         }
