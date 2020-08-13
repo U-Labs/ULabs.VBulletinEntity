@@ -102,8 +102,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             // Generic overload not possible with QueryFirstOrDefault()
             var dbThreads = db.Query(sql, threadMappingFunc, args);
             var threads = dbThreads.ToList();
-            if (threads == null) {
-                return null;
+            if (!threads.Any()) {
+                return new List<VBLightThread>();
             }
 
             // FirstPost is fetched seperately because the query would be complex (especially for dapper) if we include the multiple joins from the post to its author/group here
