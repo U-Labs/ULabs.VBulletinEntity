@@ -725,7 +725,7 @@ namespace ULabs.VBulletinEntity.LightManager {
                 post.Author.UserName
             };
             var serializedAction = phpSerializer.Serialize(action);
-            LogModeratorAction(clientIp, moderator.Id, thread.Forum.Id, post.ThreadId, post.Id, post.Author.UserName, action: serializedAction, ModeratorActionType.DeletePost);
+            LogModeratorAction(ModeratorActionType.DeletePost, clientIp, moderator.Id, thread.Forum.Id, post.ThreadId, post.Id, action: serializedAction);
 
             LogDeletion(post.Id, DeletionLogType.Post, moderator.Id, moderator.UserName, comment);
         }
@@ -736,10 +736,9 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Logs moderator actions viewable in the VB Admin CP (e.g. deleted posts). In contrast to <see cref="LogDeletion(int, DeletionLogType, int, string, string)"/> this covers EVERY moderator action, not just deletions.
         /// </summary>
-        void LogModeratorAction(string clientIp, int moderatorUserId, int forumId, int threadId = 0, int postId = 0, string postAuthorName = "", string action = "", ModeratorActionType type) {
+        void LogModeratorAction(ModeratorActionType type, string clientIp, int moderatorUserId, int forumId, int threadId = 0, int postId = 0, string action = "") {
             var modArgs = new {
                 deletingUserId = moderatorUserId,
-                postAuthorName,
                 forumId,
                 threadId,
                 postId,
