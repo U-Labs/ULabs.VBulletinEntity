@@ -1,0 +1,18 @@
+﻿@using ULabs.VBulletinEntity.LightModels.User
+@model List<VBLightPrivateMessage>
+@{
+    ViewData["Title"] = "ListPms";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>ListPms</h2>
+
+<table class="table">
+    @foreach(var pm in Model) {
+        <tr>
+            <td>@pm.Title</td>
+            <td>@pm.FromUser.UserName</td>
+            <td>@pm.SendTime</td>
+        </tr>
+    }
+</table>

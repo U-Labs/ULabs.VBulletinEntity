@@ -12,6 +12,7 @@ using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntityDemo.Models;
 using ULabs.VBulletinEntity.Tools;
 using ULabs.VBulletinEntity.LightModels.User;
+using ULabs.VBulletinEntity.LightModels.Session;
 
 namespace ULabs.VBulletinEntityDemo.Controllers {
     public class LightManagerController : Controller {
@@ -20,6 +21,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
         readonly VBLightThreadManager lightThreadManager;
         readonly VBLightSettingsManager settingsManager;
         readonly VBLightUserManager lightUserManager;
+        VBLightSession session;
         public LightManagerController(VBLightSessionManager lightSessionManager, VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager, VBLightSettingsManager settingsManager,
             VBLightUserManager lightUserManager) {
             this.lightSessionManager = lightSessionManager;
@@ -29,9 +31,9 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             this.lightUserManager = lightUserManager;
 
             var commonSettings = settingsManager.CommonSettings;
+            session = lightSessionManager.GetCurrent();
         }
         public IActionResult Dashboard() {
-            var session = lightSessionManager.GetCurrent();
             var model = new LightDashboardModel(lightForumManager, lightThreadManager, lightSessionManager);
             var thx = lightThreadManager.GetThanks(userId: 18, afterTimestamp: 1566595766);
             //lightSessionManager.UpdateLastActivity(session.SessionHash, "/LightTest");
@@ -46,10 +48,15 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var newestSmalltalkReplys = lightThreadManager.GetNewestReplys(threadId: 29780);
 
             var adminTest = lightThreadManager.GetNewestThreads(8, minReplyCount: 1, excludedForumIds: new List<int>(), orderByLastPostDate: false);
-            var pms = lightUserManager.GetReceivedPrivateMessages(userId: 18, VBPrivateMessageReadState.Unread, textPreviewWords: 1);
-            var pms2 = lightUserManager.GetReceivedPrivateMessages(userId: 18, VBPrivateMessageReadState.Unread);
-            var pms3 = lightUserManager.GetReceivedPrivateMessages(userId: 18);
+            var pms = lightUserManager.GetPrivateMessages(userId: 18, readState: VBPrivateMessageReadState.Unread, textPreviewWords: 1);
+            var pms2 = lightUserManager.GetPrivateMessages(userId: 18, folderId: 1, VBPrivateMessageReadState.Unread);
+            var pms3 = lightUserManager.GetPrivateMessages(userId: 241);
             return View(model);
+        }
+        public IActionResult ListPMs() {
+            var conversationsInfo = lightUserManager.GetPrivateMessagesConversationsInfo(userId: session.User.Id, conversationsPerPage: 2000);
+            //var pmConversations = lightUserManager.GetPrivateMessagesConversations(userId: session.User.Id, pageInfo: conversationsInfo, textPreviewWords: 20);
+            return View(new List<VBLightPrivateMessage>());
         }
         public IActionResult ViewThread(int id, int page = 1) {
             var model = new ViewThreadModel(lightThreadManager, id, page, lightSessionManager.GetCurrent().User.Id);
