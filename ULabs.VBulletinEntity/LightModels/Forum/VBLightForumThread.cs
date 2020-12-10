@@ -8,6 +8,7 @@ namespace ULabs.VBulletinEntity.LightModels.Forum {
         public int Id { get; set; }
         // For category boxes URL generation, where we get threads from differnt forum id
         public int ForumId { get; set; }
+        public string ForumTitle { get; set; }
         public string Title { get; set; }
         public bool Open { get; set; }
         public int ReplysCount { get; set; }

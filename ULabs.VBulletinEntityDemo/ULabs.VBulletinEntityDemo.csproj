@@ -17,6 +17,10 @@
     <ProjectReference Include="..\ULabs.VBulletinEntity.Shared\ULabs.VBulletinEntity.Shared.csproj" PrivateAssets="all" />
   </ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties appsettings_1development_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
+  <ItemGroup>
+    <Folder Include="wwwroot\lib\bootstrap\dist\js\" />
+  </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

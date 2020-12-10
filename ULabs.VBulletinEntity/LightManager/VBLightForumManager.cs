@@ -57,7 +57,8 @@ namespace ULabs.VBulletinEntity.LightManager {
             var uniqueChilds = all.Distinct().ToList();
             return uniqueChilds;
         }
-
+        
+        #region Permissions
         /// <summary>
         /// Get the VB bitfield permission for a given forum/usergroup. Checks the specific forum permission first and use group permission if forum permission doesnt exist.
         /// </summary>
@@ -112,7 +113,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Like <see cref="GetForumsWhereUserCan(int, VBForumFlags, bool)"/> but this method returns only the forum ids without any meta information
         /// </summary>
         public List<int> GetForumIdsWhereUserCan(int userGroupId, VBForumFlags flags, bool onlyParentCategories = false) {
-            var forumIds = BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories, selectOnlyForumId: true)
+            var forumIds = BuildForumPermissionQuery(userGroupId, flags, negate: false, onlyParentCategories, selectOnlyForumId: true)
                 .Select(f => f.Id)
                 .ToList();
             return forumIds;
@@ -124,6 +125,13 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="onlyParentCategories">If false, all forums will be fetched (default). Set this to true if you only want to get categories (parent = -1).</param>
         public List<VBLightForum> GetForumsWhereUserCanNot(int userGroupId, VBForumFlags flags, bool onlyParentCategories = false) {
             return BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories);
+        }
+
+        public List<int> GetForumIdsWhereUserCanNot(int userGroupId, VBForumFlags flags, bool onlyParentCategories = false) {
+            var forumIds = BuildForumPermissionQuery(userGroupId, flags, negate: true, onlyParentCategories, selectOnlyForumId: true)
+                .Select(f => f.Id)
+                .ToList();
+            return forumIds;
         }
 
         List<VBLightForum> BuildForumPermissionQuery(int userGroupId, VBForumFlags? flags, bool negate, bool onlyParentCategories, bool selectOnlyForumId = false) {
@@ -157,7 +165,9 @@ namespace ULabs.VBulletinEntity.LightManager {
             var forums = db.Query<VBLightForum>(sql.ToString(), args);
             return forums.ToList();
         }
+        #endregion
 
+        #region ForumThreads
         public PageContentInfo GetForumThreadsInfo(List<int> forumIds, int page = 1, int threadsPerPage = 20) {
             int offset = (page - 1) * threadsPerPage;
             var info = new PageContentInfo(page, threadsPerPage);
@@ -186,13 +196,65 @@ namespace ULabs.VBulletinEntity.LightManager {
             return GetForumThreadsInfo(new List<int>() { forumId }, page, threadsPerPage);
         }
         public List<VBLightForumThread> GetForumThreads(PageContentInfo info) {
-            string sql = @"
-                SELECT threadid AS Id, forumid, title, open, replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, 
-                    lastposter AS lastPosterUserName, lastposterid AS lastPosterUserId, lastpost AS LastPostTimeRaw, views AS ViewsCount
-                FROM thread 
-                WHERE threadid IN @ContentIds
-                ORDER BY lastpost DESC;";
-            return db.Query<VBLightForumThread>(sql, new { info.ContentIds }).ToList();
+            var param = new { info.ContentIds };
+            var builder = GetForumThreadsQueryBuilder();
+            builder.Where("threadid IN @ContentIds")
+                .OrderBy("thread.lastpost DESC");
+            return BuildForumThreadsQuery(builder, param);
         }
+        /// <summary>
+        /// Fetches the newest threads/posts as <see cref="VBLightForumThread"/> to display related information like author, views, ...
+        /// </summary>
+        /// <param name="orderByLastPostDate">If true, you'll fetch the latest posts. Otherwise, the latest threads.</param>
+        /// <param name="afterTime">Fetches only threads that were posted after the provide timestamp for pagination (only affects the thread timestamp, not the post)</param>
+        /// <param name="beforeTime">Fetches only threads posted before the provided timestamp for pagination (only affects thread timestamp, not post)</param>
+        /// <param name="excludedForumIds">When set, dont get threads posted in the specified forum ids</param>
+        /// <param name="ordering">Specify the SQL ordering. Usefull for pagination, when you go one page back, just use ASC instead of DESC to fetch the previous page instead of the first one.</param>
+        /// <param name="authorUserId">Filter only threads written by the specified user id</param>
+        /// <param name="count">Maximum amount of elements to fetch</param>
+        public List<VBLightForumThread> GetNewestThreads(bool orderByLastPostDate = false, DateTime? afterTime = null, DateTime? beforeTime = null, List<int> excludedForumIds = null,
+            Ordering ordering = Ordering.Desc, int? authorUserId = null, int count = 20) {
+            object param = new { excludedForumIds };
+            string timeStampCol = (orderByLastPostDate ? "lastpost" : "dateline");
+            string orderBySql = $"thread.{timeStampCol} {ordering}";
+            var builder = GetForumThreadsQueryBuilder()
+                .OrderBy(orderBySql);
+
+            if(excludedForumIds?.Count > 0) {
+                builder.Where("thread.forumid NOT IN @excludedForumIds");
+            }
+
+            if (afterTime.HasValue) {
+                long afterTimestamp = afterTime.Value.ToUnixTimestamp();
+                builder.Where($"thread.{timeStampCol} > {afterTimestamp}");
+            }
+
+            if (beforeTime.HasValue) {
+                long beforeTimestamp = beforeTime.Value.ToUnixTimestamp();
+                builder.Where($"thread.{timeStampCol} < {beforeTimestamp}");
+            }
+
+            if (authorUserId.HasValue) {
+                builder.Where($"thread.postuserid = {authorUserId.Value}");
+            }
+            
+            return BuildForumThreadsQuery(builder, param, count);
+        }
+        SqlBuilder GetForumThreadsQueryBuilder() {
+            var builder = new SqlBuilder();
+            builder.Select($@"
+                SELECT threadid AS Id, thread.forumid, thread.title, open, thread.replycount AS ReplysCount, dateline AS CreatedTimeRaw, postusername AS AuthorUserName, postuserid AS AuthorUserId, 
+                    thread.lastposter AS lastPosterUserName, thread.lastposterid AS lastPosterUserId, thread.lastpost AS LastPostTimeRaw, views AS ViewsCount,
+                    forum.title as ForumTitle
+                FROM thread");
+            builder.Join("forum ON(forum.forumid = thread.forumid)");
+            return builder;
+        }
+        List<VBLightForumThread> BuildForumThreadsQuery(SqlBuilder builder, object param = null, int? count = null) {
+            string countSql = (count.HasValue ? $" LIMIT {count.Value}" : "");
+            var builderTemplate = builder.AddTemplate("/**select**/ /**join**/ /**where**/ /**orderby**/ " + countSql, param);
+            return db.Query<VBLightForumThread>(builderTemplate.RawSql, param).ToList();
+        }
+        #endregion
     }
 }

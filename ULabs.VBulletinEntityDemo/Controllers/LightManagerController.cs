@@ -12,7 +12,6 @@ using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntityDemo.Models;
 using ULabs.VBulletinEntity.Tools;
 using ULabs.VBulletinEntity.LightModels.User;
-using ULabs.VBulletinEntity.LightModels.Session;
 
 namespace ULabs.VBulletinEntityDemo.Controllers {
     public class LightManagerController : Controller {
@@ -21,7 +20,6 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
         readonly VBLightThreadManager lightThreadManager;
         readonly VBLightSettingsManager settingsManager;
         readonly VBLightUserManager lightUserManager;
-        VBLightSession session;
         public LightManagerController(VBLightSessionManager lightSessionManager, VBLightForumManager lightForumManager, VBLightThreadManager lightThreadManager, VBLightSettingsManager settingsManager,
             VBLightUserManager lightUserManager) {
             this.lightSessionManager = lightSessionManager;
@@ -31,9 +29,9 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             this.lightUserManager = lightUserManager;
 
             var commonSettings = settingsManager.CommonSettings;
-            session = lightSessionManager.GetCurrent();
         }
         public IActionResult Dashboard() {
+            var session = lightSessionManager.GetCurrent();
             var model = new LightDashboardModel(lightForumManager, lightThreadManager, lightSessionManager);
             var thx = lightThreadManager.GetThanks(userId: 18, afterTimestamp: 1566595766);
             //lightSessionManager.UpdateLastActivity(session.SessionHash, "/LightTest");
@@ -48,15 +46,10 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var newestSmalltalkReplys = lightThreadManager.GetNewestReplys(threadId: 29780);
 
             var adminTest = lightThreadManager.GetNewestThreads(8, minReplyCount: 1, excludedForumIds: new List<int>(), orderByLastPostDate: false);
-            var pms = lightUserManager.GetPrivateMessages(userId: 18, readState: VBPrivateMessageReadState.Unread, textPreviewWords: 1);
-            var pms2 = lightUserManager.GetPrivateMessages(userId: 18, folderId: 1, VBPrivateMessageReadState.Unread);
-            var pms3 = lightUserManager.GetPrivateMessages(userId: 241);
+
+            var allowedIds = lightForumManager.GetForumIdsWhereUserCan(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewForum);
+            var forbidenIds = lightForumManager.GetForumIdsWhereUserCanNot(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewForum);
             return View(model);
-        }
-        public IActionResult ListPMs() {
-            var conversationsInfo = lightUserManager.GetPrivateMessagesConversationsInfo(userId: session.User.Id, conversationsPerPage: 2000);
-            //var pmConversations = lightUserManager.GetPrivateMessagesConversations(userId: session.User.Id, pageInfo: conversationsInfo, textPreviewWords: 20);
-            return View(new List<VBLightPrivateMessage>());
         }
         public IActionResult ViewThread(int id, int page = 1) {
             var model = new ViewThreadModel(lightThreadManager, id, page, lightSessionManager.GetCurrent().User.Id);
@@ -102,17 +95,24 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var threads = lightForumManager.GetForumThreads(info);
             return View(threads);
         }
+        public IActionResult GetNewestThreads() {
+            var threads = lightForumManager.GetNewestThreads(orderByLastPostDate: true);
+            return View(nameof(GetForumThreads), threads);
+        }
         public IActionResult ShowTopPosters() {
             var posters = lightUserManager.GetTopPostersFromCurrentMonth();
             return View(posters);
         }
         public IActionResult NewestContent() {
             const int count = 20;
-            var threads = lightThreadManager.GetNewestThreads(count);
-            var replys = lightThreadManager.GetNewestThreads(count: count, minReplyCount: 1, orderByLastPostDate: true)
-                .OrderBy(thread => thread.LastPostTime);
-            var kvp = new KeyValuePair<IEnumerable<VBLightThread>, IEnumerable<VBLightThread>>(threads, replys);
-            return View(kvp);
+            var threads = lightThreadManager.GetNewestThreads(count: count, excludedForumIds: new List<int>(), orderByLastPostDate: false);
+            // Newest replys
+            // var threads = lightThreadManager.GetNewestThreads(count: count, minReplyCount: 1, orderByLastPostDate: true);
+
+            string resp = "";
+            threads.ForEach(thread => resp += $"{thread.Title}<br>");
+            return Content(resp, "text/html", Encoding.UTF8);
+        }
         }
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {

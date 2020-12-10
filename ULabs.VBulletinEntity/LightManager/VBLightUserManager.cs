@@ -53,6 +53,11 @@ namespace ULabs.VBulletinEntity.LightManager {
             return user.FirstOrDefault();
         }
 
+        public List<VBLightUser> Search(string nameSearchTerm) {
+            var users = UserQuery("WHERE LOWER(u.username) LIKE CONCAT('%', @nameSearchTerm, '%')", new { nameSearchTerm });
+            return users;
+        }
+
         #region Login
         public CheckPasswordResult CheckPassword(string userName, string password, string cookieSalt, string ipAddress, TimeSpan strikeBorder, int strikesLimit = 5) {
             string sql = @"SELECT password, salt, username, userId

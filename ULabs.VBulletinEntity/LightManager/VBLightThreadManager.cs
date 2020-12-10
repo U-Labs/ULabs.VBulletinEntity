@@ -1,4 +1,7 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections;
@@ -20,6 +23,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         #region Private attributes and methods
         readonly MySqlConnection db;
         readonly VBLightForumManager lightForumManager;
+        readonly PhpSerialization phpSerializer = new PhpSerialization();
 
         // Order (also with Id and splitOn set): All attributes from the first relation entity should be placed BEFORE the (SplitOn) key
         string threadBaseQuery = @"
@@ -46,7 +50,12 @@ namespace ULabs.VBulletinEntity.LightManager {
         Func<VBLightThread, VBLightUser, VBLightForum, VBLightUserGroup, VBLightThread> threadMappingFunc = (thread, user, forum, group) => {
             thread.LastPoster = user;
             thread.Forum = forum;
-            thread.LastPoster.PrimaryUserGroup = group;
+
+            // In case the last poster got deleted, it could be null in some casese
+            if(thread.LastPoster != null) {
+                thread.LastPoster.PrimaryUserGroup = group;
+            }
+            
             return thread;
         };
         Func<VBLightPost, VBLightUser, VBLightUserGroup, VBLightPost> postMappingFunc = (post, author, group) => {
@@ -84,30 +93,121 @@ namespace ULabs.VBulletinEntity.LightManager {
             this.lightForumManager = lightForumManager;
         }
 
-        public VBLightThread Get(int threadId, bool updateViews = true) {
-            var args = new { threadId };
-            string sql = threadBaseQuery + @"WHERE t.threadid = @threadId";
+        #region Threads
+        public List<VBLightThread> Get(List<int> threadIds, bool updateViews = true) {
+            if (!threadIds.Any()) {
+                return new List<VBLightThread>();
+            }
+            var args = new { threadIds };
+            string sql = threadBaseQuery + @"WHERE t.threadid IN @threadIds";
             // Generic overload not possible with QueryFirstOrDefault()
-            var threads = db.Query(sql, threadMappingFunc, args);
-            var thread = threads.SingleOrDefault();
-            if (thread == null) {
-                return null;
+            var dbThreads = db.Query(sql, threadMappingFunc, args);
+            var threads = dbThreads.ToList();
+            if (!threads.Any()) {
+                return new List<VBLightThread>();
             }
 
             // FirstPost is fetched seperately because the query would be complex (especially for dapper) if we include the multiple joins from the post to its author/group here
-            string firstPostSql = $@"{postBaseQuery} WHERE p.postid = @postId";
-            thread.FirstPost = db.Query(firstPostSql, postMappingFunc, new { postId = thread.FirstPostId })
-                .FirstOrDefault();
+            string firstPostSql = $@"{postBaseQuery} WHERE p.postid IN @postIds";
+            var firstPosts = db.Query(firstPostSql, postMappingFunc, new { postIds = threads.Select(t => t.FirstPostId) });
+            threads.ForEach(thread => {
+                thread.FirstPost = firstPosts.FirstOrDefault(fp => fp.Id == thread.FirstPostId);
+            });
 
             if (updateViews) {
                 string viewSql = @"
                     UPDATE thread
                     SET views = views + 1
-                    WHERE threadid = @threadId";
-                db.Execute(viewSql, new { threadId });
+                    WHERE threadid IN @threadIds";
+                db.Execute(viewSql, new { threadIds });
             }
-            return thread;
+            return threads;
         }
+
+        public VBLightThread Get(int threadId, bool updateViews = true) {
+            var threads = Get(new List<int>() { threadId }, updateViews);
+            return threads.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
+        /// </summary>
+        /// <param name="count">Limit the fetched rows</param>
+        /// <param name="minReplyCount">Filter for threads with a minimum amount of replys (larger or equal than this parameter)</param>
+        /// <param name="orderByLastPostDate">If true, the threads were ordered by the date of their last reply. Otherwise the creation time of the thread is used.</param>
+        /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
+        /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
+        /// <param name="afterTime">If set, only threads with a created dateline after this timestamp will be fetched</param>
+        public List<VBLightThread> GetNewestThreads(int count = 10, int minReplyCount = 0, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null, DateTime? afterTime = null) {
+            if (includedForumIds != null && excludedForumIds != null) {
+                throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
+            }
+            var builder = new SqlBuilder();
+            builder.Select(threadBaseQuery);
+
+            if (includedForumIds?.Count > 0) {
+                builder.Where("t.forumid IN @includedForumIds", new { includedForumIds });
+            }
+            if (excludedForumIds?.Count > 0) {
+                builder.Where("t.forumid NOT IN @excludedForumIds", new { excludedForumIds });
+            }
+            if (afterTime.HasValue) {
+                long afterTimestamp = afterTime.Value.ToUnixTimestamp();
+                builder.Where("t.dateline > @afterTimestamp", new { afterTimestamp });
+            }
+
+            builder.Where("t.replycount >= @minReplyCount", new { minReplyCount });
+            builder.OrderBy((orderByLastPostDate ? "t.lastpost" : "t.dateline") + " DESC");
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
+
+            var result = db.Query(builderTemplate.RawSql, threadMappingFunc, builderTemplate.Parameters);
+            return result.ToList();
+        }
+
+        /// <summary>
+        /// Lists Threads with new replys from others in which the user was active (wrote at lest one post) ordered by last post time of the thread.
+        /// Note that you should disable auto deletion of the contentread in VB to use this! Otherwise users will get already seen new replys to older threads because of the contentread table purge!
+        /// </summary>
+        /// <param name="userId">Id of the user to check for new replys in his active threads</param>
+        /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
+        /// <param name="lastPostAgeDays">Max age in days of the threads last post to filter out older threads without any activity. Default is 180 days (= last 6 months)</param>
+        /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
+        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, count, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
+
+            // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread.
+            // This query fetches threads where the user wrote at least one post and new replys from other users were written since last read.
+            // Since VB per default deletes the thread read by cron, we also check for threads created by the user containing new replys after the authors last post
+            // ContentId 2 = Threads
+            string selectFields = @"
+                    t.threadid AS ThreadId, t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
+				    f.forumid AS ForumId, f.title AS ForumTitle,
+				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision, c.filename IS NOT NULL AS LastPosterHasAvatar,
+				    r.readid";
+            string additionalJoins = @"
+	            LEFT JOIN forum f ON(f.forumid = t.forumid)
+	            LEFT JOIN user u ON(u.userid = t.lastposterid)
+                LEFT JOIN customavatar c ON(c.userid = u.userid) ";
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds) + @"
+                GROUP BY p.threadid 
+                ORDER BY t.lastpost DESC
+                LIMIT @count";
+            var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
+            return unreadThreads.ToList();
+        }
+
+        /// <summary>
+        /// Same as <see cref="GetUnreadActiveThreads(int, int, List{int}, List{int})"/> but this methods only count unread active threads without fetching any data for better performance
+        /// </summary>
+        public int CountUnreadActiveThreads(int userId, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
+            var args = new { userId, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
+            string selectFields = "COUNT(DISTINCT p.threadid) AS cnt";
+            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins: "", ignoredForumIds, ignoredThreadIds);
+
+            int count = db.QueryFirstOrDefault<int>(sql, args);
+            return count;
+        }
+        #endregion
 
         /// <summary>
         /// Loads the replys of a thread for the page, which meta data were fetched by <see cref="VBLightThreadManager.GetReplysInfo(int, int, bool, int, int)"/>. 
@@ -211,21 +311,24 @@ namespace ULabs.VBulletinEntity.LightManager {
         }
         /// <summary>
         /// Fetches the newest visible posts, without any grouping to the threads (if not threadId is specified). Usefull for polling, when you want to fetch new posts after a certain timestamp.
+        /// This method doesn't fetch the first post of a new thread (only replys to a thread).
         /// </summary>
         /// <param name="afterTime">If this parameter is set, only posts with dateline > afterDateTime were fetched from the database</param>
         /// <param name="beforeTime">If this parameter is set, only posts with dateline less than beforeTime were fetched from the database</param>
         /// <param name="threadId">You could specify a thread id to only fetch replys from those thread (optional)</param>
         /// <param name="count">Limit the amout of data which is returned (default 10)</param>
-        public List<VBLightPost> GetNewestPosts(DateTime? afterTime = null, DateTime? beforeTime = null, int? threadId = null,int count = 10) {
+        public List<VBLightPost> GetNewestReplys(DateTime? afterTime = null, DateTime? beforeTime = null, int? threadId = null,int count = 10) {
             var args = new {
                 afterTimestamp = afterTime.HasValue ? afterTime.Value.ToUnixTimestamp() : 0,
                 beforeTimestamp = beforeTime.HasValue ? beforeTime.Value.ToUnixTimestamp() : 0,
                 threadId = threadId.HasValue ? threadId.Value : 0,
                 count
             };
+            // parentid = 0 is the first post of a new thread, so no reply
             string sql = $@"
                 {postBaseQuery}
-                WHERE p.visible = 1 " +
+                WHERE p.visible = 1 
+                AND p.parentid != 0 " +
                 (afterTime.HasValue ? " AND p.dateline > @afterTimestamp " : "") +
                 (beforeTime.HasValue ? " AND p.dateline < @beforeTimestamp " : "") +
                 (threadId.HasValue ? " AND p.threadid = @threadId " : "") + @"
@@ -263,85 +366,6 @@ namespace ULabs.VBulletinEntity.LightManager {
                 WHERE p.postid = @postId";
             var reply = db.Query(sql, postMappingFunc, new { postId });
             return reply.FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Gets the newest threads with some basic information aboud the forum and the user which wrote the last post
-        /// </summary>
-        /// <param name="count">Limit the fetched rows</param>
-        /// <param name="minReplyCount">Filter for threads with a minimum amount of replys (larger or equal than this parameter)</param>
-        /// <param name="orderByLastPostDate">If true, the threads were ordered by the date of their last reply. Otherwise the creation time of the thread is used.</param>
-        /// <param name="includedForumIds">Optionally, you can pass a list of forum ids here to filter the threads. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        /// <param name="excludedForumIds">Optionally list of forum ids to exclude. Only includedForumIds or excludedForumIds can be specified at once.</param>
-        /// <param name="afterTime">If set, only threads with a created dateline after this timestamp will be fetched</param>
-        public List<VBLightThread> GetNewestThreads(int count = 10, int minReplyCount = 0, bool orderByLastPostDate = false, List<int> includedForumIds = null, List<int> excludedForumIds = null, DateTime? afterTime = null) {
-            if (includedForumIds != null && excludedForumIds != null) {
-                throw new Exception("Both includedForumIds and excludedForumIds are specified, which doesn't make sense. Please remote one attribute from the GetNewestThreads() call.");
-            }
-            var builder = new SqlBuilder();
-            builder.Select(threadBaseQuery);
-
-            if (includedForumIds?.Count > 0) {
-                builder.Where("t.forumid IN @includedForumIds", new { includedForumIds });
-            }
-            if (excludedForumIds?.Count > 0) {
-                builder.Where("t.forumid NOT IN @excludedForumIds", new { excludedForumIds });
-            }
-            if (afterTime.HasValue) {
-                long afterTimestamp = afterTime.Value.ToUnixTimestamp();
-                builder.Where("t.dateline > @afterTimestamp", new { afterTimestamp });
-            }
-
-            builder.Where("t.replycount >= @minReplyCount", new { minReplyCount });
-            builder.OrderBy((orderByLastPostDate ? "t.lastpost" : "t.dateline") + " DESC");
-            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
-
-            var result = db.Query(builderTemplate.RawSql, threadMappingFunc, builderTemplate.Parameters);
-            return result.ToList();
-        }
-
-        /// <summary>
-        /// Lists Threads with new replys from others in which the user was active (wrote at lest one post) ordered by last post time of the thread.
-        /// Note that you should disable auto deletion of the contentread in VB to use this! Otherwise users will get already seen new replys to older threads because of the contentread table purge!
-        /// </summary>
-        /// <param name="userId">Id of the user to check for new replys in his active threads</param>
-        /// <param name="count">Limit the amount of entries. Recommended since active users may get a larger set of data</param>
-        /// <param name="lastPostAgeDays">Max age in days of the threads last post to filter out older threads without any activity. Default is 180 days (= last 6 months)</param>
-        /// <param name="ignoredForumIds">Don't fetch notifications if they were posted in those forum ids </param>
-        public List<VBLightUnreadActiveThread> GetUnreadActiveThreads(int userId, int count = 10, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
-            var args = new { userId, count, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
-
-            // Grouping by contentid (which is the thread id) avoid returning a row for each post the user made in this thread.
-            // This query fetches threads where the user wrote at least one post and new replys from other users were written since last read.
-            // Since VB per default deletes the thread read by cron, we also check for threads created by the user containing new replys after the authors last post
-            // ContentId 2 = Threads
-            string selectFields = @"
-                    t.threadid AS ThreadId, t.title AS ThreadTitle, t.lastpost AS LastPostTimeRaw,
-				    f.forumid AS ForumId, f.title AS ForumTitle,
-				    u.userid AS LastPosterUserId, u.avatarrevision AS LastPosterAvatarRevision, c.filename IS NOT NULL AS LastPosterHasAvatar,
-				    r.readid";
-            string additionalJoins = @"
-	            LEFT JOIN forum f ON(f.forumid = t.forumid)
-	            LEFT JOIN user u ON(u.userid = t.lastposterid)
-                LEFT JOIN customavatar c ON(c.userid = u.userid) ";
-            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins, ignoredForumIds, ignoredThreadIds) + @"
-                GROUP BY p.threadid 
-                ORDER BY t.lastpost DESC
-                LIMIT @count";
-            var unreadThreads = db.Query<VBLightUnreadActiveThread>(sql, args);
-            return unreadThreads.ToList();
-        }
-
-        /// <summary>
-        /// Same as <see cref="GetUnreadActiveThreads(int, int, List{int}, List{int})"/> but this methods only count unread active threads without fetching any data for better performance
-        /// </summary>
-        public int CountUnreadActiveThreads(int userId, int lastPostAgeDays = 180, List<int> ignoredForumIds = null, List<int> ignoredThreadIds = null) {
-            var args = new { userId, ignoredForumIds, ignoredThreadIds, lastPostAgeDays };
-            string selectFields = "COUNT(DISTINCT p.threadid) AS cnt";
-            string sql = BuildUnreadActiveThreadsQuery(selectFields, additionalJoins: "", ignoredForumIds, ignoredThreadIds);
-
-            int count = db.QueryFirstOrDefault<int>(sql, args);
-            return count;
         }
 
         /// <summary>
@@ -540,10 +564,13 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <summary>
         /// Creates a thread without performing any validation checks. Use UserGroupPermissions to check if the user can create threads in the specified forum
         /// </summary>
+        /// <param name="threadModel">A LightCreateThreadModel with all required information for the thread.</param>
         /// <param name="updateCounters">Determinates if the forums lastpost etc and authors post counter will be updated. Could be set to false if you want to do this with a cron insted.</param>
+        /// <param name="textEncoding">Encoding of the thread Text. Default value (null) means UTF-8.</param>
         /// <returns></returns>
-        public int CreateThread(LightCreateThreadModel threadModel, bool updateCounters = true) {
+        public int CreateThread(LightCreateThreadModel threadModel, bool updateCounters = true, Encoding textEncoding = null) {
             long ts = DateTime.UtcNow.ToUnixTimestamp();
+            threadModel.Text = ConvertPostTextToLatin1(threadModel.Text, textEncoding);
 
             var args = new {
                 ts,
@@ -583,7 +610,98 @@ namespace ULabs.VBulletinEntity.LightManager {
             db.Execute(updateThreadSql, updateThreadArgs);
             return threadId;
         }
+        // MySql.Data.MySqlClient.MySqlException (0x80004005): Incorrect string value: '\xE2\x80\x85/\xE2\x80...' for column `post`.`pagetext`
+        // Happened on Fritz during CreateThread call. This is a testfix to make sure that we have Latin1 (used by VB pagetext column)
+        string ConvertPostTextToLatin1(string text, Encoding srcEncoding = null) {
+            if (srcEncoding == null) {
+                srcEncoding = Encoding.UTF8;
+            }
 
+            var targetEncoding = Encoding.GetEncoding("ISO-8859-1");
+            var latin1 = Encoding.Convert(srcEncoding, targetEncoding, srcEncoding.GetBytes(text));
+            string latin1Text = targetEncoding.GetString(latin1);
+            return latin1Text;
+        }
+
+        #region Drafts
+        string draftsSelectSql = @"SELECT contenttypeid AS ContentTypeRaw, parentcontentid, contentid, userid, pagetext AS Text, title, dateline AS CreatedTimeRaw
+            FROM autosave";
+        public void SafeDraft(VBLightAutosave autosave) {
+            string sql = @"REPLACE INTO autosave (contenttypeid, contentid, parentcontentid, userid, pagetext, title, dateline)
+                VALUES(@ContentTypeRaw, @ContentId, @ParentContentId, @UserId, @Text, @Title, @CreatedTimeRaw)";
+            db.Query(sql, autosave);
+        }
+        /// <summary>
+        /// Fetches a saved draft from the database, that was not published by the user
+        /// </summary>
+        /// <param name="contentType">Content type of the draft. Depending on the type, you need to set <paramref name="contentId"></paramref> or <paramref name="parentContentId"/></paramref>
+        /// <param name="userId">Id of the author, that published the draft</param>
+        /// <param name="contentId">Id of the content, if it's a new content entry (e.g. new thread)</param>
+        /// <param name="parentContentId">Id of the parent content, where this draft is related to. E.g. the thread id, if we have a post</param>
+        public VBLightAutosave GetDraft(VBLightAutosaveContentType contentType, int userId, int? contentId = null, int? parentContentId = null) {
+            if (contentId != null && parentContentId != null) {
+                throw new Exception("You must specify either contentId or parentContentId.");
+            }
+
+            var builder = new SqlBuilder();
+            builder.Select(draftsSelectSql);
+
+            var param = new {
+                userId,
+                contentTypeRaw = VBLightAutosave.ContentTypeToByteArray(contentType)
+            };
+            builder.Where("userid = @userId AND contenttypeid = @contentTypeRaw", param);
+
+            if (contentId.HasValue) {
+                builder.Where("contentid = @Value", new { contentId.Value });
+            }else if (parentContentId.HasValue) {
+                builder.Where("parentcontentid = @Value", new { parentContentId.Value });
+            }
+
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/");
+            return db.Query<VBLightAutosave>(builderTemplate.RawSql, builderTemplate.Parameters).FirstOrDefault();
+        }
+
+        public List<VBLightAutosave> GetNewestDraftsFromUser(VBLightAutosaveContentType contentType, int userId, int count = 20) {
+            var builder = new SqlBuilder();
+            builder.Select(draftsSelectSql);
+
+            var param = new {
+                userId,
+                contentTypeRaw = VBLightAutosave.ContentTypeToByteArray(contentType)
+            };
+            // There are some drafts with parentcontentid = 0 and contentid != 0. Seems related to deleted posts
+            builder.Where("userid = @userId AND contenttypeid = @contentTypeRaw AND parentcontentid > 0", param);
+            builder.OrderBy("dateline DESC");
+
+            var builderTemplate = builder.AddTemplate("/**select**/ /**where**/ /**orderby**/ LIMIT @count", new { count });
+            return db.Query<VBLightAutosave>(builderTemplate.RawSql, builderTemplate.Parameters).ToList();
+        }
+
+        public void DeleteDraft(VBLightAutosaveContentType contentType, int userId, int? parentContentId = null, int? contentId = null) {
+            // Having parentContentId and contentId null is only valid on thread draft. They dont have any id, so there could be only once
+            if (contentType != VBLightAutosaveContentType.Thread && contentId == null && parentContentId == null) {
+                throw new Exception("You must specify either contentId or parentContentId.");
+            }
+
+            string sql = @"DELETE FROM autosave WHERE contenttypeid = @contentTypeRaw AND userId = @userId";
+            if (parentContentId.HasValue) {
+                sql += " AND parentcontentid = @parentContentId";
+            }
+            if (contentId.HasValue) {
+                sql += " AND contentid = @contentId";
+            }
+
+            var param = new {
+                contentTypeRaw = VBLightAutosave.ContentTypeToByteArray(contentType),
+                userId,
+                parentContentId = (parentContentId.HasValue ? parentContentId.Value : -1),
+                contentId = (contentId.HasValue ? contentId.Value : -1)
+            };
+            db.Query(sql, param);
+        }
+
+        #endregion
         #region Moderation
         /// <summary>
         /// Deletes a post and log the action in all logs as VB would do it (moderator and deletion log)
@@ -601,40 +719,37 @@ namespace ULabs.VBulletinEntity.LightManager {
                 UpdateLastPost(thread.Id);
             }
 
-            LogModeratorAction(clientIp, moderator.Id, thread.Forum.Id, post.ThreadId, post.Id, post.Author.UserName);
+            var action = new ArrayList() {
+                // The first element is the title of the post. We don't care about it because it belongs to the thread
+                "",
+                post.Author.UserName
+            };
+            var serializedAction = phpSerializer.Serialize(action);
+            LogModeratorAction(ModeratorActionType.DeletePost, clientIp, moderator.Id, thread.Forum.Id, post.ThreadId, post.Id, action: serializedAction);
+
             LogDeletion(post.Id, DeletionLogType.Post, moderator.Id, moderator.UserName, comment);
+        }
+
+        public void RenameThread(VBLightThread thread, string newTitle, string clientIp, int moderatorUserId) {
+            string sql = "UPDATE thread SET title = @newTitle WHERE threadid = @Id;";
+            db.Query(sql, new { thread.Id, newTitle });
+            LogModeratorAction(ModeratorActionType.RenameThread, clientIp, moderatorUserId, thread.Forum.Id, thread.Id, action: thread.Title);
         }
         /// <summary>
         /// Logs moderator actions viewable in the VB Admin CP (e.g. deleted posts). In contrast to <see cref="LogDeletion(int, DeletionLogType, int, string, string)"/> this covers EVERY moderator action, not just deletions.
         /// </summary>
-        public void LogModeratorAction(string clientIp, int moderatorUserId, int forumId, int threadId = 0, int postId = 0, string postAuthorName = "") {
-            var action = new ArrayList() {
-                // The first element is the title of the post. We don't care about it because it belongs to the thread
-                "",
-                postAuthorName
-            };
-            // VB provides array data as action and then serialize them using PHPs serialize/deserialize functions. PhpSerialization could serialize objects as PHP would do it
-            var serializer = new PhpSerialization();
-            string actionSerialized = serializer.Serialize(action);
-            var actionSerializedSegments = actionSerialized.Replace(postAuthorName, "\n")
-                .Split('\n');
-
+        void LogModeratorAction(ModeratorActionType type, string clientIp, int moderatorUserId, int forumId, int threadId = 0, int postId = 0, string action = "") {
             var modArgs = new {
                 deletingUserId = moderatorUserId,
-                postAuthorName,
                 forumId,
                 threadId,
                 postId,
+                action,
+                type,
                 clientIp
             };
-            // Dapper cant resolve parameters in JSON strings like a:2:{i:0;s:19:"";i:1;s:6:"@postAuthorName";} correctly.
-            // As a workaround, we just insert the username and then add the pre/suffix JSON using MySQLs CONCAT function around the username directly after inserting the modlog entry. Not really clean but currently we have no alternative.
-            // ToDo: s:19 is not always constant, where s:6 at the end stay the same. Find out for what the first s:6 is used for
-            string actionPrefix = actionSerializedSegments[0];
-            string actionSuffix = actionSerializedSegments[1];
-            string modSql = $@"INSERT INTO moderatorlog(dateline, userid, forumid, threadid, postid, action, type, ipaddress)
-                VALUES(UNIX_TIMESTAMP(), @deletingUserId, @forumId, @threadId, @postId, '" + postAuthorName + "', 17, @clientIp);" +
-                $"UPDATE moderatorlog SET action = CONCAT('{actionPrefix}', action, '{actionSuffix}') WHERE moderatorlogid = LAST_INSERT_ID();";
+            string modSql = @"INSERT INTO moderatorlog(dateline, userid, forumid, threadid, postid, action, type, ipaddress)
+                VALUES(UNIX_TIMESTAMP(), @deletingUserId, @forumId, @threadId, @postId, @action, @type, @clientIp);";
             db.Query(modSql, modArgs);
         }
         public void ReCountThreadReplys(int threadId) {
