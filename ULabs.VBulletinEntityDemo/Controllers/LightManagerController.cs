@@ -12,6 +12,7 @@ using ULabs.VBulletinEntity.Models.Permission;
 using ULabs.VBulletinEntityDemo.Models;
 using ULabs.VBulletinEntity.Tools;
 using ULabs.VBulletinEntity.LightModels.User;
+using System.Text;
 
 namespace ULabs.VBulletinEntityDemo.Controllers {
     public class LightManagerController : Controller {
@@ -113,7 +114,7 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             threads.ForEach(thread => resp += $"{thread.Title}<br>");
             return Content(resp, "text/html", Encoding.UTF8);
         }
-        }
+        
         [VBLightAuthorize(permissionRedirectUrl: "/LightManager/Dashboard", requiredUserGroupId: 9)]
         public IActionResult Authorized() {
             return Content("Youre authorized!");
