@@ -46,6 +46,10 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             int page = lightThreadManager.GetPageOfReply(threadId: 38043, replyId: 441387);
             var newestSmalltalkReplys = lightThreadManager.GetNewestReplys(threadId: 29780);
 
+            var nonVisibleForumIds = lightForumManager.GetForumIdsWhereUserCanNot(1, VBForumFlags.CanViewForum);
+            var newesttReplys = lightThreadManager.GetNewestReplys();
+            var newesttReplysPublic = lightThreadManager.GetNewestReplys(excludedForumIds: nonVisibleForumIds);
+
             var adminTest = lightThreadManager.GetNewestThreads(8, minReplyCount: 1, excludedForumIds: new List<int>(), orderByLastPostDate: false);
 
             var allowedIds = lightForumManager.GetForumIdsWhereUserCan(session.User.PrimaryUserGroup.Id, VBForumFlags.CanViewForum);

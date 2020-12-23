@@ -316,22 +316,29 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// <param name="afterTime">If this parameter is set, only posts with dateline > afterDateTime were fetched from the database</param>
         /// <param name="beforeTime">If this parameter is set, only posts with dateline less than beforeTime were fetched from the database</param>
         /// <param name="threadId">You could specify a thread id to only fetch replys from those thread (optional)</param>
+        /// <param name="excludedForumIds">Do not fetch posts of a thread in those forum ids. ATTENTION: This will slow down the query! About ~5s with 28k threads and 346k posts</param>
         /// <param name="count">Limit the amout of data which is returned (default 10)</param>
-        public List<VBLightPost> GetNewestReplys(DateTime? afterTime = null, DateTime? beforeTime = null, int? threadId = null,int count = 10) {
+        public List<VBLightPost> GetNewestReplys(DateTime? afterTime = null, DateTime? beforeTime = null, int? threadId = null, List<int> excludedForumIds = null, int count = 10) {
+            if (excludedForumIds == null) {
+                excludedForumIds = new List<int>();
+            }
             var args = new {
                 afterTimestamp = afterTime.HasValue ? afterTime.Value.ToUnixTimestamp() : 0,
                 beforeTimestamp = beforeTime.HasValue ? beforeTime.Value.ToUnixTimestamp() : 0,
                 threadId = threadId.HasValue ? threadId.Value : 0,
+                excludedForumIds,
                 count
             };
             // parentid = 0 is the first post of a new thread, so no reply
             string sql = $@"
-                {postBaseQuery}
+                {postBaseQuery} " + 
+                (excludedForumIds.Any() ? " LEFT JOIN thread t ON(t.threadid = p.ThreadId) " : "") + @"
                 WHERE p.visible = 1 
                 AND p.parentid != 0 " +
                 (afterTime.HasValue ? " AND p.dateline > @afterTimestamp " : "") +
                 (beforeTime.HasValue ? " AND p.dateline < @beforeTimestamp " : "") +
-                (threadId.HasValue ? " AND p.threadid = @threadId " : "") + @"
+                (threadId.HasValue ? " AND p.threadid = @threadId " : "") +
+                (excludedForumIds.Any() ? " AND t.forumid NOT IN @excludedForumIds " : "") + @"
                 ORDER BY p.dateline DESC
                 LIMIT @count";
             var replys = db.Query(sql, postMappingFunc, args);
