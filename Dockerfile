@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.1 AS sdk-image
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS sdk-image
 ARG BAGET_API_KEY
 ENV BAGET_API_KEY=${BAGET_API_KEY}
 ARG BAGET_URL
