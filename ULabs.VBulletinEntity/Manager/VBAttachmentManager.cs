@@ -22,7 +22,6 @@ namespace ULabs.VBulletinEntity.Manager {
 
         public async Task<PhysicalFileResult> GetAttachmentAsync(VBAttachment attachment, string attachmentsPath) {
             string fullPath = Path.Combine(attachmentsPath, attachment.FilePath);
-
             var fileContentProvider = new FileExtensionContentTypeProvider();
             string mimeType;
             if (!fileContentProvider.TryGetContentType(attachment.FileName, out mimeType)) {

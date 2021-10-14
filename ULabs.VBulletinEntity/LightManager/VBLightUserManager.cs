@@ -1,6 +1,4 @@
 ﻿using Dapper;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Net.Http.Headers;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
