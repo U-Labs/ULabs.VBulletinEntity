@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using System;
 using System.Collections.Generic;
@@ -13,15 +13,16 @@ using ULabs.VBulletinEntity.LightModels.Forum;
 using ULabs.VBulletinEntity.Manager;
 using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Tools;
+using MySql.Data.MySqlClient;
 
 namespace ULabs.VBulletinEntity {
     public static class VBServiceHelper {
-        public static void AddVBDbContext<ICachingProvider>(this IServiceCollection services, VBConfig vbConfig, string connectionString, Version serverVersion = null, ServerType serverType = ServerType.MariaDb, bool sensitiveDataLogging = false)
+        public static void AddVBDbContext<ICachingProvider>(this IServiceCollection services, VBConfig vbConfig, string connectionString, ServerType serverType = ServerType.MariaDb, bool sensitiveDataLogging = false)
             where ICachingProvider: IVBCache {
             services.AddSingleton(vbConfig);
 
             services.AddDbContext<VBDbContext>(options => {
-                options.UseMySql(connectionString, mySqlOptions => mySqlOptions.ServerVersion(serverVersion, serverType));
+                options.UseMySql(connectionString);
 
                 if (sensitiveDataLogging) {
                     options.EnableSensitiveDataLogging();

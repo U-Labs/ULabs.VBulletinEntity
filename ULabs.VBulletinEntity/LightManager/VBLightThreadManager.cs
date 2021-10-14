@@ -514,7 +514,7 @@ namespace ULabs.VBulletinEntity.LightManager {
         /// Creates a new post reply to an existing thread and updates the thread as well as the corresponding forum with stats and meta info (last thread/timestamp etc)
         /// </summary>
         /// <param name="thread"><see cref="VBLightThread"></see> of <paramref name="replyModel"/> ThreadId. Optional to save one query in combination with 
-        /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"</param>
+        /// <see cref="VBLightThreadManager.CreateReply(LightCreateReplyModel)"></see></param>
         /// <param name="updateCounters">Determinates if the forums lastpost etc and authors post counter will be updated. Could be set to false if you want to do this with a cron insted.</param>
         /// <param name="updateThreadReplysCount">If true, the reply count cache in the thread table is updated. Set to false if the reply is the first post of a new created thread</param>
         /// <returns>Id of the created post</returns>

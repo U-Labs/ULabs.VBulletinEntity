@@ -96,24 +96,9 @@ namespace ULabs.VBulletinEntity {
                 .WithOne()
                 .HasForeignKey<VBCustomAvatar>(a => a.UserId);
 
-            SetNamingConventions(builder);
             // ToDo: Most examples in this guide show configurations being applied in the OnModelCreating method, but it is recommended to separate configurations out to individual files per entity
             // https://www.learnentityframeworkcore.com/configuration/fluent-api
             base.OnModelCreating(builder);
-        }
-
-        /// <summary>
-        /// VB naming conventions: All lowercase (tables/columns) without any delimiter(parentpmid instead of ParentPmId as an example)
-        /// </summary>
-        void SetNamingConventions(ModelBuilder builder) {
-            foreach (var entityType in builder.Model.GetEntityTypes()) {
-                var relationalEntity = entityType.Relational();
-                entityType.Relational().TableName = entityType.Relational().TableName.ToLower();
-
-                foreach (var property in entityType.GetProperties()) {
-                    property.Relational().ColumnName = property.Relational().ColumnName.ToLower();
-                }
-            }
         }
     }
 }

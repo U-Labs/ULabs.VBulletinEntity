@@ -25,7 +25,7 @@ namespace ULabs.VBulletinEntityDemo {
 
         public void ConfigureServices(IServiceCollection services) {
             var vbConfig = new VBConfig(Configuration.GetValue<string>("VBCookieSalt"));
-            services.AddVBDbContext<VBCache>(vbConfig, Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
+            services.AddVBDbContext<VBCache>(vbConfig, Configuration.GetConnectionString("VBForum"), ServerType.MariaDb);
             services.AddVBManagers(vbConfig.CookieSalt);
             services.AddMvc();
         }

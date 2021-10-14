@@ -80,7 +80,7 @@ namespace ULabs.VBulletinEntity.Manager {
             // Cleanup old sessions that were invalid due to cookie timeout
             // ToDo: Document raw query
             int cookieTimeoutSpan = GetCookieTimeoutSpam();
-            int deletedOldSessionsCount = await db.Database.ExecuteSqlCommandAsync($"delete from session where userid = {cookieUser.Id} and lastactivity < {cookieTimeoutSpan}");
+            int deletedOldSessionsCount = await db.Database.ExecuteSqlRawAsync($"delete from session where userid = {cookieUser.Id} and lastactivity < {cookieTimeoutSpan}");
 
             currentSession = await CreateAsync(cookieUser, location: contextAccessor.HttpContext.Request.Path);
 
