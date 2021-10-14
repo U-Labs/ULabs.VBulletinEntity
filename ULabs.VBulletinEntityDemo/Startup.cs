@@ -13,6 +13,7 @@ using ULabs.VBulletinEntity;
 using ULabs.VBulletinEntity.Shared.Caching;
 using ULabs.VBulletinEntity.Models.Config;
 using ULabs.VBulletinEntity.Tools;
+using Microsoft.Extensions.Hosting;
 
 namespace ULabs.VBulletinEntityDemo {
     public class Startup {
@@ -26,10 +27,10 @@ namespace ULabs.VBulletinEntityDemo {
             var vbConfig = new VBConfig(Configuration.GetValue<string>("VBCookieSalt"));
             services.AddVBDbContext<VBCache>(vbConfig, Configuration.GetConnectionString("VBForum"), new Version(10, 3, 17), ServerType.MariaDb);
             services.AddVBManagers(vbConfig.CookieSalt);
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLife) {
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime appLife) {
             appLife.ApplicationStarted.Register(() => DatabaseWarmUp.WarmUpRequest("WarmUp/Index"));
 
             if (env.IsDevelopment()) {
@@ -42,10 +43,11 @@ namespace ULabs.VBulletinEntityDemo {
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
-            app.UseMvc(routes => {
-                routes.MapRoute(
+            app.UseRouting();
+            app.UseEndpoints(endpoints => {
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }

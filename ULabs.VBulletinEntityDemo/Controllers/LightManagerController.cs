@@ -104,6 +104,11 @@ namespace ULabs.VBulletinEntityDemo.Controllers {
             var threads = lightForumManager.GetNewestThreads(orderByLastPostDate: true);
             return View(nameof(GetForumThreads), threads);
         }
+
+        public IActionResult GetThread(int threadId) {
+            var thread = lightThreadManager.Get(40358, updateViews: false);
+            return Content(thread.Title);
+        }
         public IActionResult ShowTopPosters() {
             var posters = lightUserManager.GetTopPostersFromCurrentMonth();
             return View(posters);
